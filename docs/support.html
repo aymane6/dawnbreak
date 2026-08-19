@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Support · Dawnbreak</title>
+    <meta name="description" content="The alarm you cannot switch off in your sleep.">
+    <link rel="canonical" href="https://aymane6.github.io/dawnbreak/support.html">
+    <style>
+:root {
+  color-scheme: dark;
+  --canvas: #0b0d14;
+  --canvas-top: #1a1526;
+  --ink: #f6f4f1;
+  --ink-dim: #9ba0b5;
+  --hairline: #2c3145;
+  --dawn-start: #ffa24b;
+  --dawn-end: #ff5e62;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 5rem;
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--canvas-top) 0%, transparent 60%),
+    var(--canvas);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  text-wrap: pretty;
+}
+
+.sheet { max-width: 36rem; margin: 0 auto; }
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem 0 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 2.5rem;
+}
+
+/* The wordmark, which is the app's name and is never translated. */
+.mark {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  color: var(--ink);
+  padding-bottom: 1.25rem;
+}
+
+.mark span {
+  background: linear-gradient(100deg, var(--dawn-start), var(--dawn-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A real select element, so it is reachable by keyboard and by VoiceOver without any work. */
+select {
+  appearance: none;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 1.9rem 0.35rem 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.6rem;
+  background: transparent;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+  background-position: right 0.85rem center, right 0.6rem center;
+  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--dawn-start);
+  outline-offset: 3px;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0 0 2.5rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+
+h2 {
+  margin: 2.75rem 0 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-start);
+}
+
+/* Uppercasing a Japanese or Arabic heading does nothing and letter-spacing it does harm. */
+html:lang(ar) h2, html:lang(hi) h2, html:lang(ja) h2, html:lang(ko) h2, html:lang(zh-Hans) h2 {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+p { margin: 0 0 1.1rem; }
+
+ul { margin: 0 0 1.1rem; padding-inline-start: 1.1rem; }
+
+li { margin-bottom: 0.55rem; }
+
+a { color: var(--dawn-start); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-dim);
+  font-size: 0.9375rem;
+}
+
+footer a { color: var(--ink-dim); }
+
+footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 0.75rem; }
+
+/* One language at a time. Eleven of the twelve sheets carry `hidden` in the markup, so a reader
+   with no JavaScript gets English rather than twelve copies of everything; the script moves the
+   attribute rather than adding a class, and this is what makes it bite. */
+.sheet[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="sheet" lang="en" dir="ltr" data-title="Support · Dawnbreak">
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="English">
+          <option value="en" selected>English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Support</h1>
+        <p>Dawnbreak is an alarm that will not switch off until you have done something. Most questions are about the alarm not ringing, or about the mission being harder than expected at six in the morning. Both are below.</p>
+        <h2>The alarm did not ring</h2>
+        <ul>
+          <li>Alarms need permission. The app asks once, on the first launch; if it was declined, turn it on in Settings, under Dawnbreak.</li>
+          <li>An alarm you saved but never switched on will not ring. The toggle on the row is the one that matters.</li>
+          <li>Focus and Do Not Disturb do not silence it. Alarms are exempt by design.</li>
+          <li>A phone that ran out of battery overnight cannot ring. Low Power Mode on its own is fine.</li>
+        </ul>
+        <h2>I cannot finish the mission</h2>
+        <p>Every alarm has an emergency exit. Hold the button at the bottom of the mission screen and the alarm stops. It is on by default and can be turned off in Settings, which is worth doing only once you no longer need it.</p>
+        <h2>Restoring a purchase</h2>
+        <p>Settings, then Dawnbreak Pro, then Restore Purchases, signed in with the Apple Account that bought it. Subscriptions are managed in the App Store rather than here.</p>
+        <h2>Deleting everything</h2>
+        <p>Deleting the app deletes the alarms and the history with it. There is no copy anywhere else, and nothing to ask us to erase.</p>
+        <h2>Anything else</h2>
+        <p>Open an issue and it will be read. Please include your iOS version, the mission, and what the alarm was set to.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ar" dir="rtl" data-title="الدعم · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="العربية">
+          <option value="en">English</option>
+          <option value="ar" selected>العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>الدعم</h1>
+        <p>‏Dawnbreak منبّه لا ينطفئ حتى تفعل شيئًا. أكثر الأسئلة تدور حول منبّه لم يرن، أو حول مهمة تبدو أصعب مما توقعت في السادسة صباحًا. وكلاهما هنا.</p>
+        <h2>المنبّه لم يرن</h2>
+        <ul>
+          <li>المنبّهات تحتاج إذنًا. يطلبه التطبيق مرة واحدة عند أول تشغيل؛ فإن رُفض، شغّله من الإعدادات ضمن Dawnbreak.</li>
+          <li>المنبّه الذي حفظته ولم تشغّله لن يرن. المفتاح الموجود على السطر هو المهم.</li>
+          <li>‏Focus ووضع عدم الإزعاج لا يُسكتانه. المنبّهات مستثناة بالتصميم.</li>
+          <li>الهاتف الذي نفدت بطاريته ليلًا لا يستطيع أن يرن. أما وضع الطاقة المنخفضة وحده فلا مشكلة فيه.</li>
+        </ul>
+        <h2>لا أستطيع إنهاء المهمة</h2>
+        <p>لكل منبّه مخرج طوارئ. اضغط مطوّلًا على الزر في أسفل شاشة المهمة فيتوقف المنبّه. وهو مفعّل تلقائيًا ويمكن إيقافه من الإعدادات، وهذا يستحق الفعل فقط عندما لا تحتاجه بعد.</p>
+        <h2>استعادة عملية شراء</h2>
+        <p>الإعدادات، ثم Dawnbreak Pro، ثم استعادة المشتريات، بحساب Apple الذي اشترى. أما الاشتراكات فتُدار من App Store لا من هنا.</p>
+        <h2>حذف كل شيء</h2>
+        <p>حذف التطبيق يحذف المنبّهات والسجل معه. لا توجد نسخة في أي مكان آخر، ولا شيء تطلب منّا محوه.</p>
+        <h2>أي شيء آخر</h2>
+        <p>افتح مسألة وستُقرأ. أرجو ذكر إصدار iOS، والمهمة، وما كان المنبّه مضبوطًا عليه.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">الخصوصية</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="de" dir="ltr" data-title="Hilfe · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Deutsch">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de" selected>Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Hilfe</h1>
+        <p>Dawnbreak ist ein Wecker, der sich erst abschaltet, wenn du etwas getan hast. Die meisten Fragen drehen sich um einen Wecker, der nicht geklingelt hat, oder um eine Mission, die um sechs Uhr morgens schwerer ist als gedacht. Beides steht hier.</p>
+        <h2>Der Wecker hat nicht geklingelt</h2>
+        <ul>
+          <li>Wecker brauchen eine Berechtigung. Die App fragt einmal, beim ersten Start; wurde sie abgelehnt, schalte sie in den Einstellungen unter Dawnbreak ein.</li>
+          <li>Ein Wecker, den du gespeichert aber nie eingeschaltet hast, klingelt nicht. Entscheidend ist der Schalter in der Zeile.</li>
+          <li>Fokus und Nicht stören schalten ihn nicht stumm. Wecker sind bewusst ausgenommen.</li>
+          <li>Ein Telefon, dessen Akku nachts leer wurde, kann nicht klingeln. Der Energiesparmodus allein ist unproblematisch.</li>
+        </ul>
+        <h2>Ich schaffe die Mission nicht</h2>
+        <p>Jeder Wecker hat einen Notausgang. Halte den Knopf unten auf dem Missionsbildschirm gedrückt, und der Wecker hört auf. Er ist standardmäßig an und lässt sich in den Einstellungen abschalten, was sich erst lohnt, wenn du ihn nicht mehr brauchst.</p>
+        <h2>Einen Kauf wiederherstellen</h2>
+        <p>Einstellungen, dann Dawnbreak Pro, dann Käufe wiederherstellen, angemeldet mit dem Apple-Account, der gekauft hat. Abos werden im App Store verwaltet, nicht hier.</p>
+        <h2>Alles löschen</h2>
+        <p>Die App zu löschen löscht die Wecker und die Historie mit. Es gibt nirgends eine Kopie und nichts, um dessen Löschung du uns bitten müsstest.</p>
+        <h2>Alles andere</h2>
+        <p>Öffne ein Issue, es wird gelesen. Bitte nenne deine iOS-Version, die Mission und wie der Wecker eingestellt war.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Datenschutz</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="es" dir="ltr" data-title="Soporte · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Español">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es" selected>Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Soporte</h1>
+        <p>Dawnbreak es un despertador que no se apaga hasta que has hecho algo. Casi todas las preguntas son sobre una alarma que no sonó o sobre una misión más difícil de lo previsto a las seis de la mañana. Las dos están aquí.</p>
+        <h2>La alarma no sonó</h2>
+        <ul>
+          <li>Las alarmas necesitan permiso. La app lo pide una vez, en el primer arranque; si se denegó, actívalo en Ajustes, dentro de Dawnbreak.</li>
+          <li>Una alarma que guardaste pero nunca activaste no suena. El interruptor de la fila es el que cuenta.</li>
+          <li>Concentración y No molestar no la silencian. Las alarmas están exentas a propósito.</li>
+          <li>Un teléfono que se quedó sin batería de noche no puede sonar. El modo de bajo consumo por sí solo no estorba.</li>
+        </ul>
+        <h2>No consigo terminar la misión</h2>
+        <p>Toda alarma tiene una salida de emergencia. Mantén pulsado el botón de abajo en la pantalla de la misión y la alarma se detiene. Está activada por defecto y se puede desactivar en Ajustes, lo cual solo vale la pena cuando ya no la necesitas.</p>
+        <h2>Restaurar una compra</h2>
+        <p>Ajustes, luego Dawnbreak Pro, luego Restaurar compras, con la cuenta de Apple que compró. Las suscripciones se gestionan en el App Store, no aquí.</p>
+        <h2>Borrarlo todo</h2>
+        <p>Borrar la app borra las alarmas y el historial con ella. No hay copia en ningún otro sitio, ni nada que pedirnos que eliminemos.</p>
+        <h2>Cualquier otra cosa</h2>
+        <p>Abre una incidencia y se leerá. Indica tu versión de iOS, la misión y cómo estaba puesta la alarma.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacidad</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="fr" dir="ltr" data-title="Assistance · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Français">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr" selected>Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Assistance</h1>
+        <p>Dawnbreak est un réveil qui ne s'éteint pas avant que vous ayez fait quelque chose. La plupart des questions portent sur un réveil qui n'a pas sonné, ou sur une mission plus difficile que prévu à six heures du matin. Les deux sont ici.</p>
+        <h2>Le réveil n'a pas sonné</h2>
+        <ul>
+          <li>Les réveils demandent une autorisation. L'application la demande une fois, au premier lancement ; si elle a été refusée, activez-la dans Réglages, sous Dawnbreak.</li>
+          <li>Un réveil enregistré mais jamais activé ne sonnera pas. C'est l'interrupteur sur la ligne qui compte.</li>
+          <li>Concentration et Ne pas déranger ne le font pas taire. Les réveils en sont exemptés par conception.</li>
+          <li>Un téléphone dont la batterie s'est vidée dans la nuit ne peut pas sonner. Le mode économie d'énergie seul ne gêne rien.</li>
+        </ul>
+        <h2>Je n'arrive pas à finir la mission</h2>
+        <p>Chaque réveil a une sortie de secours. Maintenez le bouton en bas de l'écran de mission et le réveil s'arrête. Elle est active par défaut et se désactive dans les Réglages, ce qui ne vaut la peine que le jour où vous n'en avez plus besoin.</p>
+        <h2>Restaurer un achat</h2>
+        <p>Réglages, puis Dawnbreak Pro, puis Restaurer les achats, connecté avec le compte Apple qui a acheté. Les abonnements se gèrent dans l'App Store et non ici.</p>
+        <h2>Tout supprimer</h2>
+        <p>Supprimer l'application supprime les réveils et l'historique avec. Il n'y a de copie nulle part ailleurs, et rien à nous demander d'effacer.</p>
+        <h2>Autre chose</h2>
+        <p>Ouvrez un ticket, il sera lu. Précisez votre version d'iOS, la mission, et le réglage du réveil.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Confidentialité</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="hi" dir="ltr" data-title="सहायता · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="हिन्दी">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi" selected>हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>सहायता</h1>
+        <p>Dawnbreak एक अलार्म है जो कुछ करने तक बंद नहीं होता। ज़्यादातर सवाल अलार्म न बजने के बारे में होते हैं, या सुबह छह बजे मिशन के उम्मीद से ज़्यादा मुश्किल लगने के बारे में। दोनों नीचे हैं।</p>
+        <h2>अलार्म नहीं बजा</h2>
+        <ul>
+          <li>अलार्म के लिए अनुमति चाहिए। ऐप पहली बार खुलने पर एक बार पूछता है; मना कर दिया हो तो Settings में Dawnbreak के नीचे चालू करें।</li>
+          <li>जो अलार्म आपने सहेजा पर कभी चालू नहीं किया, वह नहीं बजेगा। पंक्ति पर लगा टॉगल ही मायने रखता है।</li>
+          <li>Focus और Do Not Disturb इसे चुप नहीं कराते। अलार्म को जान-बूझकर छूट दी गई है।</li>
+          <li>रात में बैटरी ख़त्म हो चुका फ़ोन बज नहीं सकता। अकेला Low Power Mode कोई अड़चन नहीं है।</li>
+        </ul>
+        <h2>मैं मिशन पूरा नहीं कर पा रहा</h2>
+        <p>हर अलार्म में आपातकालीन रास्ता है। मिशन स्क्रीन पर नीचे वाले बटन को दबाकर रखें और अलार्म रुक जाएगा। यह डिफ़ॉल्ट रूप से चालू है और Settings में बंद किया जा सकता है, जो तभी करने लायक है जब आपको इसकी ज़रूरत न रह जाए।</p>
+        <h2>ख़रीद बहाल करना</h2>
+        <p>Settings, फिर Dawnbreak Pro, फिर Restore Purchases, उसी Apple खाते से जिसने ख़रीदा था। सब्सक्रिप्शन App Store में संभाले जाते हैं, यहां नहीं।</p>
+        <h2>सब कुछ मिटाना</h2>
+        <p>ऐप हटाने से अलार्म और इतिहास भी उसके साथ हट जाते हैं। कहीं और कोई प्रति नहीं है, और हमसे मिटाने को कहने जैसा कुछ नहीं है।</p>
+        <h2>और कुछ</h2>
+        <p>एक issue खोलें, उसे पढ़ा जाएगा। कृपया अपना iOS संस्करण, मिशन, और अलार्म की सेटिंग बताएं।</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">गोपनीयता</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="it" dir="ltr" data-title="Assistenza · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Italiano">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it" selected>Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Assistenza</h1>
+        <p>Dawnbreak è una sveglia che non si spegne finché non hai fatto qualcosa. Quasi tutte le domande riguardano una sveglia che non ha suonato, o una missione più difficile del previsto alle sei del mattino. Ci sono entrambe qui.</p>
+        <h2>La sveglia non ha suonato</h2>
+        <ul>
+          <li>Le sveglie richiedono un permesso. L'app lo chiede una volta, al primo avvio; se è stato negato, attivalo in Impostazioni, sotto Dawnbreak.</li>
+          <li>Una sveglia salvata ma mai attivata non suona. Conta l'interruttore sulla riga.</li>
+          <li>Full Immersion e Non disturbare non la silenziano. Le sveglie sono escluse per scelta.</li>
+          <li>Un telefono rimasto senza batteria di notte non può suonare. La modalità Risparmio energetico da sola non dà problemi.</li>
+        </ul>
+        <h2>Non riesco a finire la missione</h2>
+        <p>Ogni sveglia ha un'uscita di emergenza. Tieni premuto il pulsante in basso nella schermata della missione e la sveglia si ferma. È attiva di serie e si può disattivare in Impostazioni, cosa che conviene fare solo quando non ti serve più.</p>
+        <h2>Ripristinare un acquisto</h2>
+        <p>Impostazioni, poi Dawnbreak Pro, poi Ripristina acquisti, con l'account Apple che ha comprato. Gli abbonamenti si gestiscono nell'App Store, non qui.</p>
+        <h2>Cancellare tutto</h2>
+        <p>Eliminare l'app elimina le sveglie e lo storico con essa. Non c'è una copia altrove, e non c'è nulla da chiederci di cancellare.</p>
+        <h2>Qualsiasi altra cosa</h2>
+        <p>Apri una issue e verrà letta. Indica la versione di iOS, la missione e com'era impostata la sveglia.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ja" dir="ltr" data-title="サポート · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="日本語">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja" selected>日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>サポート</h1>
+        <p>Dawnbreak は、何かをするまで切れない目覚ましです。届く質問のほとんどは、鳴らなかったという話か、朝六時のミッションが思ったより難しいという話です。どちらも以下にあります。</p>
+        <h2>アラームが鳴らなかった</h2>
+        <ul>
+          <li>アラームには許可が必要です。初回起動時に一度だけ尋ねます。断ってしまった場合は、設定の Dawnbreak からオンにしてください。</li>
+          <li>保存しただけでオンにしていないアラームは鳴りません。効くのは行にあるスイッチです。</li>
+          <li>集中モードやおやすみモードでは消音されません。アラームは意図的に対象外です。</li>
+          <li>夜のあいだにバッテリーが切れた端末は鳴れません。低電力モードそのものは問題ありません。</li>
+        </ul>
+        <h2>ミッションを終えられません</h2>
+        <p>どのアラームにも緊急脱出があります。ミッション画面の下のボタンを長押しすればアラームは止まります。初期状態でオンで、設定でオフにできますが、それが役に立つのは必要なくなってからです。</p>
+        <h2>購入の復元</h2>
+        <p>設定、Dawnbreak Pro、購入の復元の順に、購入した Apple アカウントでサインインした状態で行ってください。サブスクリプションの管理はここではなく App Store です。</p>
+        <h2>すべて削除する</h2>
+        <p>アプリを削除すれば、アラームと記録も一緒に消えます。ほかに控えはなく、こちらに消去を依頼するものもありません。</p>
+        <h2>それ以外</h2>
+        <p>issue を立ててください。読みます。iOS のバージョン、ミッション、アラームの設定内容を書き添えてください。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">プライバシー</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ko" dir="ltr" data-title="지원 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="한국어">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko" selected>한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>지원</h1>
+        <p>Dawnbreak는 무언가를 하기 전까지 꺼지지 않는 알람입니다. 들어오는 질문은 대개 알람이 울리지 않았다는 것, 아니면 아침 여섯 시의 미션이 생각보다 어렵다는 것입니다. 둘 다 아래에 있습니다.</p>
+        <h2>알람이 울리지 않았습니다</h2>
+        <ul>
+          <li>알람에는 권한이 필요합니다. 앱이 첫 실행에서 한 번 묻습니다. 거절했다면 설정의 Dawnbreak에서 켜주세요.</li>
+          <li>저장만 하고 켜지 않은 알람은 울리지 않습니다. 중요한 것은 행에 있는 스위치입니다.</li>
+          <li>집중 모드와 방해금지 모드는 이 알람을 음소거하지 않습니다. 알람은 의도적으로 예외입니다.</li>
+          <li>밤사이 배터리가 다 떨어진 기기는 울릴 수 없습니다. 저전력 모드 자체는 문제가 없습니다.</li>
+        </ul>
+        <h2>미션을 끝낼 수 없습니다</h2>
+        <p>모든 알람에는 비상 탈출이 있습니다. 미션 화면 아래 버튼을 길게 누르면 알람이 멈춥니다. 기본으로 켜져 있고 설정에서 끌 수 있지만, 그럴 만한 때는 더 이상 필요하지 않게 된 뒤입니다.</p>
+        <h2>구매 복원</h2>
+        <p>설정, Dawnbreak Pro, 구매 복원 순서로, 구매한 Apple 계정으로 로그인한 상태에서 하세요. 구독 관리는 여기가 아니라 App Store에서 합니다.</p>
+        <h2>전부 삭제하기</h2>
+        <p>앱을 삭제하면 알람과 기록도 함께 사라집니다. 다른 곳에 사본이 없고, 저희에게 삭제를 요청할 것도 없습니다.</p>
+        <h2>그 밖의 문의</h2>
+        <p>issue를 남겨주시면 읽습니다. iOS 버전, 미션, 알람 설정 내용을 함께 적어주세요.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">개인정보</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="pt-BR" dir="ltr" data-title="Suporte · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Português (Brasil)">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR" selected>Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Suporte</h1>
+        <p>O Dawnbreak é um despertador que não desliga até você fazer algo. Quase toda pergunta é sobre um despertador que não tocou, ou sobre uma missão mais difícil do que se esperava às seis da manhã. As duas estão aqui.</p>
+        <h2>O despertador não tocou</h2>
+        <ul>
+          <li>Despertadores precisam de permissão. A app pede uma vez, na primeira abertura; se foi negada, ative em Ajustes, dentro de Dawnbreak.</li>
+          <li>Um despertador que você salvou mas nunca ligou não toca. O que vale é a chave na linha.</li>
+          <li>Foco e Não Perturbe não o silenciam. Despertadores são isentos de propósito.</li>
+          <li>Um telefone que ficou sem bateria de madrugada não consegue tocar. O Modo de Pouca Energia por si só não atrapalha.</li>
+        </ul>
+        <h2>Não consigo terminar a missão</h2>
+        <p>Todo despertador tem uma saída de emergência. Mantenha pressionado o botão de baixo na tela da missão e o despertador para. Vem ligada e pode ser desligada em Ajustes, o que só vale a pena quando você não precisar mais dela.</p>
+        <h2>Restaurar uma compra</h2>
+        <p>Ajustes, depois Dawnbreak Pro, depois Restaurar compras, com a conta Apple que comprou. Assinaturas são gerenciadas na App Store, não aqui.</p>
+        <h2>Apagar tudo</h2>
+        <p>Apagar a app apaga os despertadores e o histórico junto. Não existe cópia em outro lugar, nem nada para pedir que a gente apague.</p>
+        <h2>Qualquer outra coisa</h2>
+        <p>Abra uma issue e ela será lida. Informe sua versão do iOS, a missão e como o despertador estava configurado.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacidade</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ru" dir="ltr" data-title="Поддержка · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Русский">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru" selected>Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Поддержка</h1>
+        <p>Dawnbreak — будильник, который не выключается, пока вы что-нибудь не сделаете. Почти все вопросы про то, что будильник не зазвонил, или про задание, которое в шесть утра оказалось труднее, чем ожидалось. И то, и другое ниже.</p>
+        <h2>Будильник не зазвонил</h2>
+        <ul>
+          <li>Будильникам нужно разрешение. Приложение спрашивает один раз, при первом запуске; если было отказано, включите его в Настройках, в разделе Dawnbreak.</li>
+          <li>Будильник, который вы сохранили, но не включили, не зазвонит. Решает переключатель в строке.</li>
+          <li>Фокусирование и режим «Не беспокоить» его не приглушают. Будильники намеренно исключены.</li>
+          <li>Телефон, у которого за ночь села батарея, зазвонить не может. Сам режим энергосбережения при этом не мешает.</li>
+        </ul>
+        <h2>Я не могу выполнить задание</h2>
+        <p>У каждого будильника есть аварийный выход. Удерживайте кнопку внизу экрана задания, и будильник остановится. Он включён по умолчанию и отключается в настройках, что имеет смысл только тогда, когда он вам больше не нужен.</p>
+        <h2>Восстановление покупки</h2>
+        <p>Настройки, затем Dawnbreak Pro, затем «Восстановить покупки», с той учётной записью Apple, которая покупала. Подписками управляют в App Store, а не здесь.</p>
+        <h2>Удалить всё</h2>
+        <p>Удаление приложения удаляет вместе с ним будильники и историю. Копии нигде нет, и просить нас что-то стереть не нужно.</p>
+        <h2>Всё остальное</h2>
+        <p>Откройте issue, его прочитают. Укажите версию iOS, задание и то, как был настроен будильник.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Конфиденциальность</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="zh-Hans" dir="ltr" data-title="支持 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="简体中文">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans" selected>简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>支持</h1>
+        <p>Dawnbreak 是一个在你做完某件事之前不会关掉的闹钟。绝大多数问题都是关于闹钟没响，或者早上六点的任务比想象中难。两件事都写在下面。</p>
+        <h2>闹钟没响</h2>
+        <ul>
+          <li>闹钟需要权限。应用在首次启动时问一次；如果当时拒绝了，请到「设置」里的 Dawnbreak 打开它。</li>
+          <li>只保存却没打开的闹钟不会响。起作用的是那一行上的开关。</li>
+          <li>专注模式和「不供打扰」不会把它静音。闹钟是有意排除在外的。</li>
+          <li>夜里电池耗尽的手机响不了。单是低电量模式并不影响。</li>
+        </ul>
+        <h2>我完不成任务</h2>
+        <p>每个闹钟都有紧急退出。长按任务界面下方的按钮，闹钟就会停下。它默认开启，也可以在设置里关掉，而那只在你已经不需要它之后才值得做。</p>
+        <h2>恢复购买</h2>
+        <p>设置，然后 Dawnbreak Pro，然后「恢复购买」，用当初购买的那个 Apple 账户登录。订阅在 App Store 里管理，不在这里。</p>
+        <h2>全部删除</h2>
+        <p>删除应用会一并删除闹钟和记录。别处没有副本，也没有需要请我们抹除的东西。</p>
+        <h2>其他问题</h2>
+        <p>开一个 issue，会有人读。请附上你的 iOS 版本、任务，以及闹钟当时的设置。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">隐私</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <script>
+(function () {
+  var sheets = document.querySelectorAll('.sheet');
+  var available = {};
+  for (var i = 0; i < sheets.length; i++) available[sheets[i].lang] = sheets[i];
+
+  function pick() {
+    var asked = new URLSearchParams(location.search).get('lang');
+    var wanted = asked ? [asked] : (navigator.languages || [navigator.language || 'en']);
+    for (var i = 0; i < wanted.length; i++) {
+      var tag = wanted[i];
+      if (available[tag]) return tag;
+      // 'pt-PT' should land on 'pt-BR', and 'zh-CN' on 'zh-Hans': try the base language, then any
+      // sheet that starts with it, before falling through to English.
+      var base = tag.split('-')[0];
+      if (available[base]) return base;
+      for (var code in available) if (code.split('-')[0] === base) return code;
+    }
+    return 'en';
+  }
+
+  function show(code) {
+    for (var tag in available) available[tag].hidden = tag !== code;
+    document.documentElement.lang = code;
+    document.documentElement.dir = available[code].dir || 'ltr';
+    document.title = available[code].dataset.title;
+    var picker = available[code].querySelector('select');
+    if (picker) picker.value = code;
+  }
+
+  show(pick());
+
+  document.addEventListener('change', function (event) {
+    if (event.target.matches('select[data-picker]')) show(event.target.value);
+  });
+})();
+    </script>
+  </body>
+</html>

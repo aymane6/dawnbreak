@@ -1,0 +1,48 @@
+Você não dorme demais porque o alarme é baixo. Você dorme demais porque desligá-lo custa um polegar, meio segundo e nenhum pensamento.
+
+O Dawnbreak tira o polegar da conta. Para silenciar o alarme você tem que fazer algo que uma pessoa dormindo não consegue: ir até a cozinha e fotografar a chaleira, fazer dez agachamentos na frente da câmera, resolver contas que ao meio-dia pareceriam fáceis, escanear o código de barras de uma caixa em outro quarto.
+
+Quando o silêncio chega, você já está de pé.
+
+DOZE MISSÕES
+
+- Cálculo: contas com tempo limite, no tamanho da dificuldade escolhida
+- Agachamentos: quem conta é a câmera, não você
+- Foto: vá fotografar um objeto específico, em um lugar específico
+- Código de barras: escaneie a caixa que você deixou no banheiro ontem à noite
+- Sacudir: continue sacudindo até a barra encher
+- Passos: caminhe um número definido de passos, contados pelo telefone
+- Sequência: repita uma série que fica mais longa a cada rodada
+- Digitação: copie uma frase, igual, com pontuação e tudo
+- Desenho: desenhe o que for pedido, e ele verifica
+- Memória: encontre os pares
+- Respiração: sessenta segundos de respiração calma antes de ser liberado
+- Firmeza: mantenha o telefone em pé e imóvel, mais tempo do que você gostaria
+
+ELE NÃO DESISTE
+
+Pare o alarme sem terminar a missão e ele volta em cinco minutos, na tela bloqueada, com um título que diz por quê. Coloque quantas rodadas precisar: uma para um dia de semana, dez para a manhã de um voo.
+
+Ele toca na tela bloqueada pelo próprio sistema de alarmes da Apple, então funciona com o app fechado, o telefone bloqueado e o Não Perturbe ligado. Existe uma saída de emergência nos ajustes, ligada por padrão, porque um alarme que não pode ser parado é um risco e não um recurso.
+
+CADA MANHÃ, ANOTADA
+
+Noventa dias do que realmente aconteceu: a que hora você acordou, quanto durou a missão, sua sequência, e cada manhã em que você parou o alarme sem fazer a missão. Os números não são gentis, de propósito. É isso que os torna úteis.
+
+FEITO DIREITO
+
+- Doze idiomas, incluindo o árabe da direita para a esquerda, traduzidos e não passados numa máquina
+- Escuro por padrão, porque esta tela você lê às seis da manhã
+- Um widget na tela bloqueada com o próximo alarme
+- Suporte completo a VoiceOver e texto dinâmico
+- Sem conta. Sem login. Sem anúncios. Sem analytics
+- Nada sai do telefone. Não existe servidor para onde ir
+
+GRÁTIS E PRO
+
+Grátis: um alarme, uma rodada, três missões, dificuldade até média.
+
+Pro: vinte e cinco alarmes, até dez rodadas, todas as doze missões, todas as quatro dificuldades, noventa dias de histórico. Mensal, anual, ou uma compra única que nunca renova.
+
+Privacidade: https://aymane6.github.io/dawnbreak/privacy.html
+Suporte: https://aymane6.github.io/dawnbreak/support.html

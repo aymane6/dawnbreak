@@ -1,0 +1,34 @@
+Dawnbreak is an alarm clock that will not switch off until a task is completed.
+
+No account, no login, no server. Everything is stored on the device. There is nothing to give you
+credentials for.
+
+HOW TO SEE THE MAIN FEATURE IN UNDER A MINUTE
+
+1. Open the app and allow the alarm permission when asked (AlarmKit).
+2. Tap + and set the alarm one or two minutes ahead.
+3. Under Mission, pick "Math" and leave the difficulty at Easy. Save.
+4. Lock the phone and wait. The alarm rings on the lock screen through AlarmKit.
+5. Press the second button on the alert (it is labelled with the mission, not "Open"). The app
+   opens on the mission and the alarm is only silenced once the sum is answered.
+6. To see the follow-up: press "Stop" instead. The alarm returns five minutes later under the
+   title "Mission not done".
+
+PERMISSIONS, AND WHY
+
+- Alarms (AlarmKit): the whole app. Without it there is no alarm.
+- Camera: only for the three missions that use it (photograph an object, scan a barcode, count
+  squats). The frames are analysed on the device and never stored or transmitted.
+- Motion and fitness: only for the step and shake missions. Read live, never written down.
+
+There is no location, contacts, microphone, health, or tracking access of any kind, and no
+analytics SDK.
+
+IN-APP PURCHASES
+
+Three, all unlocking the same "Pro" entitlement: monthly and yearly auto-renewable subscriptions
+and a non-consumable lifetime purchase. Free gives one alarm, one round, three missions and
+difficulty up to medium; Pro gives twenty-five alarms, ten rounds, twelve missions, four
+difficulties and ninety days of history. The paywall states this, and Restore Purchases is on it.
+
+An emergency exit is available in Settings and is on by default, so no alarm can trap a user.

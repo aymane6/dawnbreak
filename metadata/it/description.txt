@@ -1,0 +1,48 @@
+Non dormi troppo perché la sveglia suona piano. Dormi troppo perché spegnerla costa un pollice, mezzo secondo e nessun pensiero.
+
+Dawnbreak toglie il pollice dall’equazione. Per far tacere la sveglia devi fare qualcosa che una persona addormentata non può fare: andare in cucina e fotografare il bollitore, fare dieci squat davanti alla fotocamera, risolvere calcoli che a mezzogiorno ti sembrerebbero facili, scansionare il codice a barre di una scatola in un’altra stanza.
+
+Quando torna il silenzio, sei in piedi.
+
+DODICI MISSIONI
+
+- Calcolo: operazioni a tempo, tarate sulla difficoltà scelta
+- Squat: li conta la fotocamera, non tu
+- Foto: vai a fotografare un oggetto preciso, in un posto preciso
+- Codice a barre: scansiona la scatola che hai lasciato in bagno ieri sera
+- Scuotere: continua a scuotere finché la barra non si riempie
+- Passi: cammina un numero di passi stabilito, contati dal telefono
+- Sequenza: ripeti una serie che si allunga a ogni turno
+- Digitazione: ricopia una frase, identica, punteggiatura compresa
+- Disegno: disegna quello che ti chiede, e viene verificato
+- Memoria: trova le coppie
+- Respiro: sessanta secondi di respirazione lenta prima di essere lasciato andare
+- Fermo: tieni il telefono dritto e immobile, più a lungo di quanto vorresti
+
+NON MOLLA
+
+Ferma la sveglia senza finire la missione e torna dopo cinque minuti, sulla schermata di blocco, con un titolo che dice perché. Imposta i turni che ti servono: uno per un giorno feriale, dieci per la mattina di un volo.
+
+Suona sulla schermata di blocco tramite il sistema di allarmi di Apple, quindi funziona con l’app chiusa, il telefono bloccato e Non disturbare attivo. C’è un’uscita di emergenza nelle impostazioni, attiva per impostazione predefinita, perché una sveglia che non si può fermare è un pericolo e non una funzione.
+
+OGNI MATTINA, SCRITTA
+
+Novanta giorni di quello che è successo davvero: a che ora ti sei svegliato, quanto è durata la missione, la tua serie, e ogni mattina in cui hai fermato la sveglia senza fare la missione. I numeri non ti lusingano, di proposito. È questo che li rende utili.
+
+FATTA COME SI DEVE
+
+- Dodici lingue, incluso l’arabo da destra a sinistra, tradotte e non passate a una macchina
+- Scura per impostazione predefinita, perché questa schermata la leggi alle sei del mattino
+- Un widget nella schermata di blocco con la prossima sveglia
+- Supporto completo per VoiceOver e testo dinamico
+- Nessun account. Nessun accesso. Nessuna pubblicità. Nessuna analisi
+- Niente lascia il telefono. Non c’è nemmeno un server dove andare
+
+GRATIS E PRO
+
+Gratis: una sveglia, un turno, tre missioni, difficoltà fino a media.
+
+Pro: venticinque sveglie, fino a dieci turni, tutte le dodici missioni, tutte e quattro le difficoltà, novanta giorni di cronologia. Mensile, annuale, o un acquisto unico che non si rinnova mai.
+
+Privacy: https://aymane6.github.io/dawnbreak/privacy.html
+Assistenza: https://aymane6.github.io/dawnbreak/support.html

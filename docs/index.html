@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Dawnbreak · The alarm you cannot switch off in your sleep</title>
+    <meta name="description" content="The alarm you cannot switch off in your sleep.">
+    <link rel="canonical" href="https://aymane6.github.io/dawnbreak/">
+    <style>
+:root {
+  color-scheme: dark;
+  --canvas: #0b0d14;
+  --canvas-top: #1a1526;
+  --ink: #f6f4f1;
+  --ink-dim: #9ba0b5;
+  --hairline: #2c3145;
+  --dawn-start: #ffa24b;
+  --dawn-end: #ff5e62;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 5rem;
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--canvas-top) 0%, transparent 60%),
+    var(--canvas);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  text-wrap: pretty;
+}
+
+.sheet { max-width: 36rem; margin: 0 auto; }
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem 0 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 2.5rem;
+}
+
+/* The wordmark, which is the app's name and is never translated. */
+.mark {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  color: var(--ink);
+  padding-bottom: 1.25rem;
+}
+
+.mark span {
+  background: linear-gradient(100deg, var(--dawn-start), var(--dawn-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A real select element, so it is reachable by keyboard and by VoiceOver without any work. */
+select {
+  appearance: none;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 1.9rem 0.35rem 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.6rem;
+  background: transparent;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+  background-position: right 0.85rem center, right 0.6rem center;
+  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--dawn-start);
+  outline-offset: 3px;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0 0 2.5rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+
+h2 {
+  margin: 2.75rem 0 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-start);
+}
+
+/* Uppercasing a Japanese or Arabic heading does nothing and letter-spacing it does harm. */
+html:lang(ar) h2, html:lang(hi) h2, html:lang(ja) h2, html:lang(ko) h2, html:lang(zh-Hans) h2 {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+p { margin: 0 0 1.1rem; }
+
+ul { margin: 0 0 1.1rem; padding-inline-start: 1.1rem; }
+
+li { margin-bottom: 0.55rem; }
+
+a { color: var(--dawn-start); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-dim);
+  font-size: 0.9375rem;
+}
+
+footer a { color: var(--ink-dim); }
+
+footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 0.75rem; }
+
+/* One language at a time. Eleven of the twelve sheets carry `hidden` in the markup, so a reader
+   with no JavaScript gets English rather than twelve copies of everything; the script moves the
+   attribute rather than adding a class, and this is what makes it bite. */
+.sheet[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="sheet" lang="en" dir="ltr" data-title="Dawnbreak · The alarm you cannot switch off in your sleep">
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="English">
+          <option value="en" selected>English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">The alarm you cannot switch off in your sleep.</p>
+        <p>You do not oversleep because your alarm is too quiet. You oversleep because stopping it takes one thumb, half a second, and no thought at all.</p>
+        <p>Dawnbreak takes the thumb out of it. To silence the alarm you have to do something a sleeping person cannot: walk to the kitchen and photograph the kettle, do ten squats in front of the camera, solve arithmetic you would find easy at noon, scan the barcode on a box in another room.</p>
+        <h2>Twelve missions</h2>
+        <p>Arithmetic, a tile pattern to reproduce, a colour sequence, a sentence to type exactly, a shake, a walk of a set number of steps, squats counted by the camera, an object to go and photograph, a barcode to scan, a drawing recognised on the device, a lap of a small game, and a round of guided breathing. Four difficulties, and as many missions in a row as you dare set.</p>
+        <h2>It does not let go</h2>
+        <p>Stop the alarm without finishing the mission and it comes back a few minutes later under a title that says so. Up to ten rounds. An emergency exit is there from the first launch, because an alarm that can trap someone is a bug, not a feature.</p>
+        <h2>Nothing leaves your phone</h2>
+        <p>No account, no server, no analytics, no third-party code of any kind. The camera frames the squat mission counts are analysed in memory and thrown away. Your alarms and your history are files on your device and nowhere else.</p>
+        <h2>Twelve languages</h2>
+        <p>English, Arabic, German, Spanish, French, Hindi, Italian, Japanese, Korean, Portuguese, Russian and Simplified Chinese, including the right-to-left layout Arabic needs rather than a mirrored afterthought.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html">Support</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ar" dir="rtl" data-title="Dawnbreak · منبّه لا يمكنك إسكاته وأنت نائم" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="العربية">
+          <option value="en">English</option>
+          <option value="ar" selected>العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">منبّه لا يمكنك إسكاته وأنت نائم.</p>
+        <p>أنت لا تتأخر في النوم لأن المنبّه هادئ جدًا، بل لأن إسكاته لا يحتاج أكثر من إبهام ونصف ثانية وبلا أي تفكير.</p>
+        <p>‏Dawnbreak يزيل الإبهام من المعادلة. لإسكات المنبّه عليك أن تفعل ما لا يقدر عليه نائم: أن تمشي إلى المطبخ وتصوّر الغلاية، أن تؤدي عشر حركات قرفصاء أمام الكاميرا، أن تحلّ مسألة حسابية تراها سهلة في منتصف النهار، أن تقرأ باركود علبة في غرفة أخرى.</p>
+        <h2>اثنتا عشرة مهمة</h2>
+        <p>حساب، نمط مربّعات تعيد رسمه، تسلسل ألوان، جملة تكتبها حرفًا بحرف، رجّة للهاتف، عدد محدد من الخطوات، قرفصاء تعدّها الكاميرا، شيء تذهب وتصوّره، باركود تقرأه، رسمة يتعرّف عليها الجهاز، لفة في لعبة صغيرة، ودورة تنفّس موجّه. أربع درجات صعوبة، وعدد المهام المتتالية متروك لجرأتك.</p>
+        <h2>لا يتركك</h2>
+        <p>أوقف المنبّه دون إنهاء المهمة وسيعود بعد دقائق تحت عنوان يقول ذلك بصراحة. حتى عشر جولات. ومخرج الطوارئ موجود من أول تشغيل، لأن منبّهًا قادرًا على حجز صاحبه هو خلل لا ميزة.</p>
+        <h2>لا شيء يخرج من هاتفك</h2>
+        <p>لا حساب، لا خادم، لا تحليلات، ولا سطر واحد من كود طرف ثالث. صور الكاميرا التي تعدّ القرفصاء تُحلَّل في الذاكرة ثم تُرمى. منبّهاتك وسجلك ملفات على جهازك ولا مكان غيره.</p>
+        <h2>اثنتا عشرة لغة</h2>
+        <p>الإنجليزية والعربية والألمانية والإسبانية والفرنسية والهندية والإيطالية واليابانية والكورية والبرتغالية والروسية والصينية المبسطة، مع تخطيط من اليمين إلى اليسار مصمّم للعربية لا مجرد انعكاس متأخر.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">الخصوصية</a>
+          <a href="support.html">الدعم</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="de" dir="ltr" data-title="Dawnbreak · Der Wecker, den du im Schlaf nicht ausschalten kannst" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Deutsch">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de" selected>Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">Der Wecker, den du im Schlaf nicht ausschalten kannst.</p>
+        <p>Du verschläfst nicht, weil der Wecker zu leise ist. Du verschläfst, weil ihn auszuschalten einen Daumen, eine halbe Sekunde und keinerlei Nachdenken kostet.</p>
+        <p>Dawnbreak nimmt den Daumen aus der Rechnung. Um den Wecker still zu bekommen, musst du etwas tun, das ein Schlafender nicht kann: in die Küche gehen und den Wasserkocher fotografieren, zehn Kniebeugen vor der Kamera machen, eine Rechnung lösen, die mittags leicht wäre, den Barcode einer Packung im Nebenzimmer scannen.</p>
+        <h2>Zwölf Missionen</h2>
+        <p>Rechnen, ein Muster nachlegen, eine Farbfolge wiederholen, einen Satz genau abtippen, das Telefon schütteln, eine festgelegte Zahl von Schritten gehen, Kniebeugen von der Kamera zählen lassen, einen Gegenstand fotografieren gehen, einen Barcode scannen, eine Zeichnung, die das Gerät erkennt, eine Runde in einem kleinen Spiel und eine Runde geführtes Atmen. Vier Schwierigkeiten, und so viele Missionen hintereinander, wie du dir zutraust.</p>
+        <h2>Er lässt nicht los</h2>
+        <p>Beende den Wecker ohne die Mission, und er kommt Minuten später zurück, unter einem Titel, der das auch sagt. Bis zu zehn Runden. Ein Notausgang ist ab dem ersten Start da, denn ein Wecker, der jemanden einsperren kann, ist ein Fehler und keine Funktion.</p>
+        <h2>Nichts verlässt dein Telefon</h2>
+        <p>Kein Konto, kein Server, keine Analyse, keine einzige Zeile Fremdcode. Die Kamerabilder, mit denen Kniebeugen gezählt werden, werden im Speicher ausgewertet und weggeworfen. Deine Wecker und deine Historie sind Dateien auf deinem Gerät und sonst nirgends.</p>
+        <h2>Zwölf Sprachen</h2>
+        <p>Englisch, Arabisch, Deutsch, Spanisch, Französisch, Hindi, Italienisch, Japanisch, Koreanisch, Portugiesisch, Russisch und Chinesisch (vereinfacht), mit dem Rechts-nach-links-Layout, das Arabisch braucht, und nicht als nachträglich gespiegelte Notlösung.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Datenschutz</a>
+          <a href="support.html">Hilfe</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="es" dir="ltr" data-title="Dawnbreak · El despertador que no puedes apagar dormido" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Español">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es" selected>Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">El despertador que no puedes apagar dormido.</p>
+        <p>No te quedas dormido porque la alarma suene poco. Te quedas dormido porque apagarla cuesta un pulgar, medio segundo y ningún pensamiento.</p>
+        <p>Dawnbreak quita el pulgar de la ecuación. Para callar la alarma tienes que hacer algo que alguien dormido no puede: ir a la cocina y fotografiar el hervidor, hacer diez sentadillas delante de la cámara, resolver una cuenta que a mediodía te parecería fácil, escanear el código de barras de una caja en otra habitación.</p>
+        <h2>Doce misiones</h2>
+        <p>Cuentas, un patrón de fichas que repetir, una secuencia de colores, una frase que escribir exacta, agitar el teléfono, andar un número fijo de pasos, sentadillas contadas por la cámara, un objeto que ir a fotografiar, un código de barras que escanear, un dibujo que el dispositivo reconoce, una vuelta en un juego pequeño y una ronda de respiración guiada. Cuatro dificultades, y tantas misiones seguidas como te atrevas a poner.</p>
+        <h2>No te suelta</h2>
+        <p>Detén la alarma sin terminar la misión y vuelve unos minutos después, con un título que lo dice. Hasta diez rondas. Hay una salida de emergencia desde el primer arranque, porque una alarma capaz de atrapar a alguien es un fallo, no una función.</p>
+        <h2>Nada sale de tu teléfono</h2>
+        <p>Sin cuenta, sin servidor, sin analítica, sin una sola línea de código ajeno. Los fotogramas con los que se cuentan las sentadillas se analizan en memoria y se descartan. Tus alarmas y tu historial son archivos en tu dispositivo y en ningún otro sitio.</p>
+        <h2>Doce idiomas</h2>
+        <p>Inglés, árabe, alemán, español, francés, hindi, italiano, japonés, coreano, portugués, ruso y chino simplificado, con la disposición de derecha a izquierda que el árabe necesita y no un reflejo puesto al final.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Privacidad</a>
+          <a href="support.html">Soporte</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="fr" dir="ltr" data-title="Dawnbreak · Le réveil qu&#x27;on ne peut pas éteindre en dormant" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Français">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr" selected>Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">Le réveil qu'on ne peut pas éteindre en dormant.</p>
+        <p>Vous ne dormez pas trop longtemps parce que le réveil est trop discret. Vous dormez trop longtemps parce que l'arrêter demande un pouce, une demi-seconde et aucune réflexion.</p>
+        <p>Dawnbreak retire le pouce de l'équation. Pour faire taire le réveil, il faut faire quelque chose qu'un dormeur ne peut pas faire : aller dans la cuisine et photographier la bouilloire, faire dix squats devant la caméra, résoudre un calcul qui serait facile à midi, scanner le code-barres d'une boîte laissée dans une autre pièce.</p>
+        <h2>Douze missions</h2>
+        <p>Du calcul, un motif à reproduire, une séquence de couleurs, une phrase à taper à l'identique, une secousse, un nombre de pas à parcourir, des squats comptés par la caméra, un objet à aller photographier, un code-barres à scanner, un dessin reconnu sur l'appareil, un tour dans un petit jeu, et un cycle de respiration guidée. Quatre difficultés, et autant de missions d'affilée que vous osez en régler.</p>
+        <h2>Il ne lâche pas</h2>
+        <p>Arrêtez le réveil sans finir la mission et il revient quelques minutes plus tard, sous un titre qui le dit. Jusqu'à dix tours. Une sortie de secours existe dès le premier lancement, parce qu'un réveil capable de piéger quelqu'un est un défaut, pas une fonctionnalité.</p>
+        <h2>Rien ne quitte votre téléphone</h2>
+        <p>Pas de compte, pas de serveur, pas de statistiques, pas une ligne de code tiers. Les images qui servent à compter les squats sont analysées en mémoire puis jetées. Vos réveils et votre historique sont des fichiers sur votre appareil, et nulle part ailleurs.</p>
+        <h2>Douze langues</h2>
+        <p>Anglais, arabe, allemand, espagnol, français, hindi, italien, japonais, coréen, portugais, russe et chinois simplifié, avec la mise en page de droite à gauche que l'arabe exige, et non un miroir posé à la fin.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Confidentialité</a>
+          <a href="support.html">Assistance</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="hi" dir="ltr" data-title="Dawnbreak · वह अलार्म जिसे आप नींद में बंद नहीं कर सकते।" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="हिन्दी">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi" selected>हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">वह अलार्म जिसे आप नींद में बंद नहीं कर सकते।</p>
+        <p>आप देर तक इसलिए नहीं सोते कि अलार्म धीमा है। आप इसलिए सोते हैं कि उसे बंद करने में एक अंगूठा, आधा सेकंड और कोई सोच नहीं लगती।</p>
+        <p>Dawnbreak उस अंगूठे को हटा देता है। अलार्म चुप कराने के लिए आपको वह करना पड़ता है जो सोया हुआ आदमी नहीं कर सकता: रसोई तक जाकर केतली की फ़ोटो लेना, कैमरे के सामने दस स्क्वैट करना, दोपहर में आसान लगने वाला गणित हल करना, दूसरे कमरे में रखे डिब्बे का बारकोड स्कैन करना।</p>
+        <h2>बारह मिशन</h2>
+        <p>गणित, दोहराने के लिए एक पैटर्न, रंगों का क्रम, हूबहू टाइप करने के लिए एक वाक्य, फ़ोन हिलाना, तय संख्या में क़दम चलना, कैमरे से गिने जाने वाले स्क्वैट, जाकर फ़ोटो लेने के लिए एक चीज़, स्कैन करने के लिए एक बारकोड, डिवाइस पर पहचानी जाने वाली एक ड्रॉइंग, एक छोटे खेल का एक चक्कर, और निर्देशित सांस का एक दौर। चार कठिनाई स्तर, और लगातार जितने मिशन आप रखने की हिम्मत करें।</p>
+        <h2>यह पीछा नहीं छोड़ता</h2>
+        <p>मिशन पूरा किए बिना अलार्म रोकें और वह कुछ मिनट बाद ऐसे शीर्षक के साथ लौट आता है जो यही कहता है। दस राउंड तक। आपातकालीन रास्ता पहली बार खोलने से ही मौजूद है, क्योंकि किसी को फंसा सकने वाला अलार्म ख़राबी है, सुविधा नहीं।</p>
+        <h2>कुछ भी आपके फ़ोन से बाहर नहीं जाता</h2>
+        <p>कोई खाता नहीं, कोई सर्वर नहीं, कोई एनालिटिक्स नहीं, किसी और का कोड एक पंक्ति भी नहीं। स्क्वैट गिनने वाले कैमरा फ़्रेम मेमोरी में जांचे जाते हैं और फेंक दिए जाते हैं। आपके अलार्म और आपका इतिहास आपके डिवाइस पर फ़ाइलें हैं, और कहीं नहीं।</p>
+        <h2>बारह भाषाएं</h2>
+        <p>अंग्रेज़ी, अरबी, जर्मन, स्पेनिश, फ़्रेंच, हिन्दी, इतालवी, जापानी, कोरियाई, पुर्तगाली, रूसी और सरलीकृत चीनी, और अरबी के लिए दाएं से बाएं का वह लेआउट जो उसे चाहिए, बाद में लगाया गया आईना नहीं।</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">गोपनीयता</a>
+          <a href="support.html">सहायता</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="it" dir="ltr" data-title="Dawnbreak · La sveglia che non puoi spegnere nel sonno" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Italiano">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it" selected>Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">La sveglia che non puoi spegnere nel sonno.</p>
+        <p>Non dormi troppo perché la sveglia è troppo bassa. Dormi troppo perché spegnerla costa un pollice, mezzo secondo e nessun pensiero.</p>
+        <p>Dawnbreak toglie il pollice dall'equazione. Per far tacere la sveglia devi fare qualcosa che chi dorme non può fare: andare in cucina e fotografare il bollitore, fare dieci squat davanti alla fotocamera, risolvere un calcolo che a mezzogiorno ti sembrerebbe facile, scansionare il codice a barre di una scatola in un'altra stanza.</p>
+        <h2>Dodici missioni</h2>
+        <p>Calcoli, uno schema di tessere da rifare, una sequenza di colori, una frase da digitare identica, una scossa, un numero fissato di passi, squat contati dalla fotocamera, un oggetto da andare a fotografare, un codice a barre da scansionare, un disegno riconosciuto sul dispositivo, un giro in un piccolo gioco e un ciclo di respirazione guidata. Quattro difficoltà, e tante missioni di fila quante hai il coraggio di impostare.</p>
+        <h2>Non ti molla</h2>
+        <p>Ferma la sveglia senza finire la missione e torna qualche minuto dopo, con un titolo che lo dice. Fino a dieci giri. Un'uscita di emergenza c'è dal primo avvio, perché una sveglia che può intrappolare qualcuno è un difetto, non una funzione.</p>
+        <h2>Niente esce dal telefono</h2>
+        <p>Nessun account, nessun server, nessuna analitica, nemmeno una riga di codice di terzi. I fotogrammi con cui si contano gli squat vengono analizzati in memoria e buttati. Le tue sveglie e il tuo storico sono file sul tuo dispositivo e in nessun altro posto.</p>
+        <h2>Dodici lingue</h2>
+        <p>Inglese, arabo, tedesco, spagnolo, francese, hindi, italiano, giapponese, coreano, portoghese, russo e cinese semplificato, con l'impaginazione da destra a sinistra che l'arabo richiede e non uno specchio messo alla fine.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html">Assistenza</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ja" dir="ltr" data-title="Dawnbreak · 寝たまま止められない目覚まし" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="日本語">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja" selected>日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">寝たまま止められない目覚まし。</p>
+        <p>寝坊するのは、目覚ましの音が小さいからではありません。止めるのに親指ひとつ、半秒、考える必要がまったくないからです。</p>
+        <p>Dawnbreak はその親指を取り除きます。アラームを黙らせるには、眠っている人にはできないことをしなければなりません。台所まで歩いてケトルを撮る、カメラの前でスクワットを十回、昼間なら簡単な計算を解く、別の部屋にある箱のバーコードを読み取る。</p>
+        <h2>ミッションは 12 種類</h2>
+        <p>計算、並べ直すタイルの模様、色の並び、一字も違わず打つ文章、端末を振る、決めた歩数を歩く、カメラが数えるスクワット、行って撮ってくる対象物、読み取るバーコード、端末が認識する手描き、小さなゲームの一周、そして誘導つきの呼吸。難易度は四段階、連続させるミッションの数は設定するあなたの度胸次第です。</p>
+        <h2>簡単には離してくれません</h2>
+        <p>ミッションを終えずに止めれば、数分後にそう書かれたタイトルで戻ってきます。最大十回。緊急脱出は初回起動から用意してあります。人を閉じ込められる目覚ましは機能ではなく不具合だからです。</p>
+        <h2>端末から何も出ていきません</h2>
+        <p>アカウントなし、サーバーなし、解析なし、他社のコードは一行もありません。スクワットを数えるカメラの映像はメモリ上で解析して捨てます。アラームと記録は端末上のファイルであり、それ以外のどこにもありません。</p>
+        <h2>12 の言語</h2>
+        <p>英語、アラビア語、ドイツ語、スペイン語、フランス語、ヒンディー語、イタリア語、日本語、韓国語、ポルトガル語、ロシア語、簡体中国語。アラビア語には後付けの鏡像ではなく、必要な右から左のレイアウトを用意しています。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">プライバシー</a>
+          <a href="support.html">サポート</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ko" dir="ltr" data-title="Dawnbreak · 잠결에는 끌 수 없는 알람" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="한국어">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko" selected>한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">잠결에는 끌 수 없는 알람.</p>
+        <p>늦잠을 자는 건 알람이 작아서가 아닙니다. 끄는 데 엄지 하나, 반 초, 그리고 생각이 전혀 필요하지 않아서입니다.</p>
+        <p>Dawnbreak는 그 엄지를 빼버립니다. 알람을 멈추려면 잠든 사람은 할 수 없는 일을 해야 합니다. 부엌까지 걸어가 주전자를 찍고, 카메라 앞에서 스쿼트를 열 번 하고, 낮이라면 쉬웠을 계산을 풀고, 다른 방에 둔 상자의 바코드를 스캔하는 일.</p>
+        <h2>미션 12가지</h2>
+        <p>계산, 다시 맞추는 타일 패턴, 색 순서, 한 글자도 틀리지 않게 치는 문장, 흔들기, 정해진 걸음 수 걷기, 카메라가 세는 스쿼트, 가서 찍어와야 하는 물건, 스캔할 바코드, 기기가 알아보는 그림, 작은 게임 한 바퀴, 그리고 호흡 한 세트. 난이도는 네 단계, 연달아 붙일 미션 수는 당신의 배짱에 달렸습니다.</p>
+        <h2>쉽게 놓아주지 않습니다</h2>
+        <p>미션을 끝내지 않고 알람을 멈추면 몇 분 뒤에 그렇게 적힌 제목으로 돌아옵니다. 최대 열 번. 비상 탈출은 첫 실행부터 있습니다. 사람을 가둘 수 있는 알람은 기능이 아니라 결함이니까요.</p>
+        <h2>휴대폰을 벗어나는 것은 없습니다</h2>
+        <p>계정 없음, 서버 없음, 분석 없음, 남의 코드는 한 줄도 없음. 스쿼트를 세는 카메라 영상은 메모리에서 분석하고 버립니다. 알람과 기록은 기기 안의 파일이며 그 밖에는 없습니다.</p>
+        <h2>12개 언어</h2>
+        <p>영어, 아랍어, 독일어, 스페인어, 프랑스어, 힌디어, 이탈리아어, 일본어, 한국어, 포르투갈어, 러시아어, 중국어 간체. 아랍어에는 나중에 붙인 거울이 아니라 필요한 오른쪽에서 왼쪽 배치를 넣었습니다.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">개인정보</a>
+          <a href="support.html">지원</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="pt-BR" dir="ltr" data-title="Dawnbreak · O despertador que você não desliga dormindo" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Português (Brasil)">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR" selected>Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">O despertador que você não desliga dormindo.</p>
+        <p>Você não dorme demais porque o despertador é baixo. Você dorme demais porque desligá-lo custa um polegar, meio segundo e nenhum pensamento.</p>
+        <p>O Dawnbreak tira o polegar da conta. Para calar o despertador você tem que fazer algo que quem está dormindo não consegue: ir até a cozinha e fotografar a chaleira, fazer dez agachamentos na frente da câmera, resolver uma conta que ao meio-dia seria fácil, escanear o código de barras de uma caixa em outro quarto.</p>
+        <h2>Doze missões</h2>
+        <p>Cálculo, um padrão de peças para repetir, uma sequência de cores, uma frase para digitar igual, sacudir o telefone, andar um número fixo de passos, agachamentos contados pela câmera, um objeto para ir fotografar, um código de barras para escanear, um desenho que o aparelho reconhece, uma volta num joguinho e uma rodada de respiração guiada. Quatro dificuldades, e quantas missões em sequência você tiver coragem de configurar.</p>
+        <h2>Ele não solta</h2>
+        <p>Pare o despertador sem terminar a missão e ele volta alguns minutos depois, com um título dizendo exatamente isso. Até dez rodadas. Existe uma saída de emergência desde a primeira abertura, porque um despertador capaz de prender alguém é um defeito, não um recurso.</p>
+        <h2>Nada sai do seu telefone</h2>
+        <p>Sem conta, sem servidor, sem analytics, sem uma linha de código de terceiros. Os quadros da câmera que contam os agachamentos são analisados na memória e descartados. Seus despertadores e seu histórico são arquivos no seu aparelho e em nenhum outro lugar.</p>
+        <h2>Doze idiomas</h2>
+        <p>Inglês, árabe, alemão, espanhol, francês, híndi, italiano, japonês, coreano, português, russo e chinês simplificado, com o layout da direita para a esquerda que o árabe precisa, e não um espelho colado no fim.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Privacidade</a>
+          <a href="support.html">Suporte</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ru" dir="ltr" data-title="Dawnbreak · Будильник, который не выключить во сне" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Русский">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru" selected>Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">Будильник, который не выключить во сне.</p>
+        <p>Вы просыпаете не потому, что будильник тихий. Вы просыпаете потому, что выключить его стоит одного пальца, половины секунды и никаких размышлений.</p>
+        <p>Dawnbreak убирает палец из этого уравнения. Чтобы будильник замолчал, нужно сделать то, чего спящий не может: дойти до кухни и снять чайник, сделать десять приседаний перед камерой, решить арифметику, которая днём кажется простой, отсканировать штрихкод коробки в другой комнате.</p>
+        <h2>Двенадцать заданий</h2>
+        <p>Арифметика, узор из плиток, который надо повторить, последовательность цветов, фраза, которую надо набрать точь-в-точь, встряхивание, заданное число шагов, приседания, которые считает камера, предмет, который надо пойти и снять, штрихкод, рисунок, распознаваемый на устройстве, круг в маленькой игре и подход дыхательного упражнения. Четыре уровня сложности, а заданий подряд — сколько хватит смелости поставить.</p>
+        <h2>Он не отпускает</h2>
+        <p>Остановите будильник, не закончив задание, и через несколько минут он вернётся под заголовком, который об этом и говорит. До десяти кругов. Аварийный выход есть с первого запуска: будильник, способный запереть человека, — это дефект, а не функция.</p>
+        <h2>Ничего не покидает телефон</h2>
+        <p>Ни учётной записи, ни сервера, ни аналитики, ни одной строки чужого кода. Кадры камеры, по которым считаются приседания, разбираются в памяти и выбрасываются. Ваши будильники и ваша история — файлы на устройстве и больше нигде.</p>
+        <h2>Двенадцать языков</h2>
+        <p>Английский, арабский, немецкий, испанский, французский, хинди, итальянский, японский, корейский, португальский, русский и упрощённый китайский, с той раскладкой справа налево, которая нужна арабскому, а не с зеркалом, приделанным напоследок.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">Конфиденциальность</a>
+          <a href="support.html">Поддержка</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="zh-Hans" dir="ltr" data-title="Dawnbreak · 睡着的时候关不掉的闹钟" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="简体中文">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans" selected>简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Dawnbreak</h1>
+        <p class="tagline">睡着的时候关不掉的闹钟。</p>
+        <p>你睡过头，不是因为闹钟太轻。是因为关掉它只需要一根拇指、半秒钟，以及完全不用想。</p>
+        <p>Dawnbreak 把那根拇指拿掉。要让闹钟安静下来，你得做一件睡着的人做不到的事：走到厨房去拍下水壶，在摄像头前做十个深蹲，解一道中午看来很简单的算术，扫描另一个房间里那个盒子上的条码。</p>
+        <h2>十二种任务</h2>
+        <p>算术、要复原的方块图案、一串颜色顺序、要一字不差打出的句子、摇一摇、走满指定的步数、由摄像头来数的深蹲、要走过去拍下的物件、要扫的条码、由设备识别的手绘、小游戏里的一圈，以及一轮引导呼吸。四种难度，连续几个任务，取决于你敢设几个。</p>
+        <h2>它不轻易放手</h2>
+        <p>没做完任务就把闹钟停掉，它会在几分钟后带着一个明说这件事的标题回来。最多十轮。紧急退出从第一次启动就在，因为一个能把人困住的闹钟是缺陷，不是功能。</p>
+        <h2>没有东西离开你的手机</h2>
+        <p>没有账号，没有服务器，没有统计分析，没有一行别人的代码。用来数深蹲的画面在内存里分析完就丢掉。你的闹钟和记录是设备上的文件，别的地方没有。</p>
+        <h2>十二种语言</h2>
+        <p>英语、阿拉伯语、德语、西班牙语、法语、印地语、意大利语、日语、韩语、葡萄牙语、俄语和简体中文，并为阿拉伯语准备了它需要的从右到左布局，而不是事后加上的一面镜子。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="privacy.html">隐私</a>
+          <a href="support.html">支持</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <script>
+(function () {
+  var sheets = document.querySelectorAll('.sheet');
+  var available = {};
+  for (var i = 0; i < sheets.length; i++) available[sheets[i].lang] = sheets[i];
+
+  function pick() {
+    var asked = new URLSearchParams(location.search).get('lang');
+    var wanted = asked ? [asked] : (navigator.languages || [navigator.language || 'en']);
+    for (var i = 0; i < wanted.length; i++) {
+      var tag = wanted[i];
+      if (available[tag]) return tag;
+      // 'pt-PT' should land on 'pt-BR', and 'zh-CN' on 'zh-Hans': try the base language, then any
+      // sheet that starts with it, before falling through to English.
+      var base = tag.split('-')[0];
+      if (available[base]) return base;
+      for (var code in available) if (code.split('-')[0] === base) return code;
+    }
+    return 'en';
+  }
+
+  function show(code) {
+    for (var tag in available) available[tag].hidden = tag !== code;
+    document.documentElement.lang = code;
+    document.documentElement.dir = available[code].dir || 'ltr';
+    document.title = available[code].dataset.title;
+    var picker = available[code].querySelector('select');
+    if (picker) picker.value = code;
+  }
+
+  show(pick());
+
+  document.addEventListener('change', function (event) {
+    if (event.target.matches('select[data-picker]')) show(event.target.value);
+  });
+})();
+    </script>
+  </body>
+</html>

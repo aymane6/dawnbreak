@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Privacy · Dawnbreak</title>
+    <meta name="description" content="The alarm you cannot switch off in your sleep.">
+    <link rel="canonical" href="https://aymane6.github.io/dawnbreak/privacy.html">
+    <style>
+:root {
+  color-scheme: dark;
+  --canvas: #0b0d14;
+  --canvas-top: #1a1526;
+  --ink: #f6f4f1;
+  --ink-dim: #9ba0b5;
+  --hairline: #2c3145;
+  --dawn-start: #ffa24b;
+  --dawn-end: #ff5e62;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 5rem;
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--canvas-top) 0%, transparent 60%),
+    var(--canvas);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  text-wrap: pretty;
+}
+
+.sheet { max-width: 36rem; margin: 0 auto; }
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem 0 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 2.5rem;
+}
+
+/* The wordmark, which is the app's name and is never translated. */
+.mark {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  color: var(--ink);
+  padding-bottom: 1.25rem;
+}
+
+.mark span {
+  background: linear-gradient(100deg, var(--dawn-start), var(--dawn-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A real select element, so it is reachable by keyboard and by VoiceOver without any work. */
+select {
+  appearance: none;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 1.9rem 0.35rem 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.6rem;
+  background: transparent;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+  background-position: right 0.85rem center, right 0.6rem center;
+  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--dawn-start);
+  outline-offset: 3px;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0 0 2.5rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+
+h2 {
+  margin: 2.75rem 0 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-start);
+}
+
+/* Uppercasing a Japanese or Arabic heading does nothing and letter-spacing it does harm. */
+html:lang(ar) h2, html:lang(hi) h2, html:lang(ja) h2, html:lang(ko) h2, html:lang(zh-Hans) h2 {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+p { margin: 0 0 1.1rem; }
+
+ul { margin: 0 0 1.1rem; padding-inline-start: 1.1rem; }
+
+li { margin-bottom: 0.55rem; }
+
+a { color: var(--dawn-start); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-dim);
+  font-size: 0.9375rem;
+}
+
+footer a { color: var(--ink-dim); }
+
+footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 0.75rem; }
+
+/* One language at a time. Eleven of the twelve sheets carry `hidden` in the markup, so a reader
+   with no JavaScript gets English rather than twelve copies of everything; the script moves the
+   attribute rather than adding a class, and this is what makes it bite. */
+.sheet[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="sheet" lang="en" dir="ltr" data-title="Privacy · Dawnbreak">
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="English">
+          <option value="en" selected>English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Privacy</h1>
+        <p>Dawnbreak collects nothing. There is no account to create, no server to talk to, and no analytics of any kind. This page is short because there is very little to describe.</p>
+        <h2>What stays on your phone</h2>
+        <p>Your alarms, the missions attached to them, your preferences and your wake-up history are written to files inside the app's own container on your device. They are never uploaded. If you back your device up to iCloud or to a computer, they are part of that backup, which is between you and Apple.</p>
+        <h2>The camera and the motion sensors</h2>
+        <p>Three missions use the camera: photographing an object, scanning a barcode, and counting squats. Frames are analysed on the device, in memory, while the mission is on screen, and are discarded as they are replaced. Nothing is written to your photo library and nothing is transmitted. Two missions read the motion sensors to count steps or detect a shake; those readings are used as they arrive and never stored.</p>
+        <h2>Purchases</h2>
+        <p>Dawnbreak Pro is sold through the App Store. Apple takes the payment and tells the app whether a purchase is active. The app never sees your name, your card, or your Apple Account.</p>
+        <h2>Children</h2>
+        <p>The app collects nothing from anyone, at any age, so there is nothing here to treat differently for a child.</p>
+        <h2>Changes</h2>
+        <p>If any of the above stops being true, this page changes in the same release that makes it untrue.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Support</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ar" dir="rtl" data-title="الخصوصية · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="العربية">
+          <option value="en">English</option>
+          <option value="ar" selected>العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>الخصوصية</h1>
+        <p>‏Dawnbreak لا يجمع أي شيء. لا حساب تُنشئه، ولا خادم يتواصل معه، ولا تحليلات من أي نوع. هذه الصفحة قصيرة لأن ما يُوصَف قليل جدًا.</p>
+        <h2>ما يبقى على هاتفك</h2>
+        <p>منبّهاتك، والمهام المرتبطة بها، وإعداداتك، وسجل استيقاظك، تُكتب في ملفات داخل حاوية التطبيق على جهازك. ولا تُرفع أبدًا. وإذا أخذت نسخة احتياطية إلى iCloud أو إلى حاسوب، فهي جزء من تلك النسخة، وذلك أمر بينك وبين Apple.</p>
+        <h2>الكاميرا وحساسات الحركة</h2>
+        <p>ثلاث مهام تستخدم الكاميرا: تصوير شيء، وقراءة باركود، وعدّ القرفصاء. تُحلَّل الصور على الجهاز، في الذاكرة، طوال وجود المهمة على الشاشة، ثم تُرمى مع وصول ما يليها. ولا يُكتب شيء في مكتبة صورك ولا يُرسل شيء. ومهمتان تقرأان حساسات الحركة لعدّ الخطوات أو اكتشاف الرجّة، وتُستخدم القراءات لحظة وصولها ولا تُخزَّن.</p>
+        <h2>المشتريات</h2>
+        <p>يُباع Dawnbreak Pro عبر App Store. تتولى Apple الدفع وتُخبر التطبيق إن كان الشراء ساريًا. ولا يرى التطبيق اسمك ولا بطاقتك ولا حساب Apple الخاص بك.</p>
+        <h2>الأطفال</h2>
+        <p>التطبيق لا يجمع شيئًا من أي شخص في أي عمر، فلا يوجد هنا ما يُعامل بشكل مختلف مع طفل.</p>
+        <h2>التغييرات</h2>
+        <p>إن توقف أي ممّا سبق عن كونه صحيحًا، فستتغير هذه الصفحة في الإصدار نفسه الذي جعله غير صحيح.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">الدعم</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="de" dir="ltr" data-title="Datenschutz · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Deutsch">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de" selected>Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Datenschutz</h1>
+        <p>Dawnbreak erhebt nichts. Es gibt kein Konto, keinen Server, mit dem gesprochen wird, und keine Analyse irgendeiner Art. Diese Seite ist kurz, weil es sehr wenig zu beschreiben gibt.</p>
+        <h2>Was auf deinem Telefon bleibt</h2>
+        <p>Deine Wecker, die daran hängenden Missionen, deine Einstellungen und deine Aufwach-Historie werden in Dateien im eigenen Container der App auf deinem Gerät geschrieben. Sie werden nie hochgeladen. Wenn du dein Gerät in iCloud oder auf einen Computer sicherst, sind sie Teil dieser Sicherung, und das ist eine Sache zwischen dir und Apple.</p>
+        <h2>Kamera und Bewegungssensoren</h2>
+        <p>Drei Missionen nutzen die Kamera: einen Gegenstand fotografieren, einen Barcode scannen, Kniebeugen zählen. Die Bilder werden auf dem Gerät im Speicher ausgewertet, solange die Mission zu sehen ist, und verworfen, sobald das nächste kommt. In deine Fotobibliothek wird nichts geschrieben und übertragen wird nichts. Zwei Missionen lesen die Bewegungssensoren, um Schritte zu zählen oder ein Schütteln zu erkennen; diese Werte werden benutzt, wie sie eintreffen, und nie gespeichert.</p>
+        <h2>Käufe</h2>
+        <p>Dawnbreak Pro wird über den App Store verkauft. Apple nimmt die Zahlung und teilt der App mit, ob ein Kauf aktiv ist. Die App sieht weder deinen Namen noch deine Karte noch deinen Apple-Account.</p>
+        <h2>Kinder</h2>
+        <p>Die App erhebt von niemandem etwas, in keinem Alter, also gibt es hier nichts, was für ein Kind anders behandelt werden müsste.</p>
+        <h2>Änderungen</h2>
+        <p>Sollte etwas davon aufhören zu stimmen, ändert sich diese Seite in derselben Version, die es nicht mehr stimmen lässt.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Hilfe</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="es" dir="ltr" data-title="Privacidad · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Español">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es" selected>Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Privacidad</h1>
+        <p>Dawnbreak no recoge nada. No hay cuenta que crear, ni servidor con el que hablar, ni analítica de ningún tipo. Esta página es corta porque hay muy poco que describir.</p>
+        <h2>Lo que se queda en tu teléfono</h2>
+        <p>Tus alarmas, las misiones que llevan asociadas, tus preferencias y tu historial de despertares se escriben en archivos dentro del contenedor propio de la app, en tu dispositivo. Nunca se suben. Si respaldas el dispositivo en iCloud o en un ordenador, forman parte de ese respaldo, que es un asunto entre tú y Apple.</p>
+        <h2>La cámara y los sensores de movimiento</h2>
+        <p>Tres misiones usan la cámara: fotografiar un objeto, escanear un código de barras y contar sentadillas. Los fotogramas se analizan en el dispositivo, en memoria, mientras la misión está en pantalla, y se descartan al llegar el siguiente. No se escribe nada en tu carrete y no se transmite nada. Dos misiones leen los sensores de movimiento para contar pasos o detectar una sacudida; esas lecturas se usan según llegan y nunca se guardan.</p>
+        <h2>Compras</h2>
+        <p>Dawnbreak Pro se vende a través del App Store. Apple cobra y le dice a la app si hay una compra activa. La app nunca ve tu nombre, tu tarjeta ni tu cuenta de Apple.</p>
+        <h2>Menores</h2>
+        <p>La app no recoge nada de nadie, a ninguna edad, así que no hay aquí nada que deba tratarse de otro modo para un menor.</p>
+        <h2>Cambios</h2>
+        <p>Si algo de lo anterior deja de ser cierto, esta página cambia en la misma versión que lo deja de serlo.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Soporte</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="fr" dir="ltr" data-title="Confidentialité · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Français">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr" selected>Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Confidentialité</h1>
+        <p>Dawnbreak ne collecte rien. Pas de compte à créer, pas de serveur à qui parler, aucune statistique d'aucune sorte. Cette page est courte parce qu'il y a très peu à décrire.</p>
+        <h2>Ce qui reste sur votre téléphone</h2>
+        <p>Vos réveils, les missions qui y sont attachées, vos préférences et votre historique de réveils sont écrits dans des fichiers à l'intérieur du conteneur de l'application, sur votre appareil. Ils ne sont jamais envoyés. Si vous sauvegardez votre appareil sur iCloud ou sur un ordinateur, ils font partie de cette sauvegarde, ce qui se joue entre vous et Apple.</p>
+        <h2>La caméra et les capteurs de mouvement</h2>
+        <p>Trois missions utilisent la caméra : photographier un objet, scanner un code-barres, compter des squats. Les images sont analysées sur l'appareil, en mémoire, pendant que la mission est à l'écran, et jetées dès que la suivante arrive. Rien n'est écrit dans votre photothèque et rien n'est transmis. Deux missions lisent les capteurs de mouvement pour compter des pas ou détecter une secousse ; ces mesures sont utilisées à mesure et jamais conservées.</p>
+        <h2>Achats</h2>
+        <p>Dawnbreak Pro est vendu via l'App Store. Apple encaisse et indique à l'application si un achat est actif. L'application ne voit jamais votre nom, votre carte ni votre compte Apple.</p>
+        <h2>Enfants</h2>
+        <p>L'application ne collecte rien de personne, à aucun âge, il n'y a donc rien ici à traiter différemment pour un enfant.</p>
+        <h2>Modifications</h2>
+        <p>Si l'un des points ci-dessus cesse d'être vrai, cette page change dans la version même qui le rend faux.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Assistance</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="hi" dir="ltr" data-title="गोपनीयता · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="हिन्दी">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi" selected>हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>गोपनीयता</h1>
+        <p>Dawnbreak कुछ भी इकट्ठा नहीं करता। कोई खाता बनाना नहीं है, कोई सर्वर से बात नहीं होती, और किसी भी तरह का एनालिटिक्स नहीं है। यह पेज छोटा है क्योंकि बताने के लिए बहुत कम है।</p>
+        <h2>आपके फ़ोन पर क्या रहता है</h2>
+        <p>आपके अलार्म, उनसे जुड़े मिशन, आपकी पसंद और आपका जागने का इतिहास आपके डिवाइस पर ऐप के अपने कंटेनर के अंदर फ़ाइलों में लिखे जाते हैं। ये कभी अपलोड नहीं होते। अगर आप डिवाइस का बैकअप iCloud या कंप्यूटर पर लेते हैं, तो ये उस बैकअप का हिस्सा होते हैं, जो आपके और Apple के बीच की बात है।</p>
+        <h2>कैमरा और मोशन सेंसर</h2>
+        <p>तीन मिशन कैमरे का इस्तेमाल करते हैं: किसी चीज़ की फ़ोटो लेना, बारकोड स्कैन करना, और स्क्वैट गिनना। फ़्रेम डिवाइस पर, मेमोरी में, तब तक जांचे जाते हैं जब तक मिशन स्क्रीन पर है, और अगला आते ही फेंक दिए जाते हैं। आपकी फ़ोटो लाइब्रेरी में कुछ नहीं लिखा जाता और कुछ भेजा नहीं जाता। दो मिशन क़दम गिनने या हिलाना पहचानने के लिए मोशन सेंसर पढ़ते हैं; वे रीडिंग आते ही इस्तेमाल होती हैं और कभी संग्रहित नहीं होतीं।</p>
+        <h2>ख़रीदारी</h2>
+        <p>Dawnbreak Pro App Store के ज़रिए बिकता है। भुगतान Apple लेता है और ऐप को बताता है कि कोई ख़रीद सक्रिय है या नहीं। ऐप आपका नाम, आपका कार्ड या आपका Apple खाता कभी नहीं देखता।</p>
+        <h2>बच्चे</h2>
+        <p>ऐप किसी भी उम्र के किसी भी व्यक्ति से कुछ इकट्ठा नहीं करता, इसलिए यहां किसी बच्चे के लिए अलग बरताव करने जैसा कुछ नहीं है।</p>
+        <h2>बदलाव</h2>
+        <p>अगर ऊपर लिखी कोई बात सच न रह जाए, तो यह पेज उसी रिलीज़ में बदल जाएगा जो उसे बदल देती है।</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">सहायता</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="it" dir="ltr" data-title="Privacy · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Italiano">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it" selected>Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Privacy</h1>
+        <p>Dawnbreak non raccoglie nulla. Non c'è un account da creare, non c'è un server con cui parlare, non c'è analitica di alcun tipo. Questa pagina è corta perché c'è molto poco da descrivere.</p>
+        <h2>Cosa resta sul telefono</h2>
+        <p>Le tue sveglie, le missioni collegate, le tue preferenze e il tuo storico dei risvegli vengono scritti in file dentro il container dell'app, sul tuo dispositivo. Non vengono mai caricati. Se fai il backup del dispositivo su iCloud o su un computer, fanno parte di quel backup, che è una questione fra te e Apple.</p>
+        <h2>La fotocamera e i sensori di movimento</h2>
+        <p>Tre missioni usano la fotocamera: fotografare un oggetto, scansionare un codice a barre, contare gli squat. I fotogrammi vengono analizzati sul dispositivo, in memoria, mentre la missione è a schermo, e scartati appena arriva il successivo. Nella tua libreria foto non viene scritto niente e niente viene trasmesso. Due missioni leggono i sensori di movimento per contare i passi o rilevare una scossa; quelle letture si usano man mano e non vengono mai salvate.</p>
+        <h2>Acquisti</h2>
+        <p>Dawnbreak Pro si vende tramite l'App Store. Apple incassa e comunica all'app se un acquisto è attivo. L'app non vede mai il tuo nome, la tua carta o il tuo account Apple.</p>
+        <h2>Bambini</h2>
+        <p>L'app non raccoglie nulla da nessuno, a nessuna età, quindi qui non c'è niente da trattare diversamente per un bambino.</p>
+        <h2>Modifiche</h2>
+        <p>Se qualcosa di quanto sopra smette di essere vero, questa pagina cambia nella stessa versione che lo rende falso.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Assistenza</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ja" dir="ltr" data-title="プライバシー · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="日本語">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja" selected>日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>プライバシー</h1>
+        <p>Dawnbreak は何も収集しません。作るアカウントはなく、通信する相手のサーバーもなく、いかなる解析もありません。このページが短いのは、書くことがほとんどないからです。</p>
+        <h2>端末に残るもの</h2>
+        <p>アラーム、それに結びついたミッション、設定、起床の記録は、端末上のアプリ専用の領域にあるファイルに書かれます。アップロードされることはありません。iCloud やコンピュータにバックアップを取れば、それはバックアップの一部になります。そこから先はあなたと Apple の間の話です。</p>
+        <h2>カメラとモーションセンサー</h2>
+        <p>カメラを使うミッションは三つです。対象物の撮影、バーコードの読み取り、スクワットの計数。映像はミッションが表示されている間、端末上のメモリで解析され、次の映像が来た時点で捨てられます。写真ライブラリには何も書き込まれず、何も送信されません。歩数の計数と振りの検出のために、二つのミッションがモーションセンサーを読みます。その値は届いたその場で使われ、記録されることはありません。</p>
+        <h2>購入について</h2>
+        <p>Dawnbreak Pro は App Store で販売されます。支払いは Apple が処理し、購入が有効かどうかだけがアプリに伝わります。アプリがあなたの名前、カード、Apple アカウントを見ることはありません。</p>
+        <h2>子どもについて</h2>
+        <p>年齢にかかわらず誰からも何も収集しないので、子どもに対して別に扱うべきものがここにはありません。</p>
+        <h2>変更</h2>
+        <p>上のどれかが事実でなくなったときは、事実でなくしたリリースと同じリリースでこのページも変わります。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">サポート</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ko" dir="ltr" data-title="개인정보 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="한국어">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko" selected>한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>개인정보</h1>
+        <p>Dawnbreak는 아무것도 수집하지 않습니다. 만들 계정도, 이야기할 서버도, 어떤 종류의 분석도 없습니다. 이 페이지가 짧은 것은 설명할 것이 거의 없기 때문입니다.</p>
+        <h2>휴대폰에 남는 것</h2>
+        <p>알람, 거기에 붙은 미션, 설정, 기상 기록은 기기 안 앱 전용 영역의 파일에 기록됩니다. 업로드되는 일은 없습니다. iCloud나 컴퓨터로 백업하면 그 백업의 일부가 되며, 그다음은 당신과 Apple 사이의 일입니다.</p>
+        <h2>카메라와 모션 센서</h2>
+        <p>카메라를 쓰는 미션은 셋입니다. 물건 촬영, 바코드 스캔, 스쿼트 계수. 영상은 미션이 화면에 있는 동안 기기 안 메모리에서 분석되고, 다음 영상이 오면 버려집니다. 사진 라이브러리에는 아무것도 기록되지 않고, 전송되는 것도 없습니다. 걸음 수를 세거나 흔들기를 감지하기 위해 두 미션이 모션 센서를 읽습니다. 그 값은 들어오는 대로 쓰이고 저장되지 않습니다.</p>
+        <h2>구매</h2>
+        <p>Dawnbreak Pro는 App Store를 통해 판매됩니다. 결제는 Apple이 처리하고, 앱에는 구매가 유효한지만 전달됩니다. 앱이 당신의 이름, 카드, Apple 계정을 보는 일은 없습니다.</p>
+        <h2>아동</h2>
+        <p>나이와 무관하게 누구에게서도 아무것도 수집하지 않으므로, 아동에게 다르게 다룰 것이 여기에는 없습니다.</p>
+        <h2>변경</h2>
+        <p>위의 내용 중 무엇이든 사실이 아니게 되면, 사실이 아니게 만든 그 릴리스에서 이 페이지도 함께 바뀝니다.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">지원</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="pt-BR" dir="ltr" data-title="Privacidade · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Português (Brasil)">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR" selected>Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Privacidade</h1>
+        <p>O Dawnbreak não coleta nada. Não há conta para criar, não há servidor com quem falar e não há analytics de nenhum tipo. Esta página é curta porque há muito pouco a descrever.</p>
+        <h2>O que fica no seu telefone</h2>
+        <p>Seus despertadores, as missões ligadas a eles, suas preferências e seu histórico de despertares são gravados em arquivos dentro do container da própria app, no seu aparelho. Nunca são enviados. Se você faz backup do aparelho no iCloud ou num computador, eles fazem parte desse backup, o que é assunto entre você e a Apple.</p>
+        <h2>A câmera e os sensores de movimento</h2>
+        <p>Três missões usam a câmera: fotografar um objeto, escanear um código de barras e contar agachamentos. Os quadros são analisados no aparelho, na memória, enquanto a missão está na tela, e descartados quando chega o seguinte. Nada é gravado na sua biblioteca de fotos e nada é transmitido. Duas missões leem os sensores de movimento para contar passos ou detectar uma sacudida; essas leituras são usadas conforme chegam e nunca guardadas.</p>
+        <h2>Compras</h2>
+        <p>O Dawnbreak Pro é vendido pela App Store. A Apple recebe o pagamento e informa à app se há uma compra ativa. A app nunca vê seu nome, seu cartão ou sua conta Apple.</p>
+        <h2>Crianças</h2>
+        <p>A app não coleta nada de ninguém, em nenhuma idade, então não há aqui nada a tratar de outro modo para uma criança.</p>
+        <h2>Alterações</h2>
+        <p>Se alguma das afirmações acima deixar de ser verdade, esta página muda na mesma versão que a torna falsa.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Suporte</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ru" dir="ltr" data-title="Конфиденциальность · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Русский">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru" selected>Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Конфиденциальность</h1>
+        <p>Dawnbreak ничего не собирает. Нет учётной записи, нет сервера, с которым он общается, нет аналитики любого рода. Эта страница короткая, потому что описывать почти нечего.</p>
+        <h2>Что остаётся на телефоне</h2>
+        <p>Ваши будильники, привязанные к ним задания, настройки и история пробуждений записываются в файлы внутри собственного контейнера приложения на вашем устройстве. Они никогда не выгружаются. Если вы делаете резервную копию устройства в iCloud или на компьютер, они входят в неё, и это уже дело между вами и Apple.</p>
+        <h2>Камера и датчики движения</h2>
+        <p>Камеру используют три задания: снять предмет, отсканировать штрихкод, посчитать приседания. Кадры разбираются на устройстве, в памяти, пока задание на экране, и выбрасываются с приходом следующего. В вашу медиатеку ничего не пишется и ничего не передаётся. Два задания читают датчики движения, чтобы считать шаги или заметить встряхивание; эти показания используются по мере поступления и никогда не сохраняются.</p>
+        <h2>Покупки</h2>
+        <p>Dawnbreak Pro продаётся через App Store. Оплату принимает Apple и сообщает приложению лишь то, активна ли покупка. Приложение никогда не видит ваше имя, вашу карту или вашу учётную запись Apple.</p>
+        <h2>Дети</h2>
+        <p>Приложение ничего не собирает ни у кого и ни в каком возрасте, поэтому здесь нечего рассматривать иначе для ребёнка.</p>
+        <h2>Изменения</h2>
+        <p>Если что-либо из перечисленного перестанет быть правдой, эта страница изменится в том же выпуске, который сделает её неправдой.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">Поддержка</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="zh-Hans" dir="ltr" data-title="隐私 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="简体中文">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans" selected>简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>隐私</h1>
+        <p>Dawnbreak 不收集任何东西。没有要注册的账号，没有要通信的服务器，也没有任何形式的统计分析。这一页很短，因为可写的实在不多。</p>
+        <h2>留在你手机上的东西</h2>
+        <p>你的闹钟、挂在闹钟上的任务、你的偏好设置和你的起床记录，都写进设备上属于这个应用自己的容器里的文件。它们从不上传。如果你把设备备份到 iCloud 或电脑，它们会在那份备份里，而那是你和 Apple 之间的事。</p>
+        <h2>摄像头与运动传感器</h2>
+        <p>有三个任务用到摄像头：拍下一件物品、扫描条码、数深蹲。画面在任务显示期间于设备内存中分析，下一帧到来时即丢弃。不会往你的照片图库里写入任何东西，也不会传出任何东西。另有两个任务读取运动传感器来数步数或识别摇动；这些读数随到随用，从不保存。</p>
+        <h2>购买</h2>
+        <p>Dawnbreak Pro 通过 App Store 销售。付款由 Apple 处理，应用只知道购买是否有效。应用永远看不到你的姓名、你的银行卡或你的 Apple 账户。</p>
+        <h2>儿童</h2>
+        <p>本应用不从任何年龄的任何人处收集任何东西，因此这里没有需要对儿童另行处理的部分。</p>
+        <h2>变更</h2>
+        <p>如果上面任何一条不再成立，这一页会在让它不再成立的那个版本里一起改。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="support.html">支持</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bammou</span></p>
+      </footer>
+    </div>
+    <script>
+(function () {
+  var sheets = document.querySelectorAll('.sheet');
+  var available = {};
+  for (var i = 0; i < sheets.length; i++) available[sheets[i].lang] = sheets[i];
+
+  function pick() {
+    var asked = new URLSearchParams(location.search).get('lang');
+    var wanted = asked ? [asked] : (navigator.languages || [navigator.language || 'en']);
+    for (var i = 0; i < wanted.length; i++) {
+      var tag = wanted[i];
+      if (available[tag]) return tag;
+      // 'pt-PT' should land on 'pt-BR', and 'zh-CN' on 'zh-Hans': try the base language, then any
+      // sheet that starts with it, before falling through to English.
+      var base = tag.split('-')[0];
+      if (available[base]) return base;
+      for (var code in available) if (code.split('-')[0] === base) return code;
+    }
+    return 'en';
+  }
+
+  function show(code) {
+    for (var tag in available) available[tag].hidden = tag !== code;
+    document.documentElement.lang = code;
+    document.documentElement.dir = available[code].dir || 'ltr';
+    document.title = available[code].dataset.title;
+    var picker = available[code].querySelector('select');
+    if (picker) picker.value = code;
+  }
+
+  show(pick());
+
+  document.addEventListener('change', function (event) {
+    if (event.target.matches('select[data-picker]')) show(event.target.value);
+  });
+})();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+Vous ne dormez pas trop parce que votre réveil est trop discret. Vous dormez trop parce que l’arrêter demande un pouce, une demi-seconde, et aucune réflexion.
+
+Dawnbreak retire le pouce de l’équation. Pour faire taire l’alarme, il faut faire quelque chose qu’une personne endormie ne peut pas faire : aller dans la cuisine et photographier la bouilloire, enchaîner dix squats face caméra, résoudre un calcul qui vous paraîtrait facile à midi, scanner le code-barres d’une boîte laissée dans une autre pièce.
+
+Quand le silence revient, vous êtes debout.
+
+DOUZE MISSIONS
+
+- Calcul : des opérations chronométrées, calibrées sur la difficulté choisie
+- Squats : comptés par la caméra, pas par vous
+- Photo : allez photographier un objet précis, à un endroit précis
+- Code-barres : scannez la boîte laissée dans la salle de bain hier soir
+- Secouer : continuez jusqu’à remplir la barre
+- Pas : marchez un nombre de pas défini, comptés par le téléphone
+- Séquence : répétez une suite qui s’allonge à chaque manche
+- Saisie : recopiez une phrase, à l’identique, ponctuation comprise
+- Dessin : dessinez ce qui est demandé, et c’est vérifié
+- Mémoire : retrouvez les paires
+- Respiration : soixante secondes de souffle posé avant d’être libéré
+- Immobilité : gardez le téléphone droit et immobile, plus longtemps que vous ne voudriez
+
+ELLE N’ABANDONNE PAS
+
+Arrêtez l’alarme sans finir la mission et elle revient cinq minutes plus tard, sur l’écran verrouillé, avec un titre qui dit pourquoi. Réglez autant de manches qu’il faut : une pour un jour de semaine, dix pour le matin d’un avion.
+
+Elle sonne sur l’écran verrouillé via le système d’alarmes d’Apple, donc app fermée, téléphone verrouillé, mode Ne pas déranger actif. Il existe une sortie d’urgence, dans les réglages, activée par défaut, parce qu’une alarme impossible à arrêter est un danger et non une fonctionnalité.
+
+CHAQUE MATIN, NOTÉ
+
+Quatre-vingt-dix jours de ce qui s’est réellement passé : l’heure du lever, la durée de la mission, votre série, et chaque matin où vous avez arrêté l’alarme sans faire la mission. Les chiffres ne flattent pas, volontairement. C’est ce qui les rend utiles.
+
+FAIT SÉRIEUSEMENT
+
+- Douze langues, dont l’arabe de droite à gauche, traduites et non passées à la machine
+- Sombre par défaut, parce que cet écran se lit à six heures du matin
+- Un widget d’écran verrouillé avec la prochaine alarme
+- Prise en charge complète de VoiceOver et du texte dynamique
+- Sans compte. Sans connexion. Sans publicité. Sans analytique
+- Rien ne quitte le téléphone. Il n’y a aucun serveur où aller
+
+GRATUIT ET PRO
+
+Gratuit : une alarme, une manche, trois missions, difficulté jusqu’à moyenne.
+
+Pro : vingt-cinq alarmes, jusqu’à dix manches, les douze missions, les quatre difficultés, quatre-vingt-dix jours d’historique. Mensuel, annuel, ou un achat unique qui ne se renouvelle jamais.
+
+Confidentialité : https://aymane6.github.io/dawnbreak/privacy.html
+Assistance : https://aymane6.github.io/dawnbreak/support.html

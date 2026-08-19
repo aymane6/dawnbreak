@@ -1,0 +1,48 @@
+Du verschläfst nicht, weil dein Wecker zu leise ist. Du verschläfst, weil ihn abzustellen einen Daumen kostet, eine halbe Sekunde und keinen einzigen Gedanken.
+
+Dawnbreak nimmt den Daumen aus der Rechnung. Um den Alarm still zu bekommen, musst du etwas tun, was ein schlafender Mensch nicht kann: in die Küche gehen und den Wasserkocher fotografieren, zehn Kniebeugen vor der Kamera machen, Kopfrechnen lösen, das dir mittags leichtfällt, den Barcode einer Packung im anderen Zimmer scannen.
+
+Wenn es still wird, bist du auf.
+
+ZWÖLF MISSIONEN
+
+- Rechnen: Aufgaben mit Zeitlimit, passend zur gewählten Schwierigkeit
+- Kniebeugen: von der Kamera gezählt, nicht von dir
+- Foto: einen bestimmten Gegenstand an einem bestimmten Ort fotografieren
+- Barcode: die Packung scannen, die du abends im Bad gelassen hast
+- Schütteln: weiterschütteln, bis der Balken voll ist
+- Schritte: eine festgelegte Zahl von Schritten gehen, vom Telefon gezählt
+- Muster: eine Folge wiederholen, die mit jeder Runde länger wird
+- Tippen: einen Satz abschreiben, genau, mit Satzzeichen
+- Zeichnen: zeichnen, was verlangt wird, und es wird geprüft
+- Gedächtnis: die Paare finden
+- Atmen: sechzig Sekunden ruhiges Atmen, bevor du freikommst
+- Halten: das Telefon aufrecht stillhalten, länger als dir lieb ist
+
+ER LÄSST NICHT LOCKER
+
+Stell den Alarm ohne fertige Mission ab, und er kommt in fünf Minuten zurück, auf den Sperrbildschirm, mit einem Titel, der sagt warum. Stelle so viele Runden ein, wie du brauchst: eine für einen Werktag, zehn für den Morgen eines Flugs.
+
+Er klingelt über Apples eigenes Alarmsystem auf dem Sperrbildschirm, also bei geschlossener App, gesperrtem Telefon und aktivem Nicht-Störmodus. Es gibt einen Notausgang in den Einstellungen, standardmäßig an, denn ein Alarm, der sich nicht abstellen lässt, ist eine Gefahr und kein Feature.
+
+JEDER MORGEN, AUFGESCHRIEBEN
+
+Neunzig Tage von dem, was wirklich passiert ist: wann du aufgestanden bist, wie lange die Mission gedauert hat, deine Serie, und jeder Morgen, an dem du den Alarm ohne Mission gestoppt hast. Die Zahlen schmeicheln absichtlich nicht. Genau das macht sie brauchbar.
+
+ORDENTLICH GEBAUT
+
+- Zwölf Sprachen, inklusive Arabisch von rechts nach links, übersetzt und nicht durchgeschickt
+- Dunkel von Haus aus, weil du diesen Bildschirm um sechs Uhr morgens liest
+- Ein Sperrbildschirm-Widget mit dem nächsten Alarm
+- Vollständige VoiceOver-Unterstützung und Dynamic Type
+- Kein Konto. Kein Login. Keine Werbung. Keine Analytics
+- Nichts verlässt das Telefon. Es gibt keinen Server, zu dem es könnte
+
+GRATIS UND PRO
+
+Gratis: ein Alarm, eine Runde, drei Missionen, Schwierigkeit bis mittel.
+
+Pro: 25 Alarme, bis zu zehn Runden, alle zwölf Missionen, alle vier Schwierigkeitsgrade, neunzig Tage Verlauf. Monatlich, jährlich, oder ein Einmalkauf, der sich nie verlängert.
+
+Datenschutz: https://aymane6.github.io/dawnbreak/privacy.html
+Support: https://aymane6.github.io/dawnbreak/support.html

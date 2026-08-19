@@ -1,0 +1,48 @@
+You do not oversleep because your alarm is too quiet. You oversleep because stopping it takes one thumb, half a second, and no thought at all.
+
+Dawnbreak takes the thumb out of it. To silence the alarm you have to do something a sleeping person cannot: walk to the kitchen and photograph the kettle, do ten squats in front of the camera, solve arithmetic you would find easy at noon, scan the barcode on a box in another room.
+
+By the time it goes quiet, you are up.
+
+TWELVE MISSIONS
+
+- Math: sums with a time limit, sized to the difficulty you chose
+- Squats: counted by the camera, not by you
+- Photo: go and photograph a specific object, in a specific place
+- Barcode: scan the box you left in the bathroom last night
+- Shake: keep shaking until the bar fills
+- Steps: walk a set number of steps, counted by the phone
+- Pattern: repeat a sequence that gets longer each round
+- Typing: type a sentence out, exactly, punctuation and all
+- Drawing: draw what it asks for, and it checks
+- Memory: find the pairs
+- Breathe: sixty seconds of paced breathing before you are let go
+- Hold: hold still, phone upright, for longer than you want to
+
+IT DOES NOT LET GO
+
+Stop the alarm without finishing the mission and it comes back in five minutes, on the lock screen, under a title that says why. Set as many rounds as you need: one for a weekday, ten for the morning of a flight.
+
+It rings on the lock screen through Apple's own alarm system, so it works with the app closed, the phone locked, and Do Not Disturb on. There is an emergency exit, in Settings, on by default, because an alarm that cannot be stopped is a hazard and not a feature.
+
+EVERY MORNING, WRITTEN DOWN
+
+Ninety days of what actually happened: when you woke, how long the mission took, your streak, and every morning you stopped the alarm without doing the mission. The numbers are unflattering on purpose. That is what makes them useful.
+
+BUILT PROPERLY
+
+- Twelve languages, including right-to-left Arabic, translated rather than machine-processed
+- Dark by default, because you read this screen at 6am
+- A lock screen widget with the next alarm
+- Full VoiceOver support and Dynamic Type
+- No account. No sign-in. No adverts. No analytics
+- Nothing leaves the phone. There is no server to leave it to
+
+FREE AND PRO
+
+Free: one alarm, one round, three missions, difficulty up to medium.
+
+Pro: twenty-five alarms, up to ten rounds, all twelve missions, all four difficulties, ninety days of history. Monthly, yearly, or a one-time purchase that never renews.
+
+Privacy policy: https://aymane6.github.io/dawnbreak/privacy.html
+Support: https://aymane6.github.io/dawnbreak/support.html
