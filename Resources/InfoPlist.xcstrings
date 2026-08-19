@@ -1,0 +1,237 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSAlarmKitUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak needs to schedule alarms that ring even when your iPhone is silenced or in a Focus mode. Without this, an alarm you set may never sound."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحتاج Dawnbreak إلى جدولة منبهات ترن حتى عندما يكون الـ iPhone صامتاً أو في نمط تركيز. بدون ذلك، قد لا يرن المنبه الذي ضبطته أبداً."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak muss Alarme planen, die auch bei stummgeschaltetem iPhone oder in einem Fokus klingeln. Ohne diese Berechtigung kann ein gestellter Alarm stumm bleiben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak necesita programar alarmas que suenen incluso con el iPhone silenciado o en un modo de concentración. Sin esto, una alarma que pongas puede no sonar nunca."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak doit programmer des alarmes qui sonnent même lorsque l’iPhone est silencieux ou en mode de concentration. Sans cela, une alarme que vous réglez risque de ne jamais sonner."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak को ऐसे अलार्म शेड्यूल करने की ज़रूरत है जो iPhone साइलेंट या फ़ोकस मोड में होने पर भी बजें। इसके बिना आपका सेट किया अलार्म कभी नहीं बज सकता।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak deve pianificare sveglie che suonino anche con l’iPhone silenziato o in una Full Immersion. Senza questo, una sveglia che imposti potrebbe non suonare mai."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak は、iPhone が消音中や集中モード中でも鳴るアラームを設定する必要があります。この許可がないと、設定したアラームが鳴らないことがあります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak는 iPhone이 무음이거나 집중 모드일 때에도 울리는 알람을 예약해야 합니다. 이 권한이 없으면 설정한 알람이 울리지 않을 수 있습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Dawnbreak precisa agendar alarmes que toquem mesmo com o iPhone no silencioso ou em um modo de Foco. Sem isso, um alarme que você criar pode nunca tocar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak должен ставить будильники, которые звонят даже при выключенном звуке или включённом фокусировании. Без этого поставленный будильник может не прозвонить."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dawnbreak 需要设置即使 iPhone 处于静音或专注模式也会响的闹钟。没有此权限，你设定的闹钟可能永远不会响。"
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera is used only while you are completing a wake-up mission: counting squats, reading a barcode you chose, or checking the photo you take. Nothing is recorded, saved, or sent anywhere."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُستخدم الكاميرا فقط أثناء إنجاز مهمة الاستيقاظ: عدّ القرفصاء، قراءة باركود اخترته، أو التحقق من الصورة التي تأخذها. لا شيء يُسجَّل أو يُحفظ أو يُرسل إلى أي مكان."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Kamera wird nur während einer Weck-Mission genutzt: Kniebeugen zählen, einen von dir gewählten Barcode lesen oder das Foto prüfen, das du machst. Nichts wird aufgezeichnet, gespeichert oder versendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara se usa solo mientras completas una misión de despertar: contar sentadillas, leer un código que elegiste o comprobar la foto que haces. Nada se graba, se guarda ni se envía."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La caméra n’est utilisée que pendant une mission de réveil : compter des squats, lire un code-barres que vous avez choisi ou vérifier la photo que vous prenez. Rien n’est enregistré, conservé ni envoyé."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "कैमरा सिर्फ़ जगाने वाले मिशन के दौरान इस्तेमाल होता है: स्क्वैट गिनना, आपका चुना बारकोड पढ़ना, या आपकी ली गई फ़ोटो जाँचना। कुछ भी रिकॉर्ड, सेव या कहीं भेजा नहीं जाता।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fotocamera è usata solo mentre completi una missione di risveglio: contare gli squat, leggere un codice che hai scelto o verificare la foto che scatti. Niente viene registrato, salvato o inviato."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カメラは起床ミッションの実行中にのみ使用します。スクワットを数える、選んだバーコードを読み取る、撮った写真を確認する、といった用途です。記録・保存・送信は一切行いません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카메라는 기상 미션을 수행하는 동안에만 사용됩니다. 스쿼트를 세거나, 직접 고른 바코드를 읽거나, 찍은 사진을 확인할 때입니다. 어떤 것도 녹화·저장·전송되지 않습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmera é usada apenas enquanto você completa uma missão de despertar: contar agachamentos, ler um código que você escolheu ou verificar a foto que você tira. Nada é gravado, salvo ou enviado."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камера используется только во время утреннего задания: подсчёт приседаний, чтение выбранного вами штрих-кода или проверка сделанного снимка. Ничего не записывается, не сохраняется и никуда не отправляется."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机仅在你完成起床任务时使用：数深蹲、读取你选定的条码，或检查你拍下的照片。不会录制、保存或发送任何内容。"
+          }
+        }
+      }
+    },
+    "NSMotionUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motion data is used only while you are completing a wake-up mission, to count your steps or detect that you shook your iPhone. It stays on this device."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُستخدم بيانات الحركة فقط أثناء إنجاز مهمة الاستيقاظ، لعدّ خطواتك أو لمعرفة أنك رجّجت الـ iPhone. تبقى على هذا الجهاز."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewegungsdaten werden nur während einer Weck-Mission genutzt, um Schritte zu zählen oder zu erkennen, dass du das iPhone geschüttelt hast. Sie bleiben auf diesem Gerät."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los datos de movimiento se usan solo mientras completas una misión de despertar, para contar tus pasos o detectar que has agitado el iPhone. Se quedan en este dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les données de mouvement ne servent que pendant une mission de réveil, pour compter vos pas ou détecter que vous avez secoué l’iPhone. Elles restent sur cet appareil."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "मोशन डेटा सिर्फ़ जगाने वाले मिशन के दौरान इस्तेमाल होता है, आपके कदम गिनने या यह पहचानने के लिए कि आपने iPhone हिलाया। यह इसी डिवाइस पर रहता है।"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I dati di movimento sono usati solo mentre completi una missione di risveglio, per contare i passi o rilevare che hai scosso l’iPhone. Restano su questo dispositivo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "モーションデータは起床ミッションの実行中にのみ使用し、歩数を数えたり iPhone を振ったことを検出します。データはこの端末内に留まります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "동작 데이터는 기상 미션을 수행하는 동안에만 사용되어 걸음 수를 세거나 iPhone을 흔들었는지 감지합니다. 이 기기에만 남습니다."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os dados de movimento são usados apenas enquanto você completa uma missão de despertar, para contar seus passos ou detectar que você sacudiu o iPhone. Ficam neste dispositivo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Данные движения используются только во время утреннего задания, чтобы считать шаги или определить, что вы встряхнули iPhone. Они остаются на этом устройстве."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "运动数据仅在你完成起床任务时使用，用于计步或判断你是否摇动了 iPhone。数据只保留在本机。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
