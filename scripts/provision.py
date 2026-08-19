@@ -33,10 +33,10 @@ Credentials come from the environment and are never in the repository:
     export ASC_KEY_ID=XXXXXXXXXX
     export ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
-with the private key at ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8. The JWT is signed
-by openssl rather than a Python library, so this needs nothing installed that Xcode does not already
-bring. The certificate's own private key is generated locally, goes into the login keychain, and is
-written nowhere else.
+with the private key at ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8. The client and its
+token are in scripts/asc.py, which signs with openssl rather than a Python library so that this
+needs nothing installed that Xcode does not already bring. The certificate's own private key is
+generated locally, goes into the login keychain, and is written nowhere else.
 
 Exit code is 1 if the Release build could not be signed with what is now in place.
 """
@@ -45,147 +45,26 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import json
-import os
 import plistlib
 import re
 import subprocess
-import sys
 import tempfile
-import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
-BASE = "https://api.appstoreconnect.apple.com"
-TEAM = "2Y97DK7UM4"
+from asc import BOLD, Client, RESET, TEAM, bad, die, good, run, say, warn
+
 APP_GROUP = "group.com.aymbam.dawnbreak"
 CERTIFICATE_TYPE = "DISTRIBUTION"
 PROFILE_TYPE = "IOS_APP_STORE"
 # Where Xcode reads installed profiles from. `xcodebuild` will not fetch one for a manually signed
 # target unless it is already here, which is the whole point of installing them.
 PROFILE_DIRECTORY = Path.home() / "Library" / "Developer" / "Xcode" / "UserData" / "Provisioning Profiles"
-# The same folders scripts/release.sh searches, in the same order, so a key that works for one works
-# for the other.
-KEY_FOLDERS = ("./private_keys", "~/private_keys", "~/.private_keys", "~/.appstoreconnect/private_keys")
 
 # name in the portal, bundle id, profile name. The profile names are the contract with project.yml.
 TARGETS = (
     ("Dawnbreak", "com.aymbam.dawnbreak", "Dawnbreak App Store"),
     ("Dawnbreak Widget", "com.aymbam.dawnbreak.widget", "Dawnbreak Widget App Store"),
 )
-
-BOLD, GREEN, YELLOW, RED, RESET = "\033[1m", "\033[1;32m", "\033[1;33m", "\033[1;31m", "\033[0m"
-
-
-def say(message: str) -> None:
-    print(f"\033[1;36m==>{RESET} {message}")
-
-
-def good(label: str, detail: str = "") -> None:
-    print(f"  {GREEN}✓{RESET} {label:<34} {detail}")
-
-
-def bad(label: str) -> None:
-    print(f"  {RED}✗{RESET} {label}")
-
-
-def die(message: str) -> None:
-    print(f"{RED}provision:{RESET} {message}", file=sys.stderr)
-    raise SystemExit(1)
-
-
-def run(*command: str, stdin: bytes | None = None) -> bytes:
-    """A subprocess that fails loudly. openssl and security both report on stderr."""
-    result = subprocess.run(command, input=stdin, capture_output=True, check=False)
-    if result.returncode != 0:
-        die(f"{command[0]} failed: {result.stderr.decode(errors='replace').strip()}")
-    return result.stdout
-
-
-# ---------------------------------------------------------------------------
-# The API
-# ---------------------------------------------------------------------------
-
-
-def credentials() -> tuple[str, str, Path]:
-    key_id = os.environ.get("ASC_KEY_ID")
-    issuer = os.environ.get("ASC_ISSUER_ID")
-    if not key_id or not issuer:
-        die("set ASC_KEY_ID and ASC_ISSUER_ID (App Store Connect, Users and Access, Integrations)")
-    for folder in KEY_FOLDERS:
-        candidate = Path(folder).expanduser() / f"AuthKey_{key_id}.p8"
-        if candidate.is_file():
-            return key_id, issuer, candidate
-    die(f"no AuthKey_{key_id}.p8 in ~/.appstoreconnect/private_keys/")
-    raise AssertionError  # unreachable, for the type checker
-
-
-def base64url(raw: bytes) -> str:
-    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode()
-
-
-def raw_signature(der: bytes) -> bytes:
-    """ECDSA in DER, which is what openssl emits, to the fixed 64 bytes JOSE wants.
-
-    DER wraps r and s as INTEGERs: each is minimally encoded, so it may carry a leading zero byte
-    to stay positive, or be shorter than 32 bytes. ES256 wants both padded to exactly 32.
-    """
-    if der[0] != 0x30:
-        die("openssl did not produce a DER signature")
-    index = 2 if der[1] < 0x80 else 3
-    parts = []
-    for _ in range(2):
-        if der[index] != 0x02:
-            die("openssl did not produce a DER signature")
-        length = der[index + 1]
-        parts.append(der[index + 2 : index + 2 + length].lstrip(b"\x00").rjust(32, b"\x00"))
-        index += 2 + length
-    return b"".join(parts)
-
-
-def token(key_id: str, issuer: str, key_path: Path) -> str:
-    """ES256, signed by openssl, valid for ten minutes. Apple's ceiling is twenty."""
-    now = int(time.time())
-    header = base64url(json.dumps({"alg": "ES256", "kid": key_id, "typ": "JWT"}).encode())
-    claims = base64url(json.dumps(
-        {"iss": issuer, "iat": now, "exp": now + 600, "aud": "appstoreconnect-v1"}
-    ).encode())
-    signing_input = f"{header}.{claims}".encode()
-    der = run("openssl", "dgst", "-sha256", "-sign", str(key_path), stdin=signing_input)
-    return f"{header}.{claims}.{base64url(raw_signature(der))}"
-
-
-class Client:
-    def __init__(self) -> None:
-        self.key_id, self.issuer, self.key_path = credentials()
-
-    def call(self, method: str, path: str, body: dict | None = None) -> tuple[int, dict]:
-        request = urllib.request.Request(
-            BASE + path,
-            method=method,
-            data=json.dumps(body).encode() if body else None,
-            headers={
-                "Authorization": f"Bearer {token(self.key_id, self.issuer, self.key_path)}",
-                "Content-Type": "application/json",
-            },
-        )
-        try:
-            with urllib.request.urlopen(request) as response:
-                return response.status, json.loads(response.read() or b"{}")
-        except urllib.error.HTTPError as error:
-            raw = error.read()
-            try:
-                return error.code, json.loads(raw)
-            except json.JSONDecodeError:
-                return error.code, {"raw": raw.decode(errors="replace")[:400]}
-
-    def expect(self, method: str, path: str, body: dict | None = None) -> dict:
-        status, payload = self.call(method, path, body)
-        if status >= 300:
-            detail = "; ".join(e.get("detail", "") for e in payload.get("errors", [])) or json.dumps(payload)[:300]
-            die(f"{method} {path} answered {status}: {detail}")
-        return payload
 
 
 # ---------------------------------------------------------------------------
@@ -353,7 +232,7 @@ def main() -> int:
 
     print()
     if missing_group:
-        print(f"{YELLOW}provision:{RESET} the profiles cannot sign this app yet.\n")
+        warn("the profiles cannot sign this app yet.\n")
         print(f"  {APP_GROUP} does not exist in the developer portal, and the App Store Connect API")
         print("  has no endpoint that can create one. Once, by hand, signed in as the account holder:\n")
         print("    developer.apple.com/account → Identifiers → App Groups → +")

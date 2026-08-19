@@ -244,7 +244,17 @@ Run either on its own at any time.
 
 ## Release: App Store
 
-Everything the submission needs is in the repo:
+```sh
+python3 scripts/iap.py        # the subscription group, both subscriptions, the lifetime purchase
+python3 scripts/publish.py    # the listing: copy, screenshots, categories, review details
+```
+
+The same three credentials as TestFlight and nothing else; both share `scripts/asc.py` with
+`release.sh`. Both look everything up before writing it, so a second run edits what the first one
+made instead of making another one, and both stop with the same sentence if the app record does not
+exist yet.
+
+Everything they send is in the repo:
 
 | | |
 | --- | --- |
@@ -252,14 +262,30 @@ Everything the submission needs is in the repo:
 | `metadata/review_information/` | the reviewer's notes and the contact |
 | `metadata/{copyright,primary_category,secondary_category}.txt` | set once |
 | `build/shots/framed/<locale>/` | six screenshots each, 1320x2868 |
+| `build/shots/review/paywall.png` | the purchase screen, sent with all three products, published nowhere |
+| `Configuration/Dawnbreak.storekit` | the ids, prices and durations of the three products |
 | `docs/privacy.html` | the privacy policy the listing links, in twelve languages |
 
-The layout is fastlane `deliver`'s, so `fastlane deliver` uploads it as it stands. It is equally
-readable by hand: one file per field, which is a legible diff in a way a JSON string is not.
+One file per field, which is a legible diff in a way a JSON payload is not, and the same layout
+fastlane's `deliver` reads for metadata. Nothing here runs fastlane. `publish.py` uploads the files
+themselves rather than asking the generators again, so what Apple receives is what `git diff` showed.
 
-Four things are not in the repo and cannot be. The first two need a signed-in human because Apple
-exposes them nowhere else: the App Store Connect API answers `POST /v1/apps` with
-`The resource 'apps' does not allow 'CREATE'`, and has no app-group resource at all.
+`iap.py` creates the group, the two subscriptions and the non-consumable, twelve localizations each,
+the price in the base territory, the free introductory week on the yearly plan, and the review
+screenshot on all three. Then it asks Apple for each product's state and prints it: `MISSING_METADATA`
+against `READY_TO_SUBMIT` is the only honest answer to whether a product is finished, and it is
+Apple's answer rather than the script's.
+
+`publish.py` writes the app info (name, subtitle and privacy URL in twelve languages, plus the two
+categories), version 1.0.0, the twelve version localizations, the review details, the age rating
+questionnaire, a free price schedule, and the seventy-two screenshots into the 6.9-inch set, then
+attaches the newest processed build. It does not submit for review, and will not: that step is
+irreversible from a script's point of view, and the page deserves to be read once by a person the way
+a reviewer will read it.
+
+Three things stay with a signed-in human, because Apple exposes them nowhere else: the API answers
+`POST /v1/apps` with `The resource 'apps' does not allow 'CREATE'`, and has no app-group resource at
+all.
 
 1. **The app record.** Create it once in App Store Connect with bundle id `com.aymbam.dawnbreak`,
    the name from `metadata/en-US/name.txt`, primary language English. Nothing can be uploaded to
@@ -267,14 +293,12 @@ exposes them nowhere else: the App Store Connect API answers `POST /v1/apps` wit
    found".
 2. **The App Group.** `group.com.aymbam.dawnbreak`, at developer.apple.com, ticked on both App IDs.
    See the TestFlight section above; `scripts/provision.py` does the rest.
-3. **The three in-app purchases.** Ids, prices and durations are in
-   `Configuration/Dawnbreak.storekit`; recreate them in App Store Connect and attach the same
-   localized names. A subscription needs a review screenshot of the paywall, which is
-   `build/shots/framed/en-US/`.
-4. **The review contact.** `CONTACT` in `scripts/make_metadata.py` still holds a placeholder email
-   and phone number, and the preflight fails on both by design. Put real ones in, re-run
-   `make_metadata.py`. Apple uses them when a review stalls, and an invented value costs a review
-   cycle rather than saving one.
+3. **The review contact.** `CONTACT` in `scripts/make_metadata.py` still holds a placeholder email
+   and phone number, and the preflight fails on both by design, as does `publish.py` rather than
+   sending them. Put real ones in and re-run `make_metadata.py`. Apple uses them when a review
+   stalls, and an invented value costs a review cycle rather than saving one.
+
+Then, in App Store Connect: read the version page, Add for Review, Submit.
 
 The privacy answers in App Store Connect are "Data Not Collected", which is what
 `Resources/PrivacyInfo.xcprivacy` declares and what the privacy policy says. Nothing here has an

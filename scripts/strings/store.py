@@ -738,6 +738,107 @@ MISSION_COUNT_WORD = {
     "zh-Hans": "十二",
 }
 
+# ---------------------------------------------------------------------------
+# What the three products are called in the App Store
+# ---------------------------------------------------------------------------
+#
+# Not part of the listing, which is why these are not in FIELDS and get written to no file:
+# `scripts/iap.py` sends them straight to App Store Connect, because in-app purchases are their own
+# resources there and fastlane's metadata folder has nowhere to put them.
+#
+# Tighter limits than anything above: 30 characters for a display name and 45 for a description,
+# and Apple rejects the product rather than truncating. `iap.py` checks both before its first call.
+
+# The subscription group, which the App Store shows above the two plans. One string, not twelve:
+# "Dawnbreak Pro" is a product name, and NAME above already explains why those are not translated.
+IAP_GROUP_NAME = "Dawnbreak Pro"
+
+# The name of each plan, under its price. "Pro" and then the period, because the group name is
+# already on screen above it: repeating "Dawnbreak" here would spend a third of the thirty
+# characters on a word the reader has just read. The period words are the ones the app's own paywall
+# uses, so a reader who saw the paywall sees the same word in the confirmation sheet.
+IAP_NAME = {
+    "monthly": {
+        "en-US": "Pro Monthly",
+        "ar-SA": "Pro شهري",
+        "de-DE": "Pro monatlich",
+        "es-ES": "Pro mensual",
+        "fr-FR": "Pro mensuel",
+        "hi": "Pro मासिक",
+        "it": "Pro mensile",
+        "ja": "Pro 月額",
+        "ko": "Pro 월간",
+        "pt-BR": "Pro mensal",
+        "ru": "Pro на месяц",
+        "zh-Hans": "Pro 按月",
+    },
+    "yearly": {
+        "en-US": "Pro Yearly",
+        "ar-SA": "Pro سنوي",
+        "de-DE": "Pro jährlich",
+        "es-ES": "Pro anual",
+        "fr-FR": "Pro annuel",
+        "hi": "Pro वार्षिक",
+        "it": "Pro annuale",
+        "ja": "Pro 年額",
+        "ko": "Pro 연간",
+        "pt-BR": "Pro anual",
+        "ru": "Pro на год",
+        "zh-Hans": "Pro 按年",
+    },
+    "lifetime": {
+        "en-US": "Pro Lifetime",
+        "ar-SA": "Pro للأبد",
+        "de-DE": "Pro für immer",
+        "es-ES": "Pro para siempre",
+        "fr-FR": "Pro à vie",
+        "hi": "Pro हमेशा के लिए",
+        "it": "Pro per sempre",
+        "ja": "Pro 買い切り",
+        "ko": "Pro 평생",
+        "pt-BR": "Pro para sempre",
+        "ru": "Pro навсегда",
+        "zh-Hans": "Pro 永久",
+    },
+}
+
+# The line under the name, in 45 characters. The three numbers are the real ones from `Entitlement`,
+# the same ones the description and the review notes quote, because a purchase sheet that promises
+# more than the binary gives is where a 2.3.1 rejection starts. Nothing here mentions the free week
+# on the yearly plan: eligibility for an introductory offer depends on the account, so the App Store
+# draws it from the offer itself and copy that states it would be wrong for anyone who has had it.
+IAP_DESCRIPTION = {
+    "en-US": "12 missions, 25 alarms, every difficulty.",
+    "ar-SA": "١٢ مهمة، ٢٥ منبهاً، كل الصعوبات.",
+    "de-DE": "12 Missionen, 25 Alarme, alle Stufen.",
+    "es-ES": "12 misiones, 25 alarmas, 4 dificultades.",
+    "fr-FR": "12 missions, 25 alarmes, 4 difficultés.",
+    "hi": "12 मिशन, 25 अलार्म, हर कठिनाई।",
+    "it": "12 missioni, 25 sveglie, 4 difficoltà.",
+    "ja": "ミッション12種、アラーム25個、全難易度。",
+    "ko": "미션 12가지, 알람 25개, 모든 난이도.",
+    "pt-BR": "12 missões, 25 alarmes, 4 dificuldades.",
+    "ru": "12 заданий, 25 будильников, 4 сложности.",
+    "zh-Hans": "12种任务、25个闹钟、全部难度。",
+}
+
+# The lifetime purchase says what it is instead of how hard it is, because the one question a
+# non-consumable has to answer next to two subscriptions is whether it renews.
+IAP_DESCRIPTION_LIFETIME = {
+    "en-US": "12 missions, 25 alarms. One payment.",
+    "ar-SA": "١٢ مهمة، ٢٥ منبهاً. دفعة واحدة.",
+    "de-DE": "12 Missionen, 25 Alarme. Einmalig zahlen.",
+    "es-ES": "12 misiones, 25 alarmas. Un solo pago.",
+    "fr-FR": "12 missions, 25 alarmes. Un seul paiement.",
+    "hi": "12 मिशन, 25 अलार्म। एक बार भुगतान।",
+    "it": "12 missioni, 25 sveglie. Pagamento unico.",
+    "ja": "ミッション12種、アラーム25個。買い切り。",
+    "ko": "미션 12가지, 알람 25개. 한 번만 결제.",
+    "pt-BR": "12 missões, 25 alarmes. Pagamento único.",
+    "ru": "12 заданий, 25 будильников. Один платёж.",
+    "zh-Hans": "12种任务、25个闹钟。一次买断。",
+}
+
 FIELDS = (
     ("name", NAME, 30),
     ("subtitle", SUBTITLE, 30),
@@ -752,4 +853,15 @@ SHARED = (
     ("support_url", SUPPORT_URL),
     ("privacy_url", PRIVACY_URL),
     ("marketing_url", MARKETING_URL),
+)
+
+#: The product tables, in the same (name, table, limit) shape as FIELDS. These are written to no
+#: file, so without this nothing but App Store Connect would ever check them: `scripts/iap.py`
+#: reads it before its first call and `scripts/asc-preflight.py` reads it without a network.
+PRODUCT_FIELDS = (
+    ("iap_name/monthly", IAP_NAME["monthly"], 30),
+    ("iap_name/yearly", IAP_NAME["yearly"], 30),
+    ("iap_name/lifetime", IAP_NAME["lifetime"], 30),
+    ("iap_description", IAP_DESCRIPTION, 45),
+    ("iap_description/lifetime", IAP_DESCRIPTION_LIFETIME, 45),
 )

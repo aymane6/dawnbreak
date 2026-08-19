@@ -349,6 +349,43 @@ def products():
     return f"{len(declared)} products", problems
 
 
+@check("every product is named and described in twelve languages", testflight=False)
+def product_copy():
+    """`store.PRODUCT_FIELDS`, which is written to no file and therefore checked by nothing else.
+
+    The listing copy has `metadata/`, so a missing locale shows up as a missing file. The product
+    copy goes straight from Python to App Store Connect, so without this the first thing to notice a
+    thirty-one character display name is Apple, halfway through `scripts/iap.py`, on the second of
+    three products.
+    """
+    problems = []
+    locales = sorted(store.NAME)
+    for name, table, limit in store.PRODUCT_FIELDS:
+        for locale in locales:
+            if locale not in table:
+                problems.append(f"{name} has no {locale}")
+            elif len(table[locale]) > limit:
+                problems.append(f"{name}/{locale} is {len(table[locale])} characters, limit {limit}")
+        for locale in sorted(set(table) - set(locales)):
+            problems.append(f"{name} has {locale}, which the listing does not")
+    if len(store.IAP_GROUP_NAME) > 30:
+        problems.append(f"IAP_GROUP_NAME is {len(store.IAP_GROUP_NAME)} characters, limit 30")
+
+    # The tables are keyed by the last component of the product id, which is how `iap.py` finds the
+    # copy for a product it is about to create. A rename in the StoreKit file would otherwise be
+    # found there, after the product exists and before it has a name.
+    configuration = json.loads(read(STOREKIT))
+    selling = [product["productID"]
+               for group in configuration.get("subscriptionGroups", [])
+               for product in group.get("subscriptions", [])]
+    selling += [product["productID"] for product in configuration.get("products", [])]
+    for identifier in selling:
+        if identifier.rsplit(".", 1)[-1] not in store.IAP_NAME:
+            problems.append(f"{identifier} has no display name in store.IAP_NAME")
+
+    return f"{len(selling)} products × {len(locales)} locales", problems
+
+
 @check("the version is shaped like a version")
 def version():
     """Up to three dot-separated numbers, an integer build, and both plists reading the settings.
