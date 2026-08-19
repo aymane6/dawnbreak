@@ -155,22 +155,43 @@ with the private key at `~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8`
 App Store Connect under Users and Access, Integrations. The key is downloadable exactly once, and
 `.gitignore` refuses to track `AuthKey_*.p8`.
 
-Those three are all the credentials needed, including for signing. They are passed to `xcodebuild`
-as well as to `altool`, so `-allowProvisioningUpdates` can create the distribution certificate,
-register the App ID and the app group, and sign, on a machine where Xcode has never been signed in.
+Those three are all the credentials needed, including for signing, and no Apple ID has to be signed
+in to Xcode. What does the signing is `scripts/provision.py`, which `release.sh` runs for you:
+
+```sh
+python3 scripts/provision.py    # App IDs, App Groups capability, certificate, both profiles
+```
+
+It registers both App IDs, enables the App Groups capability on them, creates one Apple Distribution
+certificate (private key generated locally, imported into the login keychain, written nowhere else)
+and issues the two App Store profiles `project.yml` signs Release against, then installs them where
+Xcode looks. Re-running it is safe: it reuses whatever is already right and reissues whatever is not.
+
+It exists because `xcodebuild -allowProvisioningUpdates` cannot be used here at all. That flag
+authenticates against `developerservices2.apple.com`, and that host rejects an App Store Connect API
+key outright (`Authentication failed: Make sure a bearer token was provided…`, whatever the token's
+audience, lifetime or scope), because it wants the session an interactive Apple ID login produces.
+The public API accepts the same key for certificates, profiles and identifiers, which is everything
+except one thing, so Release signs manually against what the API made.
+
+The one thing is the App Group. `group.com.aymbam.dawnbreak` has to be created once by hand at
+developer.apple.com and ticked on both App IDs; there is no endpoint for it. `provision.py` prints
+those three clicks and exits 1 until they are done, because a profile issued before the group exists
+authorises no group at all and the archive then fails with four errors that barely mention it.
 
 `release.sh` runs the whole path and stops at the first thing that would fail later:
 
 1. `xcodegen generate`, because a stale project builds last week's entitlements silently.
 2. `scripts/asc-preflight.py --testflight`, which reads the sources.
-3. Both test suites.
-4. `xcodebuild archive`, Release, `generic/platform=iOS`.
-5. `scripts/verify-archive.sh`, which reads the built bundles.
-6. `xcodebuild -exportArchive` into `build/export/Dawnbreak.ipa`.
-7. `xcrun altool --validate-app`, which costs nothing and reports ITMS errors by number.
-8. `xcrun altool --upload-app`, last, because it is the only step that cannot be undone.
+3. `scripts/provision.py`, before the twenty minutes of build a missing profile would waste.
+4. Both test suites.
+5. `xcodebuild archive`, Release, `generic/platform=iOS`.
+6. `scripts/verify-archive.sh`, which reads the built bundles.
+7. `xcodebuild -exportArchive` into `build/export/Dawnbreak.ipa`.
+8. `xcrun altool --validate-app`, which costs nothing and reports ITMS errors by number.
+9. `xcrun altool --upload-app`, last, because it is the only step that cannot be undone.
 
-`--dry-run` stops before the upload. `--no-tests` skips step 3. `--review` runs the strict preflight
+`--dry-run` stops before the upload. `--no-tests` skips step 4. `--review` runs the strict preflight
 instead of the TestFlight one. `--unsigned` needs no credentials at all: it runs steps 1 to 5 with
 `CODE_SIGNING_ALLOWED=NO` and verifies the archive with the three signature checks skipped, which is
 how you prove the bundle assembles on a machine with no distribution certificate.
@@ -208,15 +229,21 @@ Everything the submission needs is in the repo:
 The layout is fastlane `deliver`'s, so `fastlane deliver` uploads it as it stands. It is equally
 readable by hand: one file per field, which is a legible diff in a way a JSON string is not.
 
-Three things are not in the repo and cannot be:
+Four things are not in the repo and cannot be. The first two need a signed-in human because Apple
+exposes them nowhere else: the App Store Connect API answers `POST /v1/apps` with
+`The resource 'apps' does not allow 'CREATE'`, and has no app-group resource at all.
 
 1. **The app record.** Create it once in App Store Connect with bundle id `com.aymbam.dawnbreak`,
-   the name from `metadata/en-US/name.txt`, primary language English.
-2. **The three in-app purchases.** Ids, prices and durations are in
+   the name from `metadata/en-US/name.txt`, primary language English. Nothing can be uploaded to
+   TestFlight before it exists: the upload is rejected with "No suitable application records were
+   found".
+2. **The App Group.** `group.com.aymbam.dawnbreak`, at developer.apple.com, ticked on both App IDs.
+   See the TestFlight section above; `scripts/provision.py` does the rest.
+3. **The three in-app purchases.** Ids, prices and durations are in
    `Configuration/Dawnbreak.storekit`; recreate them in App Store Connect and attach the same
    localized names. A subscription needs a review screenshot of the paywall, which is
    `build/shots/framed/en-US/`.
-3. **The review contact.** `CONTACT` in `scripts/make_metadata.py` still holds a placeholder email
+4. **The review contact.** `CONTACT` in `scripts/make_metadata.py` still holds a placeholder email
    and phone number, and the preflight fails on both by design. Put real ones in, re-run
    `make_metadata.py`. Apple uses them when a review stalls, and an invented value costs a review
    cycle rather than saving one.

@@ -25,7 +25,20 @@
 	<key>teamID</key>
 	<string>2Y97DK7UM4</string>
 	<key>signingStyle</key>
-	<string>automatic</string>
+	<string>manual</string>
+	<!-- Manual, and named, for the reason project.yml's Release configuration is manual: automatic
+	     export re-signs by asking the developer portal for profiles, and the portal host xcodebuild
+	     uses will not accept an App Store Connect API key. These two are what
+	     scripts/provision.py creates through the API that does accept it. -->
+	<key>signingCertificate</key>
+	<string>Apple Distribution</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>com.aymbam.dawnbreak</key>
+		<string>Dawnbreak App Store</string>
+		<key>com.aymbam.dawnbreak.widget</key>
+		<string>Dawnbreak Widget App Store</string>
+	</dict>
 	<!-- The dSYMs go with the build, which is the only way a crash from TestFlight comes back
 	     symbolicated. A missed alarm caused by a crash is the worst bug this app can have. -->
 	<key>uploadSymbols</key>

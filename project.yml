@@ -63,6 +63,18 @@ targets:
         # iPhone only. Every mission assumes a phone held upright next to a bed, and an iPad
         # build would have to answer what a squat counter looks like at 1024pt wide.
         TARGETED_DEVICE_FAMILY: "1"
+      configs:
+        # Manual for Release, and only for Release. Automatic signing needs xcodebuild to talk
+        # to developerservices2.apple.com, which rejects an App Store Connect API key with
+        # "Authentication failed" however the token is built: that host wants the session an
+        # interactive Apple ID login produces. The public API does accept the key, so
+        # `scripts/provision.py` makes the distribution certificate and both App Store profiles
+        # through it, under exactly the names named here. Debug stays automatic, where the
+        # development certificate Xcode already has is enough.
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Dawnbreak App Store
     entitlements:
       path: Configuration/Dawnbreak.entitlements
       properties:
@@ -165,6 +177,13 @@ targets:
         # No asset catalog in this target on purpose: the extension takes its palette from
         # the shared `Theme`, so there is nothing to keep in sync and nothing duplicated.
         SKIP_INSTALL: YES
+      configs:
+        # Its own profile, because an extension has its own bundle id. Same reasoning as the
+        # app's, above.
+        Release:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: Dawnbreak Widget App Store
     info:
       path: Configuration/DawnbreakWidget-Info.plist
       properties:

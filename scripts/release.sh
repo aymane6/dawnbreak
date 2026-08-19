@@ -18,6 +18,8 @@
 #                   entitlements and no error says so.
 #   asc-preflight   reads the sources: stale catalogues, a listing promising more than the binary
 #                   gives, a privacy manifest that is not in the widget's target.
+#   provision       the certificate and the two profiles Release signs with, through the API,
+#                   before the twenty minutes of build that would otherwise be wasted.
 #   tests           the kit's logic and the app's localization, on a simulator.
 #   archive         Release, generic/platform=iOS, so what is verified is what is uploaded.
 #   verify-archive  reads the built bundles: twelve compiled .lproj folders, the manifest in both
@@ -34,10 +36,12 @@
 # altool looks and which .gitignore refuses to track. A key is downloadable exactly once; keep it
 # out of the working tree and out of the shell history.
 #
-# The same three are handed to xcodebuild, not just to altool. `-allowProvisioningUpdates` on its
-# own can only use an account already signed in to Xcode; with the key it authenticates by itself,
-# which is what lets a machine with no distribution certificate create one, register the App ID and
-# the app group, and sign. Nothing here needs Xcode to have been opened.
+# Signing does not go through `xcodebuild -allowProvisioningUpdates`, and cannot: that flag
+# authenticates against developerservices2.apple.com, which refuses an App Store Connect API key
+# ("Authentication failed: Make sure a bearer token was provided…") and wants the session an
+# interactive Apple ID login produces. `scripts/provision.py` uses the public API, which does accept
+# the key, to make the certificate and the two App Store profiles, and Release signs manually
+# against them. Nothing here needs Xcode to have been signed in.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -73,7 +77,6 @@ mkdir -p "$LOGS"
 
 # Resolved before anything is built, because the archive is the first step that signs: finding out
 # at the export that there are no credentials is twenty minutes of build wasted.
-CREDENTIALS=()
 if [[ "$SIGNED" -eq 1 ]]; then
   : "${ASC_KEY_ID:?set ASC_KEY_ID (App Store Connect → Users and Access → Integrations), or pass --unsigned}"
   : "${ASC_ISSUER_ID:?set ASC_ISSUER_ID (the issuer id on the same page)}"
@@ -83,13 +86,6 @@ if [[ "$SIGNED" -eq 1 ]]; then
     [[ -f "$folder/AuthKey_$ASC_KEY_ID.p8" ]] && KEY_FILE="$folder/AuthKey_$ASC_KEY_ID.p8" && break
   done
   [[ -n "$KEY_FILE" ]] || die "no AuthKey_$ASC_KEY_ID.p8 in ~/.appstoreconnect/private_keys/"
-
-  CREDENTIALS=(
-    -allowProvisioningUpdates
-    -authenticationKeyPath "$(cd "$(dirname "$KEY_FILE")" && pwd)/$(basename "$KEY_FILE")"
-    -authenticationKeyID "$ASC_KEY_ID"
-    -authenticationKeyIssuerID "$ASC_ISSUER_ID"
-  )
 fi
 
 # ---------------------------------------------------------------------------
@@ -108,7 +104,18 @@ say "Preflight"
 python3 scripts/asc-preflight.py $PREFLIGHT_STAGE || die "preflight failed, nothing was built"
 
 # ---------------------------------------------------------------------------
-# 3. Tests
+# 3. The signing assets
+# ---------------------------------------------------------------------------
+
+# Before the tests rather than after: it costs two seconds and four API calls, and it is the step
+# most likely to need a human, so it should fail while there is still nothing to throw away.
+if [[ "$SIGNED" -eq 1 ]]; then
+  say "Provisioning"
+  python3 scripts/provision.py || die "the Release build cannot be signed yet, see above"
+fi
+
+# ---------------------------------------------------------------------------
+# 4. Tests
 # ---------------------------------------------------------------------------
 
 if [[ "$RUN_TESTS" -eq 1 ]]; then
@@ -138,7 +145,7 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 4. Archive
+# 5. Archive
 # ---------------------------------------------------------------------------
 
 # Removed rather than overwritten: xcodebuild merges into an existing archive, so a stale dSYM or a
@@ -155,14 +162,14 @@ xcodebuild archive \
   -configuration Release \
   -destination 'generic/platform=iOS' \
   -archivePath "$ARCHIVE" \
-  ${CREDENTIALS[@]:+"${CREDENTIALS[@]}"} ${SIGNING[@]:+"${SIGNING[@]}"} \
+  ${SIGNING[@]:+"${SIGNING[@]}"} \
   -quiet > "$LOGS/archive.log" 2>&1 || {
     tail -40 "$LOGS/archive.log" >&2
     die "the archive failed, see build/logs/archive.log"
   }
 
 # ---------------------------------------------------------------------------
-# 5. Verify what was actually built
+# 6. Verify what was actually built
 # ---------------------------------------------------------------------------
 
 say "Verifying the archive"
@@ -174,7 +181,7 @@ fi
 scripts/verify-archive.sh "$ARCHIVE" || die "the archive is not uploadable"
 
 # ---------------------------------------------------------------------------
-# 6. Export
+# 7. Export
 # ---------------------------------------------------------------------------
 
 say "Exporting the .ipa"
@@ -182,7 +189,6 @@ xcodebuild -exportArchive \
   -archivePath "$ARCHIVE" \
   -exportOptionsPlist Configuration/ExportOptions.plist \
   -exportPath "$EXPORT" \
-  ${CREDENTIALS[@]:+"${CREDENTIALS[@]}"} \
   -quiet > "$LOGS/export.log" 2>&1 || {
     tail -40 "$LOGS/export.log" >&2
     die "the export failed, see build/logs/export.log"
@@ -191,7 +197,7 @@ xcodebuild -exportArchive \
 say "$(du -h "$IPA" | cut -f1) at ${IPA/#$ROOT\//}"
 
 # ---------------------------------------------------------------------------
-# 7. Upload
+# 8. Upload
 # ---------------------------------------------------------------------------
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
