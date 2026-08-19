@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  How `xcodebuild -exportArchive` turns the archive into the .ipa that gets uploaded. Used by
+  scripts/release.sh; hand-written and tracked, unlike everything else in this folder, which
+  xcodegen generates.
+
+  Two of these keys matter more than they look:
+
+  `manageAppVersionAndBuildNumber` is false because the default is true, and true means Xcode
+  silently picks the build number for you at export. project.yml is the one source of truth for the
+  version, `scripts/asc-preflight.py` checks both Info.plists against it, and none of that survives
+  a tool that rewrites CFBundleVersion on the way out the door.
+
+  `destination` is export, not upload. The upload is a separate step in release.sh so that
+  `scripts/verify-archive.sh` gets to inspect the .ipa first: an archive can export cleanly and
+  still be missing its privacy manifest or carry a simulator slice, and an upload cannot be undone.
+-->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>destination</key>
+	<string>export</string>
+	<key>teamID</key>
+	<string>2Y97DK7UM4</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<!-- The dSYMs go with the build, which is the only way a crash from TestFlight comes back
+	     symbolicated. A missed alarm caused by a crash is the worst bug this app can have. -->
+	<key>uploadSymbols</key>
+	<true/>
+	<key>stripSwiftSymbols</key>
+	<true/>
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>
