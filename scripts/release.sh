@@ -4,6 +4,7 @@
 #
 #     scripts/release.sh                 # all of it, ending in a build on TestFlight
 #     scripts/release.sh --dry-run       # everything except the upload
+#     scripts/release.sh --unsigned      # generate, check, test, archive, verify: no credentials
 #     scripts/release.sh --review        # the strict preflight, for a store submission
 #     scripts/release.sh --no-tests      # skip the two test suites (they take about four minutes)
 #
@@ -32,6 +33,11 @@
 # and the private key at ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8, which is where
 # altool looks and which .gitignore refuses to track. A key is downloadable exactly once; keep it
 # out of the working tree and out of the shell history.
+#
+# The same three are handed to xcodebuild, not just to altool. `-allowProvisioningUpdates` on its
+# own can only use an account already signed in to Xcode; with the key it authenticates by itself,
+# which is what lets a machine with no distribution certificate create one, register the App ID and
+# the app group, and sign. Nothing here needs Xcode to have been opened.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -48,10 +54,12 @@ die()  { printf '\033[1;31mrelease:\033[0m %s\n' "$*" >&2; exit 1; }
 
 DRY_RUN=0
 RUN_TESTS=1
+SIGNED=1
 PREFLIGHT_STAGE="--testflight"
 for argument in "$@"; do
   case "$argument" in
     --dry-run)  DRY_RUN=1 ;;
+    --unsigned) SIGNED=0; DRY_RUN=1 ;;
     --no-tests) RUN_TESTS=0 ;;
     --review)   PREFLIGHT_STAGE="" ;;
     *) die "unknown option $argument (see the header of this script)" ;;
@@ -62,6 +70,27 @@ for tool in xcodegen xcodebuild python3; do
   command -v "$tool" >/dev/null || die "$tool is not installed"
 done
 mkdir -p "$LOGS"
+
+# Resolved before anything is built, because the archive is the first step that signs: finding out
+# at the export that there are no credentials is twenty minutes of build wasted.
+CREDENTIALS=()
+if [[ "$SIGNED" -eq 1 ]]; then
+  : "${ASC_KEY_ID:?set ASC_KEY_ID (App Store Connect → Users and Access → Integrations), or pass --unsigned}"
+  : "${ASC_ISSUER_ID:?set ASC_ISSUER_ID (the issuer id on the same page)}"
+
+  KEY_FILE=""
+  for folder in "./private_keys" "$HOME/private_keys" "$HOME/.private_keys" "$HOME/.appstoreconnect/private_keys"; do
+    [[ -f "$folder/AuthKey_$ASC_KEY_ID.p8" ]] && KEY_FILE="$folder/AuthKey_$ASC_KEY_ID.p8" && break
+  done
+  [[ -n "$KEY_FILE" ]] || die "no AuthKey_$ASC_KEY_ID.p8 in ~/.appstoreconnect/private_keys/"
+
+  CREDENTIALS=(
+    -allowProvisioningUpdates
+    -authenticationKeyPath "$(cd "$(dirname "$KEY_FILE")" && pwd)/$(basename "$KEY_FILE")"
+    -authenticationKeyID "$ASC_KEY_ID"
+    -authenticationKeyIssuerID "$ASC_ISSUER_ID"
+  )
+fi
 
 # ---------------------------------------------------------------------------
 # 1. The project, from project.yml
@@ -116,14 +145,17 @@ fi
 # removed resource can survive into the upload.
 rm -rf "$ARCHIVE" "$EXPORT"
 
-say "Archiving (Release)"
+SIGNING=()
+[[ "$SIGNED" -eq 0 ]] && SIGNING=(CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="")
+
+say "Archiving (Release$([[ "$SIGNED" -eq 0 ]] && printf ', unsigned'))"
 xcodebuild archive \
   -project Dawnbreak.xcodeproj \
   -scheme Dawnbreak \
   -configuration Release \
   -destination 'generic/platform=iOS' \
   -archivePath "$ARCHIVE" \
-  -allowProvisioningUpdates \
+  ${CREDENTIALS[@]:+"${CREDENTIALS[@]}"} ${SIGNING[@]:+"${SIGNING[@]}"} \
   -quiet > "$LOGS/archive.log" 2>&1 || {
     tail -40 "$LOGS/archive.log" >&2
     die "the archive failed, see build/logs/archive.log"
@@ -134,6 +166,11 @@ xcodebuild archive \
 # ---------------------------------------------------------------------------
 
 say "Verifying the archive"
+if [[ "$SIGNED" -eq 0 ]]; then
+  scripts/verify-archive.sh --unsigned "$ARCHIVE" || die "the archive is not what it should be"
+  say "Unsigned run: stopping before the export, which needs a distribution certificate"
+  exit 0
+fi
 scripts/verify-archive.sh "$ARCHIVE" || die "the archive is not uploadable"
 
 # ---------------------------------------------------------------------------
@@ -145,7 +182,7 @@ xcodebuild -exportArchive \
   -archivePath "$ARCHIVE" \
   -exportOptionsPlist Configuration/ExportOptions.plist \
   -exportPath "$EXPORT" \
-  -allowProvisioningUpdates \
+  ${CREDENTIALS[@]:+"${CREDENTIALS[@]}"} \
   -quiet > "$LOGS/export.log" 2>&1 || {
     tail -40 "$LOGS/export.log" >&2
     die "the export failed, see build/logs/export.log"
@@ -161,15 +198,6 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   say "Dry run: stopping before the upload"
   exit 0
 fi
-
-: "${ASC_KEY_ID:?set ASC_KEY_ID (App Store Connect → Users and Access → Integrations)}"
-: "${ASC_ISSUER_ID:?set ASC_ISSUER_ID (the issuer id on the same page)}"
-
-KEY_FILE=""
-for folder in "./private_keys" "$HOME/private_keys" "$HOME/.private_keys" "$HOME/.appstoreconnect/private_keys"; do
-  [[ -f "$folder/AuthKey_$ASC_KEY_ID.p8" ]] && KEY_FILE="$folder/AuthKey_$ASC_KEY_ID.p8" && break
-done
-[[ -n "$KEY_FILE" ]] || die "no AuthKey_$ASC_KEY_ID.p8 in ~/.appstoreconnect/private_keys/"
 
 # Apple's own validation first. It reports the same ITMS numbers as the upload, does not consume
 # anything, and is the difference between finding out now and finding out by email.

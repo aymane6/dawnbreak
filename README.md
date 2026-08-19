@@ -155,6 +155,10 @@ with the private key at `~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8`
 App Store Connect under Users and Access, Integrations. The key is downloadable exactly once, and
 `.gitignore` refuses to track `AuthKey_*.p8`.
 
+Those three are all the credentials needed, including for signing. They are passed to `xcodebuild`
+as well as to `altool`, so `-allowProvisioningUpdates` can create the distribution certificate,
+register the App ID and the app group, and sign, on a machine where Xcode has never been signed in.
+
 `release.sh` runs the whole path and stops at the first thing that would fail later:
 
 1. `xcodegen generate`, because a stale project builds last week's entitlements silently.
@@ -167,7 +171,9 @@ App Store Connect under Users and Access, Integrations. The key is downloadable 
 8. `xcrun altool --upload-app`, last, because it is the only step that cannot be undone.
 
 `--dry-run` stops before the upload. `--no-tests` skips step 3. `--review` runs the strict preflight
-instead of the TestFlight one.
+instead of the TestFlight one. `--unsigned` needs no credentials at all: it runs steps 1 to 5 with
+`CODE_SIGNING_ALLOWED=NO` and verifies the archive with the three signature checks skipped, which is
+how you prove the bundle assembles on a machine with no distribution certificate.
 
 Bump `CURRENT_PROJECT_VERSION` in `project.yml` before each upload: App Store Connect refuses a
 build number it has already seen.
@@ -225,13 +231,11 @@ analytics SDK, a network call, or a tracking permission.
 page, the privacy policy and the support page. The listing links to all three, and a reviewer opens
 the privacy policy, so a 404 there is an immediate rejection.
 
-Enable it once, after the first push:
-
-1. The repository has to be named `dawnbreak` and be public. The URLs are baked into the listing as
-   `https://aymane6.github.io/dawnbreak/`, so a different name means editing `scripts/strings/store.py`
-   and re-running `make_metadata.py` and `make_pages.py`.
-2. Settings, Pages, Source: Deploy from a branch. Branch `main`, folder `/docs`.
-3. Wait for the first deploy, then open `https://aymane6.github.io/dawnbreak/privacy.html`.
+Live at [aymane6.github.io/dawnbreak](https://aymane6.github.io/dawnbreak/), served from `main` and
+the `/docs` folder. The repository has to keep the name `dawnbreak` and stay public: those URLs are
+baked into the listing, so a rename means editing `scripts/strings/store.py` and re-running
+`make_metadata.py` and `make_pages.py`. On a fork, set it under Settings, Pages, Source: deploy from
+a branch, `main`, `/docs`.
 
 Language follows the browser, with a picker on the page, `?lang=ja` to force one, and English as the
 fallback. Every language is in the file, so it works with JavaScript off. There is no build step and

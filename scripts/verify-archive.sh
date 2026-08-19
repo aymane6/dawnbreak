@@ -4,6 +4,7 @@
 #
 #     scripts/verify-archive.sh                          # build/Dawnbreak.xcarchive
 #     scripts/verify-archive.sh path/to/Some.xcarchive   # any archive
+#     scripts/verify-archive.sh --unsigned               # an archive built with no identity
 #
 # `scripts/asc-preflight.py` reads the sources: it can tell you the privacy manifest is in the repo
 # and listed in the widget's target. Only the archive can tell you it was actually copied into both
@@ -18,7 +19,20 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$PWD"
 
-ARCHIVE="${1:-$ROOT/build/Dawnbreak.xcarchive}"
+# `--unsigned` is for the archive you can build with no Apple credentials at all
+# (`CODE_SIGNING_ALLOWED=NO`), which is the only end-to-end proof available on a machine with no
+# distribution certificate. Everything about the bundle's contents is still checked; the three
+# checks that read a signature are skipped and say so, rather than passing on a technicality.
+SIGNED=1
+ARCHIVE=""
+for argument in "$@"; do
+  case "$argument" in
+    --unsigned) SIGNED=0 ;;
+    -*) printf '\033[1;31mverify-archive:\033[0m unknown option %s\n' "$argument" >&2; exit 1 ;;
+    *) ARCHIVE="$argument" ;;
+  esac
+done
+ARCHIVE="${ARCHIVE:-$ROOT/build/Dawnbreak.xcarchive}"
 
 APP_BUNDLE_ID="com.aymbam.dawnbreak"
 WIDGET_BUNDLE_ID="com.aymbam.dawnbreak.widget"
@@ -30,6 +44,7 @@ LANGUAGE_COUNT=$(grep -c 'static let \w* = CaptureLocale(' "$ROOT/Sources/Contra
 
 say()  { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 pass() { printf '  \033[1;32m✓\033[0m %-52s %s\n' "$1" "${2:-}"; }
+skip() { printf '  \033[1;33m-\033[0m %-52s %s\n' "$1" "${2:-}"; }
 FAILURES=0
 fail() { printf '  \033[1;31m✗\033[0m %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
@@ -143,22 +158,28 @@ fi
 ARCHS=$(/usr/bin/lipo -archs "$APP/$(value CFBundleExecutable "$APP_PLIST")" 2>/dev/null || echo "unreadable")
 expect "architectures" "$ARCHS" "arm64"
 
-if /usr/bin/codesign --verify --strict --deep "$APP" 2>/dev/null; then
-  pass "code signature" "valid, including the extension"
+if [[ "$SIGNED" -eq 0 ]]; then
+  skip "code signature"     "not checked (--unsigned)"
+  skip "app group entitlement" "not checked (--unsigned)"
+  skip "team"               "not checked (--unsigned)"
 else
-  fail "the signature does not verify (codesign --verify --strict --deep)"
-fi
+  if /usr/bin/codesign --verify --strict --deep "$APP" 2>/dev/null; then
+    pass "code signature" "valid, including the extension"
+  else
+    fail "the signature does not verify (codesign --verify --strict --deep)"
+  fi
 
-ENTITLEMENTS=$(/usr/bin/codesign -d --entitlements - --xml "$APP" 2>/dev/null | /usr/bin/plutil -convert xml1 - -o - 2>/dev/null || true)
-if [[ "$ENTITLEMENTS" == *"$APP_GROUP"* ]]; then
-  pass "app group entitlement" "$APP_GROUP"
-else
-  fail "the signed app does not carry $APP_GROUP, so the widget reads an empty store"
-fi
-if [[ "$ENTITLEMENTS" == *"$TEAM_ID"* ]]; then
-  pass "team" "$TEAM_ID"
-else
-  fail "the signature is not for team $TEAM_ID"
+  ENTITLEMENTS=$(/usr/bin/codesign -d --entitlements - --xml "$APP" 2>/dev/null | /usr/bin/plutil -convert xml1 - -o - 2>/dev/null || true)
+  if [[ "$ENTITLEMENTS" == *"$APP_GROUP"* ]]; then
+    pass "app group entitlement" "$APP_GROUP"
+  else
+    fail "the signed app does not carry $APP_GROUP, so the widget reads an empty store"
+  fi
+  if [[ "$ENTITLEMENTS" == *"$TEAM_ID"* ]]; then
+    pass "team" "$TEAM_ID"
+  else
+    fail "the signature is not for team $TEAM_ID"
+  fi
 fi
 
 # Without these a TestFlight crash report is a list of hexadecimal addresses.
@@ -174,4 +195,9 @@ if [[ "$FAILURES" -gt 0 ]]; then
   printf '\033[1;31mverify-archive:\033[0m %s problems. Do not upload this archive.\n' "$FAILURES" >&2
   exit 1
 fi
-say "Archive is uploadable: $VERSION ($BUILD), $LANGUAGE_COUNT languages, signed for $TEAM_ID"
+if [[ "$SIGNED" -eq 0 ]]; then
+  say "Archive assembles correctly: $VERSION ($BUILD), $LANGUAGE_COUNT languages, unsigned"
+  printf '  Not uploadable as it stands: an unsigned archive cannot be exported for the store.\n'
+else
+  say "Archive is uploadable: $VERSION ($BUILD), $LANGUAGE_COUNT languages, signed for $TEAM_ID"
+fi
