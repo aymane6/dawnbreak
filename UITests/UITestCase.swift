@@ -34,9 +34,15 @@ class UITestCase: XCTestCase {
     /// things the flag also does, which is seed data worth asserting against and keep the app
     /// from asking for the alarm permission on launch. A UI test that has to dismiss a system
     /// alert before it can begin is a UI test that fails the first time Apple rewords the alert.
-    func launch(_ screen: CaptureLaunch.Screen, in locale: CaptureLocale = .english) -> XCUIApplication {
+    /// `free` seeds the free tier, which only the paywall screenshot wants: everything else is
+    /// photographed with Pro on, and a Pro account cannot reach the purchase screen.
+    func launch(
+        _ screen: CaptureLaunch.Screen,
+        in locale: CaptureLocale = .english,
+        free: Bool = false
+    ) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = CaptureLaunch.arguments(for: screen) + locale.launchArguments
+        app.launchArguments = CaptureLaunch.arguments(for: screen, free: free) + locale.launchArguments
         app.launch()
         return app
     }

@@ -34,6 +34,15 @@ enum AccessibilityID {
     static let statsWindow = "ax.stats.window"
     /// The appearance picker, far enough down the settings list to prove the screen scrolled.
     static let settingsAppearance = "ax.settings.appearance"
+    /// The row that opens the paywall, and the button that buys on it.
+    ///
+    /// The two ends of the path the review notes send Apple's reviewer down, walked by
+    /// `SmokeTests.testTheFreeTierReachesThePaywallFromSettings` so the notes cannot come to
+    /// describe a route the app no longer has. The twelve store screenshot runs never see either:
+    /// they are seeded with Pro already on, so settings shows "Pro is active" where this row would
+    /// be.
+    static let settingsUpgrade = "ax.settings.upgrade"
+    static let paywallPurchase = "ax.paywall.purchase"
     /// The primary button on the onboarding pages.
     static let onboardingNext = "ax.onboarding.next"
 }

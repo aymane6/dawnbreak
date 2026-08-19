@@ -5,9 +5,11 @@
 #     scripts/shots.sh                # all twelve languages
 #     scripts/shots.sh fr-FR ja       # only these listings, by App Store Connect code
 #     scripts/shots.sh --frame-only   # re-frame what is already in build/shots/raw
+#     scripts/shots.sh --review       # only the paywall, for App Store review
 #
 # Output: build/shots/raw/<store>/NN-screen.png   as the simulator saw it
 #         build/shots/framed/<store>/NN-screen.png  what gets uploaded
+#         build/shots/review/paywall.png         sent with each product, not published
 #
 # One build, twelve launches. The app is built for testing once and then relaunched per language
 # with `-AppleLanguages`, which is the only way to get a screenshot of a *release-configured*
@@ -25,6 +27,9 @@ BUILD="$ROOT/build"
 RAW="$BUILD/shots/raw"
 FRAMED="$BUILD/shots/framed"
 DERIVED="$BUILD/shots/derived"
+# One image, English, unframed: Apple asks for a picture of the purchase screen with every product
+# and never publishes it. `scripts/iap.py` uploads it to all three.
+REVIEW="$BUILD/shots/review"
 
 # The 6.9-inch device the store requires, created by name so a rerun reuses it rather than
 # accumulating simulators. iPhone 17 Pro Max renders 1320×2868, one of the two accepted sizes.
@@ -46,14 +51,19 @@ say() { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31mshots:\033[0m %s\n' "$*" >&2; exit 1; }
 
 FRAME_ONLY=0
+REVIEW_ONLY=0
 WANTED=()
 for argument in "$@"; do
   case "$argument" in
     --frame-only) FRAME_ONLY=1 ;;
+    --review) REVIEW_ONLY=1 ;;
     -*) die "unknown option $argument" ;;
     *) WANTED+=("$argument") ;;
   esac
 done
+
+[[ $FRAME_ONLY -eq 1 && $REVIEW_ONLY -eq 1 ]] && die "--frame-only and --review do different jobs"
+[[ $REVIEW_ONLY -eq 1 && ${#WANTED[@]} -gt 0 ]] && die "--review takes no languages: the review screenshot is English"
 
 # ---------------------------------------------------------------------------
 # The compositor, which also answers "which languages?" so this script holds
@@ -88,10 +98,13 @@ if [[ ${#WANTED[@]} -gt 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Capture
+# The simulator, and the one build every capture runs on. Shared by the
+# twelve-language run and by --review, which need the same device in the same
+# state and differ only in what they photograph on it.
 # ---------------------------------------------------------------------------
 
-if [[ $FRAME_ONLY -eq 0 ]]; then
+# Sets UDID and PREFERENCES, which everything below reads.
+prepare_simulator() {
   command -v xcodegen >/dev/null || die "xcodegen is not installed: brew install xcodegen"
 
   say "Generating the project"
@@ -127,11 +140,13 @@ print(runtimes[-1]['identifier'] if runtimes else '')
   xcrun simctl bootstatus "$UDID" -b
 
   # Where the device keeps the preferences SpringBoard reads at launch. `simctl` has no command that
-  # writes them on a shut-down device, so the loop below writes the file directly. Resolved after the
+  # writes them on a shut-down device, so `use_language` writes the file directly. Resolved after the
   # first boot, because a freshly created device has no data directory until then.
   PREFERENCES="$HOME/Library/Developer/CoreSimulator/Devices/$UDID/data/Library/Preferences"
   [[ -d "$PREFERENCES" ]] || die "$UDID booted without a preferences directory at $PREFERENCES"
+}
 
+build_runner() {
   # The `Screenshots` scheme, whose only test target is `DawnbreakUITests` and whose test
   # configuration is Release: the screenshots have to be of the binary that gets archived, and the
   # unit tests cannot be built against a Release app because `@testable import` needs
@@ -148,6 +163,107 @@ print(runtimes[-1]['identifier'] if runtimes else '')
     -quiet \
     ONLY_ACTIVE_ARCH=YES \
     CODE_SIGNING_ALLOWED=NO
+}
+
+# $1 an AppleLanguages value, $2 an AppleLocale value. Resprings the device into that language and
+# reapplies the status bar, because a shutdown clears the overrides.
+use_language() {
+  # The status bar belongs to SpringBoard, not to the app, and `-AppleLanguages` on the app's
+  # command line does not reach it. Without this the Arabic screenshots carry a left-to-right
+  # status bar with Latin digits over a mirrored Arabic screen. So the *device* is put into the
+  # language, which means a shutdown and a boot: the preference is read at launch and there is no
+  # supported way to make a running SpringBoard read it again.
+  #
+  # `plutil` on the file rather than `defaults write`, and shut down rather than booted. The host's
+  # `cfprefsd` caches any domain it is asked to write, including one that belongs to a simulator,
+  # and hands the stale copy back on the next read while the device boots from what is on disk;
+  # `simctl spawn defaults` is worse, because spawn needs a booted device and the device's own
+  # `cfprefsd` then rewrites the file from its cache on the way down. Neither wrote Japanese.
+  xcrun simctl shutdown "$UDID" 2>/dev/null || true
+  plutil -replace AppleLanguages -json "[\"$1\"]" "$PREFERENCES/.GlobalPreferences.plist"
+  plutil -replace AppleLocale -string "$2" "$PREFERENCES/.GlobalPreferences.plist"
+  xcrun simctl boot "$UDID"
+  xcrun simctl bootstatus "$UDID" -b
+
+  # 9:41 is the time in every iPhone screenshot Apple has ever published; full bars and a charged
+  # battery because 43% and two bars read as someone's phone rather than as a product shot.
+  # SpringBoard formats `$CLOCK` in its own language, which is what the respring above buys:
+  # Japanese gets 9:41 on a 24-hour clock, English 9:41 AM, Arabic Arabic-Indic digits.
+  xcrun simctl status_bar "$UDID" override \
+    --time "$CLOCK" \
+    --dataNetwork wifi --wifiMode active --wifiBars 3 \
+    --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+}
+
+# Left in the language of whichever listing came last otherwise, which is a surprise the next
+# person to open this simulator by hand does not deserve.
+finish_simulator() {
+  xcrun simctl status_bar "$UDID" clear
+  xcrun simctl shutdown "$UDID" 2>/dev/null || true
+  plutil -replace AppleLanguages -json '["en"]' "$PREFERENCES/.GlobalPreferences.plist"
+  plutil -replace AppleLocale -string en_US "$PREFERENCES/.GlobalPreferences.plist"
+}
+
+# ---------------------------------------------------------------------------
+# The review screenshot: one screen, one language, no frame
+# ---------------------------------------------------------------------------
+
+if [[ $REVIEW_ONLY -eq 1 ]]; then
+  prepare_simulator
+
+  say "Capturing the paywall for App Store review"
+  rm -rf "$REVIEW"
+  mkdir -p "$REVIEW"
+  use_language en en_US
+
+  # `DawnbreakTests` and not the UI tests, which is the whole reason this branch shares nothing with
+  # the twelve-language run but the simulator.
+  #
+  # The paywall needs prices, prices need a StoreKit test session, and a session installs its
+  # products for the bundle id of the process that creates one. A UI test runner is its own bundle
+  # id, so the app under test finds nothing there and photographs "Prices are not loading"; a unit
+  # test bundle is loaded into the app, so the session and the screen are the same process. See the
+  # comment on `ReviewShotTests`, which also explains what that costs.
+  #
+  # The `Dawnbreak` scheme, therefore Debug, therefore its own derived data: the twelve-language run
+  # builds the same targets in Release into `$DERIVED` and frames from whatever `Dawnbreak.app` it
+  # finds there.
+  #
+  # Signed, unlike every other build here, and with entitlements the app does not otherwise ask for.
+  # `storekitd` will not hold a StoreKit configuration for an app that is not a development install,
+  # and what it reads is `get-task-allow`: without it `saveConfigurationData` is answered with
+  # "com.aymbam.dawnbreak is not installed for development", the session is created without
+  # complaint, no products arrive, and the paywall photographs "Prices are not loading". The
+  # entitlement is in `Configuration/Dawnbreak-Debug.entitlements`, generated by xcodegen from the
+  # `DawnbreakTests` target, and passed here rather than wired into the project so that no other
+  # build can pick it up: a distribution profile does not authorise it, and an archive signed with it
+  # fails. It applies to the widget as well, which is harmless and unavoidable, a command-line
+  # setting reaching every target in the build. Debug signs itself ad hoc on a simulator, so none of
+  # this costs a certificate or an account.
+  env TEST_RUNNER_DAWNBREAK_REVIEW_SHOT="$REVIEW" \
+    xcodebuild test \
+      -project Dawnbreak.xcodeproj \
+      -scheme Dawnbreak \
+      -destination "platform=iOS Simulator,id=$UDID" \
+      -derivedDataPath "$BUILD/shots/derived-review" \
+      -only-testing:DawnbreakTests/ReviewShotTests \
+      -quiet \
+      ONLY_ACTIVE_ARCH=YES \
+      CODE_SIGN_ENTITLEMENTS=Configuration/Dawnbreak-Debug.entitlements
+
+  finish_simulator
+  [[ -f "$REVIEW/paywall.png" ]] || die "the test passed but wrote no $REVIEW/paywall.png"
+  say "Done. $REVIEW/paywall.png, uploaded to all three products by scripts/iap.py"
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Capture
+# ---------------------------------------------------------------------------
+
+if [[ $FRAME_ONLY -eq 0 ]]; then
+  prepare_simulator
+  build_runner
 
   rm -rf "$RAW"
   mkdir -p "$RAW"
@@ -161,33 +277,7 @@ print(runtimes[-1]['identifier'] if runtimes else '')
   while IFS=$'\t' read -r store language apple_locale; do
     wanted "$store" || continue
     say "Capturing $store ($language)"
-
-    # The status bar belongs to SpringBoard, not to the app, and `-AppleLanguages` on the app's
-    # command line does not reach it. Without this the Arabic screenshots carry a left-to-right
-    # status bar with Latin digits over a mirrored Arabic screen. So the *device* is put into the
-    # language, which means a shutdown and a boot: the preference is read at launch and there is no
-    # supported way to make a running SpringBoard read it again.
-    #
-    # `plutil` on the file rather than `defaults write`, and shut down rather than booted. The host's
-    # `cfprefsd` caches any domain it is asked to write, including one that belongs to a simulator,
-    # and hands the stale copy back on the next read while the device boots from what is on disk;
-    # `simctl spawn defaults` is worse, because spawn needs a booted device and the device's own
-    # `cfprefsd` then rewrites the file from its cache on the way down. Neither wrote Japanese.
-    xcrun simctl shutdown "$UDID" 2>/dev/null || true
-    plutil -replace AppleLanguages -json "[\"$language\"]" "$PREFERENCES/.GlobalPreferences.plist"
-    plutil -replace AppleLocale -string "$apple_locale" "$PREFERENCES/.GlobalPreferences.plist"
-    xcrun simctl boot "$UDID"
-    xcrun simctl bootstatus "$UDID" -b
-
-    # A shutdown clears the status bar overrides, so they are reapplied every time rather than once
-    # at the top. 9:41 is the time in every iPhone screenshot Apple has ever published; full bars and
-    # a charged battery because 43% and two bars read as someone's phone rather than as a product
-    # shot. SpringBoard formats `$CLOCK` in its own language, which is what the respring above buys:
-    # Japanese gets 9:41 on a 24-hour clock, English gets 9:41 AM, Arabic gets Arabic-Indic digits.
-    xcrun simctl status_bar "$UDID" override \
-      --time "$CLOCK" \
-      --dataNetwork wifi --wifiMode active --wifiBars 3 \
-      --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+    use_language "$language" "$apple_locale"
 
     # A failure here is not fatal to the run: eleven good languages plus a named twelfth is more
     # useful than an aborted script, and the summary at the end says which ones to retake.
@@ -216,12 +306,7 @@ print(runtimes[-1]['identifier'] if runtimes else '')
     printf '\033[1;33mshots:\033[0m retake with: scripts/shots.sh %s\n' "${FAILED[*]}" >&2
   fi
 
-  # Left in the language of whichever listing came last otherwise, which is a surprise the next
-  # person to open this simulator by hand does not deserve.
-  xcrun simctl status_bar "$UDID" clear
-  xcrun simctl shutdown "$UDID" 2>/dev/null || true
-  plutil -replace AppleLanguages -json '["en"]' "$PREFERENCES/.GlobalPreferences.plist"
-  plutil -replace AppleLocale -string en_US "$PREFERENCES/.GlobalPreferences.plist"
+  finish_simulator
 fi
 
 # ---------------------------------------------------------------------------

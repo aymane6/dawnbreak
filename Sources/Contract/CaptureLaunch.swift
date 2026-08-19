@@ -12,6 +12,13 @@ enum CaptureLaunch {
     static let argument = "-dawnbreak-capture"
     /// Followed by a `Screen` raw value.
     static let screenArgument = "-dawnbreak-capture-screen"
+    /// Seeds the free tier instead of Pro.
+    ///
+    /// The store screenshots are taken with Pro on, because a listing full of padlocks sells
+    /// nothing. The test that walks the path the review notes describe needs the opposite: an
+    /// account that already has Pro shows "Pro is active" in settings, with no upgrade row to tap
+    /// and no purchase screen behind it.
+    static let freeArgument = "-dawnbreak-capture-free"
 
     /// Where the seeded run stores its data. A suite rather than `.standard` so a capture run
     /// cannot overwrite the preferences of an app already installed on the same simulator.
@@ -44,7 +51,9 @@ enum CaptureLaunch {
         var subcaptionKey: String { "shot.sub.\(rawValue)" }
     }
 
-    static func arguments(for screen: Screen) -> [String] {
-        [argument, screenArgument, screen.rawValue]
+    /// `free` is a Bool rather than an `Entitlement` so that this file keeps importing nothing but
+    /// Foundation: it is compiled into the widget and into the UI test target as well as the app.
+    static func arguments(for screen: Screen, free: Bool = false) -> [String] {
+        [argument, screenArgument, screen.rawValue] + (free ? [freeArgument] : [])
     }
 }

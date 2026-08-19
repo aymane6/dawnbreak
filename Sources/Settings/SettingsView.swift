@@ -88,6 +88,7 @@ struct SettingsView: View {
                         Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.textTertiary)
                     }
                 }
+                .accessibilityIdentifier(AccessibilityID.settingsUpgrade)
                 Button {
                     Task { await app.subscription.restore() }
                 } label: {

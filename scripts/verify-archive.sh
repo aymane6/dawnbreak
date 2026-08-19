@@ -162,6 +162,7 @@ if [[ "$SIGNED" -eq 0 ]]; then
   skip "code signature"     "not checked (--unsigned)"
   skip "app group entitlement" "not checked (--unsigned)"
   skip "team"               "not checked (--unsigned)"
+  skip "not debuggable"     "not checked (--unsigned)"
 else
   if /usr/bin/codesign --verify --strict --deep "$APP" 2>/dev/null; then
     pass "code signature" "valid, including the extension"
@@ -179,6 +180,24 @@ else
     pass "team" "$TEAM_ID"
   else
     fail "the signature is not for team $TEAM_ID"
+  fi
+
+  # `get-task-allow` is what makes a build debuggable, and what `storekitd` reads to decide that an
+  # app is a development install: `scripts/shots.sh --review` puts it on one Debug build so the
+  # review screenshot can have prices on it. It must never reach the store, which refuses a
+  # debuggable binary. A distribution profile does not authorise it either, so the usual outcome is a
+  # signing failure long before here, and "the usual outcome" is not something to upload on.
+  DEBUGGABLE=()
+  for bundle in "$APP" "$WIDGET"; do
+    [[ -d "$bundle" ]] || continue
+    if /usr/bin/codesign -d --entitlements - --xml "$bundle" 2>/dev/null | grep -q "get-task-allow"; then
+      DEBUGGABLE+=("$(basename "$bundle")")
+    fi
+  done
+  if [[ ${#DEBUGGABLE[@]} -eq 0 ]]; then
+    pass "not debuggable" "no get-task-allow"
+  else
+    fail "${DEBUGGABLE[*]} carries get-task-allow, which is a Debug entitlement the store rejects"
   fi
 fi
 

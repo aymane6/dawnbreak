@@ -85,6 +85,24 @@ final class SmokeTests: UITestCase {
         assertNothingIsCoveringTheScreen(app)
     }
 
+    /// The path the reviewer's notes describe: Settings, then Dawnbreak Pro, on the free tier.
+    ///
+    /// `metadata/review_information/notes.txt` tells Apple to get to the purchase screen that way,
+    /// and a reviewer who cannot follow those notes files a rejection rather than a bug report. The
+    /// row exists only on the free tier: on Pro it is "Pro is active" with nothing to tap, so this
+    /// is also the assertion that the seeded tier is the one being tested.
+    ///
+    /// Prices are not part of it. They need a StoreKit test session inside the app's own process,
+    /// which a UI test runner cannot give it, and they are what `ReviewShotTests` exists for.
+    func testTheFreeTierReachesThePaywallFromSettings() {
+        let app = launch(.settings, free: true)
+        waitFor(AccessibilityID.settingsUpgrade, in: app).tap()
+        XCTAssertTrue(
+            element(AccessibilityID.paywallPurchase, in: app).waitForExistence(timeout: anchorTimeout),
+            "Settings no longer reaches the paywall, and the review notes say it does"
+        )
+    }
+
     /// Every one of the twelve languages launches, and none of them shows a raw key.
     ///
     /// `LocalizationTests` already proves the catalogs are complete, from the compiled tables.

@@ -28,6 +28,11 @@ enum CaptureMode {
         return screen
     }
 
+    /// Whether this run wants the free tier. Only the paywall is worth seeing behind one.
+    static var isFree: Bool {
+        ProcessInfo.processInfo.arguments.contains(CaptureLaunch.freeArgument)
+    }
+
     // MARK: - Environment
 
     /// The environment the app root runs on: the real one, or a seeded throwaway.
@@ -46,7 +51,13 @@ enum CaptureMode {
         UserDefaults.standard.removePersistentDomain(forName: CaptureLaunch.defaultsSuite)
         let defaults = UserDefaults(suiteName: CaptureLaunch.defaultsSuite) ?? .standard
 
-        let environment = AppEnvironment(directory: directory, defaults: defaults, entitlement: .pro)
+        // Pinned either way, so no run of this depends on a StoreKit transaction being present:
+        // `.pro` unlocks every screen the listing shows, `.free` is what the paywall needs behind
+        // it. Prices are not pinned and cannot be: `PaywallView` asks StoreKit for them when it
+        // opens, which is why the one screenshot that needs them is taken from inside the app by
+        // `ReviewShotTests` rather than from out here.
+        let entitlement: Entitlement = isFree ? .free : .pro
+        let environment = AppEnvironment(directory: directory, defaults: defaults, entitlement: entitlement)
         seed(environment)
         return environment
     }

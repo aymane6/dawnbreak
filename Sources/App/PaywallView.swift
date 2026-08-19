@@ -159,6 +159,9 @@ struct PaywallView: View {
             }
             .buttonStyle(DawnButtonStyle(isEnabled: app.subscription.displayPrice(for: selection) != nil))
             .disabled(app.subscription.displayPrice(for: selection) == nil || app.subscription.purchaseInFlight != nil)
+            // How a test knows it is looking at this screen and not at the settings row that opens
+            // it. Enabled only once a price has arrived, so it also says the prices loaded.
+            .accessibilityIdentifier(AccessibilityID.paywallPurchase)
 
             Text("paywall.cta.note", bundle: .main)
                 .font(.caption2)

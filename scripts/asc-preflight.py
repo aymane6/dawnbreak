@@ -47,12 +47,20 @@ WIDGET_INFO_PLIST = CONFIGURATION / "DawnbreakWidget-Info.plist"
 ENTITLEMENTS = (
     CONFIGURATION / "Dawnbreak.entitlements",
     CONFIGURATION / "DawnbreakWidget.entitlements",
+    # Not shipped and not archived: the Debug-only file that adds `get-task-allow`, which
+    # `scripts/shots.sh --review` passes to xcodebuild so `storekitd` will hold a StoreKit
+    # configuration and the paywall has prices to photograph. Checked here because xcodegen
+    # generates it, and because the app group in it has to be the same string as in the other two.
+    CONFIGURATION / "Dawnbreak-Debug.entitlements",
 )
 STOREKIT = CONFIGURATION / "Dawnbreak.storekit"
 XCODEPROJ = ROOT / "Dawnbreak.xcodeproj"
 PRIVACY_MANIFEST = ROOT / "Resources" / "PrivacyInfo.xcprivacy"
 ICON_SET = ROOT / "Resources" / "Assets.xcassets" / "AppIcon.appiconset"
 FRAMED = ROOT / "build" / "shots" / "framed"
+# Not one of the twelve sets: the picture of the purchase screen that goes with each product, in
+# English, unframed, never published. `scripts/shots.sh --review` writes it.
+REVIEW_SHOT = ROOT / "build" / "shots" / "review" / "paywall.png"
 PREFERENCES = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Store/Preferences.swift"
 MISSION_KIND = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Models/MissionKind.swift"
 MISSION_CONFIG = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Models/MissionConfig.swift"
@@ -210,16 +218,16 @@ def site():
 
 @check("the Xcode project is generated and current")
 def project_generated():
-    """xcodegen's five outputs have to exist, and say what project.yml says.
+    """xcodegen's six outputs have to exist, and say what project.yml says.
 
-    All five are gitignored, so on a fresh clone they are simply absent. Worse is the case where
+    All six are gitignored, so on a fresh clone they are simply absent. Worse is the case where
     they exist and disagree with project.yml: the build succeeds, with yesterday's version number
     and yesterday's entitlements.
 
     Timestamps cannot answer this. xcodegen compares before it writes and leaves a file whose
     content already matches completely untouched, so an old mtime is the normal state of a current
     file. The only honest oracle is xcodegen itself: generate into a scratch tree and diff. That
-    also catches the failure a timestamp never could, which is one of these four edited by hand.
+    also catches the failure a timestamp never could, which is one of these five edited by hand.
     """
     problems = []
     for path in (XCODEPROJ, INFO_PLIST, WIDGET_INFO_PLIST, *ENTITLEMENTS):
@@ -229,7 +237,7 @@ def project_generated():
         return "not generated", problems
 
     if not shutil.which("xcodegen"):
-        return "5 files, not verified (xcodegen is not installed)", problems
+        return "6 files, not verified (xcodegen is not installed)", problems
 
     # A farm of symlinks to every top-level entry, so the spec's source paths resolve, with a real
     # empty Configuration/ so the four generated files land somewhere they can be compared. The
@@ -263,14 +271,14 @@ def project_generated():
     finally:
         shutil.rmtree(farm, ignore_errors=True)
 
-    return "5 files, 4 diffed against project.yml", problems
+    return "6 files, 5 diffed against project.yml", problems
 
 
 # ---------------------------------------------------------------------------
 # Identifiers
 # ---------------------------------------------------------------------------
 
-@check("the app group is spelled the same in all five places")
+@check("the app group is spelled the same in all six places")
 def app_group():
     """One typo here does not fail to build; it gives the widget its own empty container.
 
@@ -740,6 +748,32 @@ def screenshots():
         problems.append(f"the languages disagree on how many screenshots there are: {counts}")
     return (f"{len(counts)} languages × {min(counts.values(), default=0)} shots at "
             f"{SHOT_SIZE[0]}×{SHOT_SIZE[1]}"), problems
+
+
+@check("the purchase screen has been photographed for review", testflight=False)
+def review_shot():
+    """The picture that goes with each product, which is not one of the twelve sets.
+
+    A subscription submitted without it sits in MISSING_METADATA, and a version with a product in
+    that state cannot be submitted, so a missing file here costs a round trip through Apple's queue
+    to be told.
+    """
+    from PIL import Image
+
+    if not REVIEW_SHOT.exists():
+        return "not taken", [f"{REVIEW_SHOT.relative_to(ROOT)} is missing, "
+                             "run scripts/shots.sh --review"]
+
+    problems = []
+    with Image.open(REVIEW_SHOT) as image:
+        size, mode = image.size, image.mode
+    # App Store Connect refuses a review screenshot below this, and one that small would be
+    # unreadable anyway. The capture is 1320×2868, so this is a floor, not a target.
+    if size[0] < 640 or size[1] < 920:
+        problems.append(f"{size[0]}×{size[1]} is under the 640×920 App Store Connect accepts")
+    if "A" in mode:
+        problems.append("it has an alpha channel, which App Store Connect refuses")
+    return f"{size[0]}×{size[1]} {mode}", problems
 
 
 # ---------------------------------------------------------------------------
