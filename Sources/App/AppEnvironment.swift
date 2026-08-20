@@ -45,16 +45,26 @@ final class AppEnvironment {
     ///   StoreKit. Only the screenshot run passes it, so that a premium mission can be
     ///   photographed unlocked without a sandbox purchase; `nil` everywhere else, and then the
     ///   receipt is the only answer.
+    /// - Parameter bridge: the bridge this environment attaches its stores to. Defaults to
+    ///   the process-wide one, because the App Intents fired from the lock screen reach
+    ///   `AlarmBridge.shared` and must read the same stores the screens write. Anything that
+    ///   builds a *throwaway* environment must pass a throwaway bridge here: `attach` is a
+    ///   side effect on shared state, and an incidental `AppEnvironment()` — a preview, an
+    ///   environment default — once pointed the shared bridge at a temporary directory. From
+    ///   that moment the lock screen's buttons were answered out of an empty store: no
+    ///   mission, no re-arm, no second ring, and reconciliation cancelling real alarms as
+    ///   strays it could not account for.
     init(
         directory: URL = StoreLocation.supportDirectory(),
         defaults: UserDefaults = .standard,
-        entitlement: Entitlement? = nil
+        entitlement: Entitlement? = nil,
+        bridge: AlarmBridge = .shared
     ) {
         alarms = AlarmStore(directory: directory)
         log = WakeLogStore(directory: directory)
         preferences = Preferences(defaults: defaults)
         subscription = SubscriptionStore(pinnedEntitlement: entitlement)
-        bridge = AlarmBridge.shared
+        self.bridge = bridge
         bridge.attach(alarms: alarms, log: log)
     }
 
@@ -100,11 +110,16 @@ final class AppEnvironment {
 extension EnvironmentValues {
     /// `assumeIsolated`, because `@Entry` generates a `nonisolated static var defaultValue` and
     /// `AppEnvironment` is `@MainActor`. The assumption holds: an environment default is only
-    /// read while a view's body is being evaluated, which SwiftUI does on the main actor, and in
-    /// the shipping app it is never read at all because `DawnbreakApp` injects its own instance
-    /// at the root. What is left is previews. The alternative, an optional environment value,
-    /// would put an unwrap in every one of the twenty views that reads it.
+    /// read while a view's body is being evaluated, which SwiftUI does on the main actor.
+    ///
+    /// The bridge is this value's own, never `.shared`, and that one argument is a fix for the
+    /// worst bug this app has had. "Never read in the shipping app" turned out to be a hope,
+    /// not a property: the moment anything evaluated this default, its `AppEnvironment` was
+    /// built on a *temporary* directory and — through `attach` — pointed the process-wide
+    /// bridge at it. Every lock-screen button after that was answered out of an empty store:
+    /// the stop button stopped the alarm for good, no mission, no second ring. A default that
+    /// exists for previews is allowed to be useless; it is not allowed to reach shared state.
     @Entry var app: AppEnvironment = MainActor.assumeIsolated {
-        AppEnvironment(directory: FileManager.default.temporaryDirectory)
+        AppEnvironment(directory: FileManager.default.temporaryDirectory, bridge: AlarmBridge())
     }
 }

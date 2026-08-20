@@ -137,8 +137,9 @@ struct ReviewShotTests {
     /// simulator somebody debugs in next. Free rather than pro because that is the tier a reviewer
     /// downloads, and the only tier that can still be sold something.
     ///
-    /// Constructing one also re-points `AlarmBridge.shared` at these stores, which is harmless
-    /// here: nothing rings in this process, and the host app is left on screen behind the window.
+    /// With a bridge of its own, so building it cannot re-point `AlarmBridge.shared` at these
+    /// scratch stores. It once did, on the theory that nothing rings in a test process; the
+    /// theory did not survive learning what a mis-attached shared bridge does to the app.
     private func scratchEnvironment() throws -> AppEnvironment {
         let suite = "com.aymbam.dawnbreak.review-shot"
         let directory = FileManager.default.temporaryDirectory
@@ -146,7 +147,7 @@ struct ReviewShotTests {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let defaults = try #require(UserDefaults(suiteName: suite))
         defaults.removePersistentDomain(forName: suite)
-        return AppEnvironment(directory: directory, defaults: defaults, entitlement: .free)
+        return AppEnvironment(directory: directory, defaults: defaults, entitlement: .free, bridge: AlarmBridge())
     }
 
     /// The host app's window scene, once it has one.

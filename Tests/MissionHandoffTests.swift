@@ -227,6 +227,105 @@ struct MissionHandoffTests {
         #expect(bridge.armedIDs.isEmpty)
     }
 
+    // MARK: - The id that does not survive the trip
+
+    // AppIntents was seen handing `perform()` its parameter as nil on a cold launch — "Failed
+    // to fetch metadata for StopAlarmIntent", "Prepared alarmID to String(nil)" — and the old
+    // guard turned that into the reported bug in its entirety: button pressed, nothing at all.
+    // These hold the fallbacks that stand behind the parameter.
+
+    @Test("A stop whose id did not survive still finds the alarm the system says is ringing")
+    func aGarbageHintFallsBackToTheAlertingAlarm() async {
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.schedule(alarm)
+        system.startAlerting(alarm.id)
+
+        await bridge.handleStopPressed(hint: "")
+
+        #expect(bridge.activeMission?.alarmID == alarm.id, "the ringing alarm was not resolved")
+        #expect(system.calls.contains(.followUp(alarm.id)), "the resolved alarm was not re-armed")
+    }
+
+    @Test("With nothing alerting, the owed mission on disk answers for the id")
+    func aGarbageHintFallsBackToTheOwedMission() async {
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+
+        // A cold relaunch: fresh process, nothing in memory, the handoff still on disk. The
+        // follow-up is armed but not alerting yet, so the disk is the only thing that answers.
+        let relaunched = AlarmBridge(system: system)
+        await relaunched.handleMissionRequested(hint: "not-a-uuid")
+
+        #expect(relaunched.activeMission?.alarmID == alarm.id)
+    }
+
+    @Test("With nothing alerting and nothing owed, the one alarm recently due answers")
+    func aGarbageHintFallsBackToTheOneRecentlyDueAlarm() async {
+        // An alarm whose time was ten minutes ago: due within the window, and the only one.
+        let justRang = Date().addingTimeInterval(-600)
+        let alarm = AlarmDraft(
+            hour: Calendar.current.component(.hour, from: justRang),
+            minute: Calendar.current.component(.minute, from: justRang),
+            mission: .default
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+
+        await bridge.handleStopPressed(hint: "")
+
+        #expect(bridge.activeMission?.alarmID == alarm.id, "the recently due alarm was not resolved")
+        #expect(system.calls.contains(.followUp(alarm.id)))
+    }
+
+    @Test("An unresolvable press does nothing rather than guessing among several alarms")
+    func anUnresolvableHintStaysQuiet() async {
+        // An alarm half a day away, whichever half of the day the test runs in: not alerting,
+        // not owed, and outside the recently-due window, so nothing answers for the hint.
+        let farAway = Date().addingTimeInterval(12 * 3600)
+        let alarm = AlarmDraft(
+            hour: Calendar.current.component(.hour, from: farAway),
+            minute: Calendar.current.component(.minute, from: farAway),
+            mission: .default
+        )
+        let (bridge, _) = Self.bridge(with: alarm, system: FakeAlarmSystem())
+
+        await bridge.handleStopPressed(hint: "")
+
+        #expect(bridge.activeMission == nil)
+    }
+
+    // MARK: - The daemon refusing or vanishing
+
+    @Test("A follow-up refused once is retried rather than abandoned")
+    func aRefusedFollowUpIsRetried() async {
+        struct StaleDate: Error {}
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem(refusal: StaleDate(), refusalLimit: 1)
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+
+        await bridge.handleStopPressed(alarmID: alarm.id)
+
+        #expect(system.calls.filter { $0 == .followUp(alarm.id) }.count == 2, "no second attempt was made")
+        #expect(bridge.armedIDs == [alarm.id], "the retry did not leave the alarm armed")
+        #expect(bridge.lastFailure == nil, "a survived refusal is not a failure to report")
+    }
+
+    @Test("A follow-up refused twice is reported, because nothing will ring on its own")
+    func aTwiceRefusedFollowUpIsReported() async {
+        struct Broken: Error {}
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem(refusal: Broken(), refusalLimit: .max)
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+
+        await bridge.handleStopPressed(alarmID: alarm.id)
+
+        #expect(bridge.lastFailure?.detail.contains("follow-up") == true)
+    }
+
     // MARK: - Reconciliation
 
     @Test("Re-arming everything at launch does not cancel the follow-up a dodge just armed")
@@ -242,6 +341,84 @@ struct MissionHandoffTests {
         // would replace the ring that was going to get the user up with one 24 hours away.
         #expect(system.calls.last == .followUp(alarm.id))
         #expect(bridge.armedIDs == [alarm.id])
+    }
+
+    @Test("Reconciliation does nothing at all when the daemon cannot be asked")
+    func reconcileDoesNothingOnAFailedRead() async {
+        // The bug this holds down, from the daemon's own log: "Scheduled alarm", then 200ms
+        // later "Cancelling alarm". A stale read answered "nothing armed", reconciliation
+        // believed it, and cancel-then-reschedule destroyed the alarm it was protecting. No
+        // answer licenses nothing.
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.schedule(alarm)
+        let armedBefore = system.calls.count
+        system.becomeUnreachable()
+
+        await bridge.reconcile()
+
+        #expect(system.calls.count == armedBefore, "reconcile acted on a read that never happened")
+    }
+
+    @Test("Reconciliation never cancels an alarm that is ringing this instant")
+    func reconcileSparesAnAlertingAlarm() async {
+        // The app can be launched in the background by the ringing alert's own buttons, and
+        // reconcile runs at every launch. The alarm was deleted from the store while it rang,
+        // so the stray-cancelling loop would see an id the store cannot vouch for — attached
+        // to the very ring the user is answering.
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem()
+        let (bridge, store) = Self.bridge(with: alarm, system: system)
+        await bridge.schedule(alarm)
+        system.startAlerting(alarm.id)
+        store.remove(id: alarm.id)
+        let cancelsBefore = system.calls.filter { $0 == .cancel(alarm.id) }.count
+
+        await bridge.reconcile()
+
+        #expect(system.calls.filter { $0 == .cancel(alarm.id) }.count == cancelsBefore,
+                "reconcile cancelled the ringing alarm")
+        #expect(bridge.armedIDs == [alarm.id])
+    }
+
+    // MARK: - The shared bridge's stores
+
+    @Test("Building a throwaway environment does not steal the shared bridge's stores")
+    func aThrowawayEnvironmentLeavesTheSharedBridgeAlone() async {
+        // The worst bug this app has had, as a regression test. SwiftUI's environment default
+        // built an `AppEnvironment` on a temporary directory, and building one used to attach
+        // its stores to `AlarmBridge.shared` — the object the lock-screen intents talk to.
+        // From that moment every button on the ringing alert was answered out of an empty
+        // store: no mission, no re-arm, no second ring. "Nothing happened."
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("throwaway-\(UUID().uuidString)", isDirectory: true)
+
+        let alarm = Self.draft()
+        let real = AlarmStore(directory: directory)
+        real.upsert(alarm)
+        AlarmBridge.shared.attach(alarms: real, log: WakeLogStore(directory: directory))
+        defer {
+            // The singleton outlives the test and talks to the process's real AlarmKit, so
+            // everything it was made to do here is undone: the follow-up it armed, the
+            // handoff on disk, and the store it was attached to.
+            AlarmBridge.shared.cancel(alarm.id)
+            PendingMissionStore.clear()
+            AlarmBridge.shared.restorePendingMission()
+            AlarmBridge.shared.attach(
+                alarms: AlarmStore(directory: directory),
+                log: WakeLogStore(directory: directory)
+            )
+        }
+
+        // What the environment default does, spelled out: a scratch environment with a bridge
+        // of its own. The assertion is that this line has no effect on `.shared`.
+        _ = AppEnvironment(directory: FileManager.default.temporaryDirectory, bridge: AlarmBridge(system: FakeAlarmSystem()))
+
+        PendingMissionStore.clear()
+        await AlarmBridge.shared.handleMissionRequested(alarmID: alarm.id)
+        #expect(AlarmBridge.shared.activeMission?.alarmID == alarm.id,
+                "the shared bridge lost its store to a throwaway environment")
     }
 
     // MARK: - The follow-up's contents

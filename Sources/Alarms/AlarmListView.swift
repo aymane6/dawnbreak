@@ -63,13 +63,25 @@ struct AlarmListView: View {
                     .accessibilityIdentifier(AccessibilityID.addAlarm)
                 }
             }
-            .sheet(item: $editing) { route in
+            // Yields to a ringing alarm: the editor dismisses itself the moment a mission
+            // activates, because UIKit gives the window one presentation at a time and an open
+            // sheet would make the mission cover fail with "already presenting". Losing an
+            // unsaved edit to a ringing alarm is a fair trade; losing the mission screen is not.
+            .sheet(item: Binding(
+                get: { app.bridge.activeMission == nil ? editing : nil },
+                set: { editing = $0 }
+            )) { route in
                 switch route {
                 case .new:
                     AlarmEditorView(alarm: AlarmDraft(), isNew: true)
                 case .existing(let alarm):
                     AlarmEditorView(alarm: alarm, isNew: false)
                 }
+            }
+            // Cleared, not merely hidden, or the editor would re-present itself the moment
+            // the mission settles, with a draft from before the alarm rang.
+            .onChange(of: app.bridge.activeMission != nil) { _, ringing in
+                if ringing { editing = nil }
             }
             .overlay(alignment: .bottom) { permissionBanner }
             .task {
@@ -83,7 +95,14 @@ struct AlarmListView: View {
             }
             .alert(
                 Text("error.title", bundle: .main),
-                isPresented: Binding(get: { app.bridge.lastFailure != nil }, set: { if !$0 { app.bridge.clearFailure() } })
+                // Held back while a mission is on screen, for the same reason the editor sheet
+                // yields: an alert presented first would make the mission cover fail with
+                // "already presenting". The failure is still there to read once the mission
+                // settles; `lastFailure` is not cleared by waiting.
+                isPresented: Binding(
+                    get: { app.bridge.lastFailure != nil && app.bridge.activeMission == nil },
+                    set: { if !$0 { app.bridge.clearFailure() } }
+                )
             ) {
                 Button(role: .cancel) { app.bridge.clearFailure() } label: { Text("action.ok", bundle: .main) }
             } message: {

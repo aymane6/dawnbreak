@@ -28,6 +28,15 @@ final class FakeAlarmSystem: AlarmScheduler {
     private struct Log: Sendable {
         var calls: [Call] = []
         var armed: Set<UUID> = []
+        /// The subset of `armed` the fake reports as ringing right now.
+        var alerting: Set<UUID> = []
+        /// Whether `snapshot()` answers at all. False plays the daemon being unreachable,
+        /// which the bridge must treat as "no information", not as "nothing armed".
+        var reachable = true
+        /// How many more scheduling calls throw `refusal` before the fake starts accepting.
+        /// `.max` refuses forever; 1 plays the daemon rejecting a fire date that slipped
+        /// into the past, which a retry with a fresh date survives.
+        var refusalsLeft = 0
         /// When each follow-up was asked to fire, in order. How long after a dodge the alarm
         /// comes back is a product decision, so it is asserted rather than assumed.
         var followUpDates: [Date] = []
@@ -38,9 +47,26 @@ final class FakeAlarmSystem: AlarmScheduler {
     private let refusal: (any Error)?
     private let log = Mutex(Log())
 
-    init(authorization: AlarmManager.AuthorizationState = .authorized, refusal: (any Error)? = nil) {
+    init(
+        authorization: AlarmManager.AuthorizationState = .authorized,
+        refusal: (any Error)? = nil,
+        refusalLimit: Int = .max
+    ) {
         self.authorizationState = authorization
         self.refusal = refusal
+        if refusal != nil {
+            log.withLock { $0.refusalsLeft = refusalLimit }
+        }
+    }
+
+    /// Marks an armed alarm as ringing, for the resolution fallbacks.
+    func startAlerting(_ id: UUID) {
+        log.withLock { _ = $0.alerting.insert(id) }
+    }
+
+    /// Plays the daemon being unreachable from here on.
+    func becomeUnreachable() {
+        log.withLock { $0.reachable = false }
     }
 
     var calls: [Call] { log.withLock { $0.calls } }
@@ -63,12 +89,17 @@ final class FakeAlarmSystem: AlarmScheduler {
         AsyncStream { $0.finish() }
     }
 
-    func scheduledIDs() -> Set<UUID> { log.withLock { $0.armed } }
+    func snapshot() -> AlarmSnapshot? {
+        log.withLock {
+            $0.reachable ? AlarmSnapshot(scheduled: $0.armed, alerting: $0.alerting) : nil
+        }
+    }
 
     func cancel(id: UUID) {
         log.withLock {
             $0.calls.append(.cancel(id))
             $0.armed.remove(id)
+            $0.alerting.remove(id)
         }
     }
 
@@ -82,15 +113,17 @@ final class FakeAlarmSystem: AlarmScheduler {
     }
 
     private func arm(_ id: UUID, as call: Call) throws {
-        let taken = log.withLock {
+        let (taken, refusing) = log.withLock {
             $0.calls.append(call)
-            return $0.armed.contains(id)
+            let refusing = $0.refusalsLeft > 0
+            if refusing { $0.refusalsLeft -= 1 }
+            return ($0.armed.contains(id), refusing)
         }
-        if let refusal { throw refusal }
+        if refusing, let refusal { throw refusal }
         // The refusal this whole file exists for, and it comes after the call is recorded
         // because the real one is recorded by the daemon too, in its log, as a rejection.
         if taken { throw DuplicateID() }
-        log.withLock { $0.armed.insert(id) }
+        log.withLock { _ = $0.armed.insert(id) }
     }
 }
 

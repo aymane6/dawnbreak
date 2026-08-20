@@ -1,17 +1,16 @@
-La version 3 corrige ce que les deux premières faisaient mal : modifier une alarme enregistrée échouait avec « iOS a refusé de programmer cette alarme », et le bouton Arrêter d’une alarme qui sonne mettait fin à la matinée sans aucune mission.
+La version 4 corrige le cœur du dernier signalement : appuyer sur Calcul ou sur Arrêter pendant la sonnerie ne faisait rien du tout. Pas de mission, pas de deuxième sonnerie. La cause était un état interne auquel les boutons de l'écran verrouillé pouvaient parler dans le vide ; ils atteignent désormais toujours la vraie alarme, et l'alarme ne peut plus être désarmée en silence en arrière-plan.
 
 À TESTER EN PREMIER
 
-1. Modifier une alarme. En créer une, l’enregistrer, la réouvrir, changer l’heure et la mission, enregistrer à nouveau. Aucune erreur, et elle sonne toujours.
-2. Appuyer sur Arrêter pendant qu’elle sonne. La mission s’ouvre quand même, et si elle n’est pas résolue l’alarme revient soixante secondes plus tard.
-3. Quitter l’écran de mission, ou forcer la fermeture de l’app avec une mission en cours. L’alarme revient tout de suite.
-4. Résoudre la mission. C’est seulement là que la matinée est finie, et plus rien ne sonne.
+1. Régler une alarme à une ou deux minutes, verrouiller le téléphone, la laisser sonner. Appuyer sur le bouton qui porte le nom de la mission. L'app doit s'ouvrir directement sur la mission.
+2. La faire sonner à nouveau et appuyer sur Arrêter cette fois. La mission s'ouvre quand même, et si elle n'est pas résolue l'alarme revient soixante secondes plus tard.
+3. Quitter l'écran de mission, ou forcer la fermeture de l'app avec la mission non résolue. L'alarme revient tout de suite.
+4. Modifier une alarme enregistrée : changer l'heure et la mission, enregistrer. Aucune erreur, et elle sonne toujours.
 
 À REGARDER AUSSI
 
 - Les douze missions, à chaque difficulté, avec plusieurs manches.
-- Téléphone verrouillé, mode silencieux, et un mode de concentration. L’alarme doit sonner dans les trois cas.
-- Une autre langue : changer la langue de l’iPhone, puis relire l’écran d’alarme et le texte de la mission.
-- La sortie d’urgence dans les réglages, activée par défaut, prévue comme le seul moyen de sortir sans mission.
+- Le mode silencieux et un mode de concentration. L'alarme doit sonner dans les deux cas.
+- Une autre langue : changer la langue de l'iPhone, puis relire l'écran d'alarme et le texte de la mission.
 
-Si quelque chose ne va pas, une capture d’écran en dit plus qu’une phrase. Renvoyez-la par TestFlight, ou par la page d’assistance dans les réglages.
+Si quelque chose ne va pas, une capture d'écran en dit plus qu'une phrase. Envoyez-la par TestFlight, ou par la page d'assistance dans les réglages.

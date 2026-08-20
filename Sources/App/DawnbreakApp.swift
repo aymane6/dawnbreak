@@ -13,6 +13,11 @@ struct DawnbreakApp: App {
                 .environment(\.app, env)
                 .preferredColorScheme(colorScheme)
                 .task {
+                    #if DEBUG
+                    // Before the restore: the seed clears the pending mission store, and the
+                    // ring test needs the launch to start from silence.
+                    await E2EAlarmSeed.armIfRequested(on: env)
+                    #endif
                     // Order matters. Restore first so a mission interrupted by the app being
                     // killed is back on screen before anything can re-arm the alarm, then
                     // reconcile so an alarm the system has forgotten is put back.

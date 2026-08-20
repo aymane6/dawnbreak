@@ -52,6 +52,12 @@ struct RootView: View {
         .sheet(item: paywallBinding) { reason in
             PaywallView(reason: reason)
         }
+        // Cleared, not merely hidden. The gated binding above already dismisses the paywall
+        // when a mission takes the screen; without this, the stored reason would re-present
+        // it out of nowhere the moment the mission settles.
+        .onChange(of: app.bridge.activeMission != nil) { _, ringing in
+            if ringing { app.paywallReason = nil }
+        }
     }
 
     /// The two things that take the whole screen, as one value.
@@ -96,7 +102,15 @@ struct RootView: View {
     }
 
     private var paywallBinding: Binding<AppEnvironment.PaywallReason?> {
-        Binding(get: { app.paywallReason }, set: { app.paywallReason = $0 })
+        // Nil while a mission or onboarding owns the screen, which dismisses an open paywall
+        // the moment an alarm rings. UIKit gives a view one presentation at a time: a sheet
+        // left up would make the mission cover fail with "already presenting" — silently, in
+        // a log nobody reads — and a morning with no mission screen is the one bug this app
+        // exists not to have. The paywall can be reopened; the morning cannot.
+        Binding(
+            get: { takeover == nil ? app.paywallReason : nil },
+            set: { app.paywallReason = $0 }
+        )
     }
 }
 

@@ -20,6 +20,19 @@ enum CaptureLaunch {
     /// and no purchase screen behind it.
     static let freeArgument = "-dawnbreak-capture-free"
 
+    /// Followed by a number of seconds: a Debug launch arms one real alarm that far out, through
+    /// the real bridge and the real AlarmKit daemon, for the end-to-end ring test. Not a capture
+    /// flag: the run it starts is the ordinary app, and the whole point is that nothing is faked.
+    /// The behaviour behind it is compiled out of Release; only the string lives here, because the
+    /// test target has to spell it identically.
+    static let e2eAlarmArgument = "-dawnbreak-e2e-alarm"
+
+    /// A Debug launch that starts with a mission already owed, as if a lock-screen intent had
+    /// just run: the handoff written to the shared container, the alarm in the store, nothing
+    /// faked past that point. What the test then watches is the half of the journey the app
+    /// owns — the mission screen taking the display, over whatever else wanted it.
+    static let e2eMissionArgument = "-dawnbreak-e2e-mission"
+
     /// Where the seeded run stores its data. A suite rather than `.standard` so a capture run
     /// cannot overwrite the preferences of an app already installed on the same simulator.
     static let defaultsSuite = "com.aymbam.dawnbreak.capture"

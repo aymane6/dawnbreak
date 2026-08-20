@@ -40,8 +40,11 @@ struct StopAlarmIntent: LiveActivityIntent {
     init(alarmID: UUID) { self.alarmID = alarmID.uuidString }
 
     func perform() async throws -> some IntentResult {
-        guard let id = UUID(uuidString: alarmID) else { return .result() }
-        await AlarmBridge.shared.handleStopPressed(alarmID: id)
+        // The id is a hint, not a requirement. AppIntents has been seen delivering it as nil
+        // on a cold launch ("Failed to fetch metadata for StopAlarmIntent", "Prepared alarmID
+        // to String(nil)"), and a guard that returned on that turned a metadata hiccup into
+        // the whole reported bug. The bridge works out which alarm is ringing on its own.
+        await AlarmBridge.shared.handleStopPressed(hint: alarmID)
         return .result()
     }
 }
@@ -60,8 +63,7 @@ struct StartMissionIntent: LiveActivityIntent {
     init(alarmID: UUID) { self.alarmID = alarmID.uuidString }
 
     func perform() async throws -> some IntentResult {
-        guard let id = UUID(uuidString: alarmID) else { return .result() }
-        await AlarmBridge.shared.handleMissionRequested(alarmID: id)
+        await AlarmBridge.shared.handleMissionRequested(hint: alarmID)
         return .result()
     }
 }
@@ -82,8 +84,7 @@ struct SnoozeAlarmIntent: LiveActivityIntent {
     init(alarmID: UUID) { self.alarmID = alarmID.uuidString }
 
     func perform() async throws -> some IntentResult {
-        guard let id = UUID(uuidString: alarmID) else { return .result() }
-        await AlarmBridge.shared.handleSnoozePressed(alarmID: id)
+        await AlarmBridge.shared.handleSnoozePressed(hint: alarmID)
         return .result()
     }
 }

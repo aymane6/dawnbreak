@@ -1,17 +1,16 @@
-Build 3 fixes what the first two got wrong: editing a saved alarm failed with "iOS refused to schedule this alarm", and the Stop button on a ringing alarm ended the morning with no mission at all.
+Build 4 fixes the heart of the last report: pressing Math or Stop on the ringing alarm did nothing at all. No mission, no second ring. The cause was internal state the lock screen's buttons could end up talking to with nothing behind it; they now always reach the real alarm, and the alarm can no longer be silently disarmed in the background.
 
 WHAT TO TEST FIRST
 
-1. Edit an alarm. Set one, save it, open it again, change the time and the mission, save again. No error, and it still rings.
-2. Press Stop while it rings. The mission opens anyway, and if it is not answered the alarm comes back sixty seconds later.
-3. Leave the mission screen, or force quit the app with a mission still owed. The alarm comes straight back.
-4. Answer the mission. Only then is the morning over, and nothing rings again.
+1. Set an alarm a minute or two ahead, lock the phone, let it ring. Press the button named after the mission. The app must open straight onto the mission.
+2. Ring it again and press Stop instead. The mission still opens, and if it is not solved the alarm returns sixty seconds later.
+3. Leave the mission screen, or force quit the app with the mission unsolved. The alarm comes straight back.
+4. Edit a saved alarm: change the time and the mission, save. No error, and it still rings.
 
 ALSO WORTH A LOOK
 
 - The twelve missions, at each difficulty, with several rounds.
-- A locked phone, silent mode, and a Focus mode. The alarm has to ring through all three.
+- Silent mode and a Focus mode. The alarm has to ring through both.
 - Another language: change the iPhone language, then read the alarm and the mission text again.
-- The emergency exit in Settings, on by default, and meant to be the only way out without a mission.
 
-If something is wrong, a screenshot of it says more than a sentence about it. Send it back through TestFlight, or through the support page in Settings.
+If something is wrong, a screenshot says more than a sentence. Send it through TestFlight, or through the support page in Settings.

@@ -36,8 +36,27 @@ enum CaptureMode {
     // MARK: - Environment
 
     /// The environment the app root runs on: the real one, or a seeded throwaway.
+    ///
+    /// One per process, and that is the fix for a bug that cost a morning. This is called from
+    /// `DawnbreakApp`'s `@State` initial value, and SwiftUI re-initialises an `App` struct
+    /// whenever it likes: the extra values are discarded, but their construction is not — each
+    /// one built a fresh `AlarmStore` and attached it to the shared bridge. From then on the
+    /// bridge answered every intent and every reconciliation out of a store frozen at the
+    /// moment of the re-init: alarms created after it did not exist as far as the lock screen
+    /// was concerned, and reconcile cancelled them as strays it could not account for.
     @MainActor
     static func makeEnvironment() -> AppEnvironment {
+        if let environment = current { return environment }
+        let environment = build()
+        current = environment
+        return environment
+    }
+
+    @MainActor
+    private static var current: AppEnvironment?
+
+    @MainActor
+    private static func build() -> AppEnvironment {
         guard isActive else { return AppEnvironment() }
 
         // Under caches rather than the support directory: the run must not touch alarms that

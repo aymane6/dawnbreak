@@ -4,6 +4,7 @@ import DawnbreakKit
 import Foundation
 import Observation
 import SwiftUI
+import os
 
 /// The only place that talks to AlarmKit.
 ///
@@ -14,6 +15,14 @@ import SwiftUI
 @Observable
 final class AlarmBridge {
     static let shared = AlarmBridge()
+
+    /// The trail a customer's morning leaves. `lastFailure` reaches the screen, but the two
+    /// reports that shaped this file both arrived as "nothing happened", and nothing is what a
+    /// dialog cannot describe: the button was pressed on the lock screen, the app never came
+    /// forward, and every trace of why lived in a process that had already exited. This is the
+    /// log a sysdiagnose surfaces.
+    @ObservationIgnored
+    private static let journal = Logger(subsystem: "com.aymbam.dawnbreak", category: "alarms")
 
     private(set) var authorization: AlarmManager.AuthorizationState = .notDetermined
     /// Set when an alarm is ringing and the mission screen should be on screen. The root
@@ -87,10 +96,15 @@ final class AlarmBridge {
     /// screen is up, and killing the app is the first thing anyone tries.
     static let missionEngagedDelay: TimeInterval = 180
 
+    /// How far back an alarm's fire time can be and still count as "the one ringing now",
+    /// when nothing better identifies it. Generous, because it only breaks ties among the
+    /// user's own enabled alarms, and a wrong "none" costs the whole morning.
+    static let recentlyDueWindow: TimeInterval = 30 * 60
+
     init(system: AlarmScheduler = AlarmSystem()) {
         self.system = system
         authorization = system.authorizationState
-        armedIDs = system.scheduledIDs()
+        armedIDs = system.snapshot()?.scheduled ?? []
     }
 
     func attach(alarms: AlarmStore, log: WakeLogStore) {
@@ -170,44 +184,136 @@ final class AlarmBridge {
             }
         }
 
+        Self.journal.info("arming \(alarm.id.uuidString, privacy: .public), cancel first")
         system.cancel(id: alarm.id)
         do {
             try await system.schedule(alarm)
             lastFailure = nil
+            // Recorded by hand rather than read back. The daemon's list is eventually
+            // consistent with its own confirmations: a read issued milliseconds after a
+            // successful schedule has been seen coming back without the alarm in it, and
+            // anything that trusts such a read un-arms alarms it should be protecting.
+            armedIDs.insert(alarm.id)
+            Self.journal.info("armed \(alarm.id.uuidString, privacy: .public)")
         } catch AlarmManager.AlarmError.maximumLimitReached {
+            armedIDs.remove(alarm.id)
             lastFailure = Failure(messageKey: "error.tooManyAlarms", detail: "")
         } catch {
+            armedIDs.remove(alarm.id)
+            Self.journal.error("schedule refused for \(alarm.id.uuidString, privacy: .public): \(String(describing: error), privacy: .public)")
             lastFailure = Failure(messageKey: "error.scheduleFailed", detail: String(describing: error))
         }
-        armedIDs = system.scheduledIDs()
     }
 
     func cancel(_ id: UUID) {
         // A cancel for an alarm the system does not know about throws, and that is fine:
         // the desired end state is "not scheduled", which is already true.
+        Self.journal.info("cancel \(id.uuidString, privacy: .public)")
         system.cancel(id: id)
-        armedIDs = system.scheduledIDs()
+        armedIDs.remove(id)
     }
 
     /// Re-arms every enabled alarm. Run at launch, because an app update or a restore from
     /// backup leaves the store full of alarms the system has never been told about.
     func reconcile() async {
+        // Nothing here without a real answer from the daemon. `snapshot()` is nil when the
+        // read failed, and a failed read is not an empty system: treating it as one made this
+        // method cancel a perfectly armed alarm 200ms after it was scheduled — the daemon
+        // confirmed the arm, a stale read said "not scheduled", and the cancel-then-reschedule
+        // that followed killed the alarm it was trying to protect. Reconciliation is an
+        // optimisation; running it on a guess is how it becomes the thing it guards against.
+        guard let snapshot = system.snapshot() else {
+            Self.journal.warning("reconcile skipped: the daemon could not be asked")
+            return
+        }
         // A mission still owed is not reconciled away. Its alarm is armed as a one-off
         // follow-up, so the store would look "not armed on its normal schedule" and the loop
         // below would replace the follow-up with tomorrow's alarm — cancelling the one ring
         // that was going to make the user get up.
         let owed = PendingMissionStore.loadIfFresh()?.alarmID
-        let scheduled = system.scheduledIDs()
-        for alarm in alarms.alarms where alarm.isEnabled && !scheduled.contains(alarm.id) && alarm.id != owed {
+        // What this process armed counts as armed even when the snapshot has not caught up:
+        // a successful read can still be a stale one, and re-arming on its say-so starts with
+        // a cancel of the very alarm in question.
+        let known = snapshot.scheduled.union(armedIDs)
+        for alarm in alarms.alarms where alarm.isEnabled
+            && !known.contains(alarm.id) && alarm.id != owed {
+            Self.journal.notice("reconcile re-arming \(alarm.id.uuidString, privacy: .public): not among \(known.count) known ids")
             await schedule(alarm)
         }
-        // The reverse direction too: an alarm switched off while the app was closed.
-        for id in scheduled where id != owed && alarms.alarm(id: id)?.isEnabled != true {
+        // The reverse direction too: an alarm switched off while the app was closed. Never an
+        // alarm that is ringing this instant: the app can be launched in the background by the
+        // alert's own buttons, and cancelling the alerting alarm from that launch silences the
+        // ring and destroys the handoff mid-flight. And never one this process armed itself:
+        // "the store cannot vouch for it" reads as "the user deleted it" only for ids that
+        // arrived from outside, not for one whose schedule call returned two hundred
+        // milliseconds ago.
+        for id in snapshot.scheduled where id != owed
+            && !snapshot.alerting.contains(id)
+            && !armedIDs.contains(id)
+            && alarms.alarm(id: id)?.isEnabled != true {
+            let held = alarms.alarm(id: id)
+            Self.journal.notice("reconcile cancelling stray \(id.uuidString, privacy: .public): store holds \(self.alarms.alarms.count) alarms, knows it: \(held != nil), enabled: \(held?.isEnabled == true)")
             cancel(id)
         }
     }
 
     // MARK: - Intent handling
+
+    /// The alarm a lock-screen button belongs to, worked out from whatever survives.
+    ///
+    /// The button's intent carries the alarm's id as a parameter, and that parameter cannot be
+    /// trusted: on a cold launch AppIntents has been seen failing to load the intent's own
+    /// metadata — "Failed to fetch metadata for StopAlarmIntent", "Prepared alarmID to
+    /// String(nil)" — and handing `perform()` an empty string. The old guard returned silently
+    /// on that, which turned one framework hiccup into the whole reported bug: button pressed,
+    /// no mission, no re-arm, no second ring, nothing.
+    ///
+    /// So the id is a hint, and three fallbacks stand behind it, most direct first: the alarm
+    /// the daemon says is alerting right now, the mission already owed on disk, and finally the
+    /// only enabled alarm that was due within the last half hour. Only when every one of those
+    /// comes up empty is there genuinely nothing to act on.
+    private func resolveRingingAlarm(hint: String) -> UUID? {
+        if let id = UUID(uuidString: hint) { return id }
+        Self.journal.error("intent arrived with no usable alarm id ('\(hint, privacy: .public)'), falling back")
+
+        if let alerting = system.snapshot()?.alerting, !alerting.isEmpty {
+            let id = alerting.first { alarms.alarm(id: $0) != nil } ?? alerting.first
+            Self.journal.notice("resolved to the alerting alarm \(id?.uuidString ?? "?", privacy: .public)")
+            return id
+        }
+        if let pending = PendingMissionStore.loadIfFresh() {
+            Self.journal.notice("resolved to the owed mission \(pending.alarmID.uuidString, privacy: .public)")
+            return pending.alarmID
+        }
+        let now = Date()
+        let due = alarms.alarms.filter { alarm in
+            guard alarm.isEnabled else { return false }
+            guard let fire = alarm.nextFireDate(after: now.addingTimeInterval(-Self.recentlyDueWindow)) else { return false }
+            return fire <= now.addingTimeInterval(60)
+        }
+        if let only = due.count == 1 ? due.first : nil {
+            Self.journal.notice("resolved to the one recently due alarm \(only.id.uuidString, privacy: .public)")
+            return only.id
+        }
+        Self.journal.error("no alarm could be resolved: \(due.count) recently due, nothing alerting, nothing owed")
+        return nil
+    }
+
+    /// The intent-facing spellings: the parameter as it survived the trip, resolved before use.
+    func handleStopPressed(hint: String) async {
+        guard let id = resolveRingingAlarm(hint: hint) else { return }
+        await handleStopPressed(alarmID: id)
+    }
+
+    func handleMissionRequested(hint: String) async {
+        guard let id = resolveRingingAlarm(hint: hint) else { return }
+        await handleMissionRequested(alarmID: id)
+    }
+
+    func handleSnoozePressed(hint: String) async {
+        guard let id = resolveRingingAlarm(hint: hint) else { return }
+        await handleSnoozePressed(alarmID: id)
+    }
 
     /// The alert's stop affordance was pressed.
     ///
@@ -325,16 +431,37 @@ final class AlarmBridge {
         // is put back by the system the moment it stops ringing, so the id is always taken by
         // the time a dodge tries to reuse it, and the follow-up would never arm. This is the
         // line whose absence meant a stopped alarm never rang again.
+        Self.journal.info("arming follow-up for \(pending.alarmID.uuidString, privacy: .public), cancel first")
         system.cancel(id: pending.alarmID)
         do {
             try await system.scheduleFollowUp(pending.followUpDraft(), at: Date().addingTimeInterval(delay))
+            armedIDs.insert(pending.alarmID)
+            Self.journal.info("follow-up armed \(Int(delay), privacy: .public)s out for \(pending.alarmID.uuidString, privacy: .public)")
         } catch {
-            // Named, because this failure is invisible otherwise: the alarm is already silent,
-            // the mission screen is up, and the only symptom is a morning that never rings
-            // again. A dialog naming the stage is what makes the next report diagnosable.
-            lastFailure = Failure(messageKey: "error.scheduleFailed", detail: "follow-up: \(error)")
+            // One more try, further out. The fire date is computed before the daemon sees the
+            // request, and on a cold launch the gap between the two has been measured at whole
+            // seconds — long enough that the five-second "immediate" follow-up arrived already
+            // in the past, and the daemon refused it: "Cannot schedule an alarm with a fixed
+            // date in the past". A minute late is a worse comeback than five seconds; none at
+            // all is the only unacceptable one.
+            Self.journal.error("follow-up refused, retrying further out: \(String(describing: error), privacy: .public)")
+            do {
+                try await system.scheduleFollowUp(
+                    pending.followUpDraft(),
+                    at: Date().addingTimeInterval(max(delay, 30))
+                )
+                armedIDs.insert(pending.alarmID)
+                Self.journal.info("follow-up armed on retry for \(pending.alarmID.uuidString, privacy: .public)")
+            } catch {
+                // Named, because this failure is invisible otherwise: the alarm is already
+                // silent, the mission screen is up, and the only symptom is a morning that
+                // never rings again. A dialog naming the stage is what makes the next report
+                // diagnosable.
+                Self.journal.fault("follow-up refused twice, the alarm will not come back on its own: \(String(describing: error), privacy: .public)")
+                armedIDs.remove(pending.alarmID)
+                lastFailure = Failure(messageKey: "error.scheduleFailed", detail: "follow-up: \(error)")
+            }
         }
-        armedIDs = system.scheduledIDs()
     }
 
     // MARK: - Mission outcome
@@ -428,13 +555,22 @@ protocol AlarmScheduler: Sendable {
     func requestAuthorization() async throws -> AlarmManager.AuthorizationState
     func authorizationUpdates() -> AsyncStream<AlarmManager.AuthorizationState>
 
-    /// The ids the system holds right now, empty if it cannot be asked.
-    func scheduledIDs() -> Set<UUID>
+    /// What the system holds right now, or nil when it cannot be asked. The difference is
+    /// load-bearing: "nothing scheduled" licenses reconciliation to cancel strays, and "no
+    /// answer" licenses nothing. Collapsing the two into an empty set is how a stale read
+    /// once cancelled a freshly armed alarm.
+    func snapshot() -> AlarmSnapshot?
     func armedUpdates() -> AsyncStream<Set<UUID>>
     /// Silent when there is nothing to cancel: the caller wants the end state, not the call.
     func cancel(id: UUID)
     func schedule(_ alarm: AlarmDraft) async throws
     func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date) async throws
+}
+
+/// One coherent read of the daemon's state: everything armed, and the subset ringing right now.
+struct AlarmSnapshot: Sendable {
+    var scheduled: Set<UUID>
+    var alerting: Set<UUID>
 }
 
 /// The calls that cross into AlarmKit, deliberately outside the main actor.
@@ -463,10 +599,14 @@ struct AlarmSystem: AlarmScheduler {
         stream { AlarmManager.shared.authorizationUpdates }
     }
 
-    /// `alarms` throws when the daemon cannot be reached, and an unreachable daemon holds
-    /// nothing this app can rely on, so that reads as "none armed" rather than as a crash.
-    func scheduledIDs() -> Set<UUID> {
-        Set(((try? AlarmManager.shared.alarms) ?? []).map(\.id))
+    /// `alarms` throws when the daemon cannot be reached, and nil is the honest translation:
+    /// an unreachable daemon is not an empty one, and the callers act on the difference.
+    func snapshot() -> AlarmSnapshot? {
+        guard let alarms = try? AlarmManager.shared.alarms else { return nil }
+        return AlarmSnapshot(
+            scheduled: Set(alarms.map(\.id)),
+            alerting: Set(alarms.filter { $0.state == .alerting }.map(\.id))
+        )
     }
 
     func armedUpdates() -> AsyncStream<Set<UUID>> {

@@ -1,17 +1,16 @@
-La build 3 corregge quello che sbagliavano le prime due: modificare una sveglia salvata finiva con «iOS ha rifiutato di programmare questa sveglia», e il pulsante Stop su una sveglia che suona chiudeva la mattina senza nessuna missione.
+La build 4 corregge il cuore dell'ultima segnalazione: premere Calcolo o Stop sulla sveglia che suona non faceva assolutamente nulla. Nessuna missione, nessun secondo squillo. La causa era uno stato interno con cui i pulsanti della schermata di blocco potevano finire a parlare a vuoto; ora raggiungono sempre la sveglia vera, e la sveglia non può più essere disarmata in silenzio in background.
 
 COSA PROVARE PER PRIMO
 
-1. Modifica una sveglia. Creala, salvala, riaprila, cambia ora e missione, salva di nuovo. Nessun errore, e suona ancora.
-2. Premi Stop mentre suona. La missione si apre comunque, e se non la risolvi la sveglia torna sessanta secondi dopo.
-3. Esci dalla schermata della missione, o chiudi forzatamente l'app con una missione in sospeso. La sveglia torna subito.
-4. Risolvi la missione. Solo allora la mattina è finita e non suona più niente.
+1. Imposta una sveglia a uno o due minuti, blocca il telefono, lasciala suonare. Premi il pulsante con il nome della missione. L'app deve aprirsi direttamente sulla missione.
+2. Falla suonare di nuovo e premi Stop. La missione si apre comunque, e se non la risolvi la sveglia torna sessanta secondi dopo.
+3. Esci dalla schermata della missione, o chiudi forzatamente l'app con la missione irrisolta. La sveglia torna subito.
+4. Modifica una sveglia salvata: cambia ora e missione, salva. Nessun errore, e suona ancora.
 
 VALE LA PENA GUARDARE ANCHE
 
 - Le dodici missioni, a ogni difficoltà, con più turni.
-- Telefono bloccato, modalità silenziosa e una modalità di concentrazione. La sveglia deve suonare in tutti e tre i casi.
+- La modalità silenziosa e una modalità di concentrazione. La sveglia deve suonare in entrambe.
 - Un'altra lingua: cambia la lingua dell'iPhone e rileggi la sveglia e il testo della missione.
-- L'uscita di emergenza nelle impostazioni, attiva per impostazione predefinita, pensata come l'unico modo di uscire senza missione.
 
-Se qualcosa non va, uno screenshot dice più di una frase. Rimandalo con TestFlight o dalla pagina di assistenza nelle impostazioni.
+Se qualcosa non va, uno screenshot dice più di una frase. Invialo con TestFlight o dalla pagina di assistenza nelle impostazioni.

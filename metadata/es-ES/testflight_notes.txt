@@ -1,17 +1,16 @@
-La versión 3 corrige lo que fallaba en las dos primeras: editar una alarma guardada terminaba en «iOS ha rechazado programar esta alarma», y el botón Detener de una alarma sonando acababa la mañana sin ninguna misión.
+La versión 4 corrige el corazón del último informe: pulsar Cálculo o Detener en la alarma sonando no hacía nada en absoluto. Ni misión ni segundo toque. La causa era un estado interno con el que los botones de la pantalla bloqueada podían acabar hablando sin nada detrás; ahora siempre llegan a la alarma real, y la alarma ya no puede desarmarse en silencio en segundo plano.
 
 QUÉ PROBAR PRIMERO
 
-1. Edita una alarma. Créala, guárdala, vuelve a abrirla, cambia la hora y la misión, guarda otra vez. Sin error, y sigue sonando.
-2. Pulsa Detener mientras suena. La misión se abre igualmente, y si no la resuelves la alarma vuelve sesenta segundos después.
-3. Sal de la pantalla de la misión, o fuerza el cierre de la app con una misión pendiente. La alarma vuelve al instante.
-4. Resuelve la misión. Solo entonces acaba la mañana y no vuelve a sonar nada.
+1. Pon una alarma a uno o dos minutos, bloquea el teléfono, deja que suene. Pulsa el botón con el nombre de la misión. La app debe abrirse directamente en la misión.
+2. Hazla sonar otra vez y pulsa Detener. La misión se abre igualmente, y si no la resuelves la alarma vuelve sesenta segundos después.
+3. Sal de la pantalla de la misión, o fuerza el cierre con la misión sin resolver. La alarma vuelve al instante.
+4. Edita una alarma guardada: cambia la hora y la misión, guarda. Sin error, y sigue sonando.
 
 TAMBIÉN MERECE UNA MIRADA
 
 - Las doce misiones, en cada dificultad, con varias rondas.
-- Teléfono bloqueado, modo silencio y un modo de concentración. La alarma tiene que sonar en los tres.
+- Modo silencio y un modo de concentración. La alarma tiene que sonar en ambos.
 - Otro idioma: cambia el idioma del iPhone y vuelve a leer la alarma y el texto de la misión.
-- La salida de emergencia en Ajustes, activada por defecto, pensada como la única forma de salir sin misión.
 
 Si algo va mal, una captura dice más que una frase. Envíala por TestFlight o desde la página de soporte en Ajustes.
