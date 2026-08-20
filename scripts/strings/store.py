@@ -30,7 +30,10 @@ than the binary delivers, and `scripts/asc-preflight.py` checks these numbers ag
 SUPPORT_URL = "https://aymane6.github.io/dawnbreak/support.html"
 PRIVACY_URL = "https://aymane6.github.io/dawnbreak/privacy.html"
 MARKETING_URL = "https://aymane6.github.io/dawnbreak/"
-COPYRIGHT = "2026 Aymane Bammou"
+# The rights holder as the account that publishes the app spells it: the distribution certificate
+# reads "Apple Distribution: Aymane BAMHAMED". This line is printed on the store page and at the
+# foot of all twelve HTML pages, so it names the person Apple pays and not an approximation.
+COPYRIGHT = "2026 Aymane Bamhamed"
 
 # Under the icon in search results and on the home screen. "Dawnbreak" stays in every language:
 # it is the name the app is reviewed and searched under, and a translated app name splits its own
