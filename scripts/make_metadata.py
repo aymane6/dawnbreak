@@ -99,11 +99,14 @@ difficulties and ninety days of history. The paywall states this, and Restore Pu
 An emergency exit is available in Settings and is on by default, so no alarm can trap a user.
 """
 
+# Apple writes to this when a review stalls, so every value here is one a person answers. The
+# surname is the account holder's as the distribution certificate spells it ("Apple Distribution:
+# Aymane BAMHAMED"), not a guess.
 CONTACT = {
     "first_name": "Aymane",
-    "last_name": "Bammou",
-    "phone_number": "+15555555555",
-    "email_address": "aymane.bammou@example.com",
+    "last_name": "Bamhamed",
+    "phone_number": "+33671518425",
+    "email_address": "fastpapershot.supp@outlook.com",
     "demo_account_required": "false",
 }
 
