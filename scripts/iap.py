@@ -9,8 +9,8 @@ Creates, or reuses, and then reports:
     two subscriptions         com.aymbam.dawnbreak.pro.monthly (P1M) and .yearly (P1Y)
     one non-consumable        com.aymbam.dawnbreak.pro.lifetime
     twelve localizations      on each product, display name and description
-    one price                 on each, in the base territory, equalized by Apple from there
-    a free week               the yearly plan's introductory offer
+    a price                   in every territory Apple sells in, equalized from the base one
+    a free week               the yearly plan's introductory offer, in every territory
     a review screenshot       on each, if build/shots/review/paywall.png has been captured
 
 Ids, prices, periods and family sharing are read from Configuration/Dawnbreak.storekit rather than
@@ -21,9 +21,10 @@ descriptions come from `scripts/strings/store.py`, where the rest of the store c
 It needs the app record to exist and cannot make one: `POST /v1/apps` is refused for an API key.
 Everything else here is allowed, which is why this is a script and not a page of instructions.
 
-Safe to re-run. Every step looks for what it would create and only writes what is missing. A price
-is only ever set on a product this run has just created: changing the price of a subscription
-somebody is already paying for is a decision, not a repair.
+Safe to re-run. Every step looks for what it would create and only writes what is missing, which
+includes the per-territory rows: a plan priced in eleven countries gets the other hundred and
+sixty-four and keeps the eleven. A price that exists is never changed, wherever it came from.
+Changing the price of a subscription somebody is already paying for is a decision, not a repair.
 
     export ASC_KEY_ID=XXXXXXXXXX
     export ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -38,6 +39,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -56,9 +58,9 @@ REVIEW_SHOT = ROOT / "build" / "shots" / "review" / "paywall.png"
 # In-app purchases live under /v2, and their subresources with them. Subscriptions are /v1.
 PURCHASES = "/v2/inAppPurchases"
 
-# The territory a price is set in; Apple equalizes the rest from it. One price per product is
-# therefore enough, and the number of territories that came back priced is worth printing: if
-# equalization did not happen the product cannot be sold, and only App Store Connect knows.
+# The territory whose price the other hundred and seventy-four are derived from. Apple does the
+# deriving in both product families, but only applies it for a purchase: for a subscription
+# `equalizations` hands back the numbers and this script has to post them. See `subscription_price`.
 BASE_TERRITORY = "USA"
 
 # StoreKit writes ISO 8601 durations, the API wants names. Only the ones a subscription may use.
@@ -162,6 +164,25 @@ def total(client: Client, path: str) -> int:
     return counted if isinstance(counted, int) else len(payload.get("data", []))
 
 
+def counted(client: Client, path: str) -> int:
+    """`total` for numbers that get added together: an unreadable collection contributes nothing
+    rather than a negative. Under-reporting shows up as a smaller number next to a state that Apple
+    itself supplies, which is the pair worth reading anyway."""
+    return max(total(client, f"{path}?limit=200"), 0)
+
+
+def territories_of(client: Client, path: str) -> set[str]:
+    """Which countries a per-territory collection already covers, so only the rest is sent.
+
+    `include=territory` is not decoration here. Rows of `subscriptionPrices` and of
+    `subscriptionIntroductoryOffers` come back with no relationships at all without it, and their
+    ids are an opaque blob that happens to be base64 with the country inside, which is Apple's
+    business and not something to parse.
+    """
+    return {row["relationships"]["territory"]["data"]["id"]
+            for row in client.collection(f"{path}?include=territory&limit=200")}
+
+
 def state(client: Client, path: str) -> str:
     """What App Store Connect thinks of a product now: READY_TO_SUBMIT, MISSING_METADATA, ...
 
@@ -172,27 +193,52 @@ def state(client: Client, path: str) -> str:
     status, payload = client.call("GET", path)
     if status >= 300:
         return "UNKNOWN"
-    return payload.get("data", {}).get("attributes", {}).get("state", "UNKNOWN")
+    return (payload.get("data") or {}).get("attributes", {}).get("state", "UNKNOWN")
 
 
 def price_point(client: Client, path: str, price: str) -> str:
     """The price point whose customer price is exactly what the StoreKit file says.
 
-    There are several hundred per product per territory, so this matches on the price rather than
-    computing a tier. If that exact price is not offered, the nearest three are printed and the run
-    stops: an invented price would be a silent difference between what the simulator sells and what
-    the store charges.
+    There are eight hundred per product per territory, so this matches on the price rather than
+    computing a tier, and it stops on the page the price is on instead of collecting the rest.
+    Stopping early is not only speed: the third page of a non-consumable's price points answers
+    500 "An unexpected error occurred on the server side" often enough that reading all four of
+    them is the likeliest way for this script to fail at something that is not its own doing. So a
+    5xx is retried rather than fatal, and only a page that keeps failing ends the run.
+
+    If the exact price is not offered, the nearest three seen are printed and the run stops: an
+    invented price would be a silent difference between what the simulator sells and what the store
+    charges.
     """
-    points = client.collection(f"{path}?filter[territory]={BASE_TERRITORY}&limit=200")
-    if not points:
+    seen: list[dict] = []
+    url = f"{path}?filter[territory]={BASE_TERRITORY}&limit=200"
+    while url:
+        page = None
+        for attempt in range(3):
+            status, payload = client.call("GET", url)
+            if status < 300:
+                page = payload
+                break
+            if status < 500:
+                die(f"GET {url} answered {status}: {problem(payload)}")
+            time.sleep(2 * (attempt + 1))
+        if page is None:
+            die(f"Apple answered 5xx three times for {url}, so the {price} price point could not "
+                "be looked up. Nothing was created; run this again.")
+            raise AssertionError  # unreachable, for the type checker
+        rows = page.get("data", [])
+        match = next((row for row in rows if row["attributes"]["customerPrice"] == price), None)
+        if match:
+            return match["id"]
+        seen.extend(rows)
+        url = page.get("links", {}).get("next", "")
+
+    if not seen:
         die(f"{BASE_TERRITORY} returned no price points from {path}")
-    match = next((point for point in points if point["attributes"]["customerPrice"] == price), None)
-    if match:
-        return match["id"]
-    nearest = sorted(points, key=lambda point: abs(
-        float(point["attributes"]["customerPrice"]) - float(price)))[:3]
+    nearest = sorted(seen, key=lambda row: abs(
+        float(row["attributes"]["customerPrice"]) - float(price)))[:3]
     die(f"{BASE_TERRITORY} has no price point at {price}; nearest are "
-        + ", ".join(point["attributes"]["customerPrice"] for point in nearest))
+        + ", ".join(row["attributes"]["customerPrice"] for row in nearest))
     raise AssertionError  # unreachable, for the type checker
 
 
@@ -303,7 +349,6 @@ def subscription(client: Client, group_id: str, spec: dict) -> tuple[str, bool]:
             # upgrade: they sell the same features for a different period, so neither is above the
             # other and a change takes effect at the next renewal instead of immediately.
             "groupLevel": spec.get("groupNumber", 1),
-            "availableInAllTerritories": True,
             "reviewNote": REVIEW_NOTE,
         },
         # `group`, not `subscriptionGroup`: the relationship is named after the thing, the resource
@@ -331,43 +376,78 @@ def subscription_localizations(client: Client, subscription_id: str, key: str) -
     return len(existing)
 
 
-def subscription_price(client: Client, subscription_id: str, price: str) -> None:
+def subscription_price(client: Client, subscription_id: str, price: str) -> int:
+    """The price in every territory, which is what makes a plan sellable. Returns how many.
+
+    The web form takes one number and fills a hundred and seventy-five countries in from it. The API
+    does not: `subscriptionPrices` is one row per territory, a price point belongs to exactly one
+    territory, and posting one with no territory relationship at all is accepted and still prices
+    only the price point's own country. A plan available everywhere and priced in one place is what
+    App Store Connect calls MISSING_METADATA, and it says that without naming the missing half.
+
+    `equalizations` is Apple's own conversion of one price point into every other territory, which is
+    the arithmetic the web form does, so this asks for that and posts the rows.
+
+    Only territories with no price are sent. An existing price is never touched, whoever set it.
+    """
+    priced = territories_of(client, f"/v1/subscriptions/{subscription_id}/prices")
     point = price_point(client, f"/v1/subscriptions/{subscription_id}/pricePoints", price)
-    client.expect("POST", "/v1/subscriptionPrices", {"data": {
-        "type": "subscriptionPrices",
-        # No start date: the price applies as soon as the plan goes live. Nothing is subscribed yet,
-        # so there is no current price worth preserving either.
-        "attributes": {"startDate": None, "preserveCurrentPrice": False},
-        "relationships": {
-            "subscription": {"data": {"type": "subscriptions", "id": subscription_id}},
-            "subscriptionPricePoint": {"data": {"type": "subscriptionPricePoints", "id": point}},
-            "territory": {"data": {"type": "territories", "id": BASE_TERRITORY}}}}})
+    everywhere = [(BASE_TERRITORY, point)] + [
+        (row["relationships"]["territory"]["data"]["id"], row["id"]) for row in client.collection(
+            f"/v1/subscriptionPricePoints/{point}/equalizations?include=territory&limit=200")]
+
+    for territory, identifier in everywhere:
+        if territory in priced:
+            continue
+        client.expect("POST", "/v1/subscriptionPrices", {"data": {
+            "type": "subscriptionPrices",
+            # No start date: the price applies as soon as the plan goes live. Nothing is subscribed
+            # yet, so there is no current price worth preserving either.
+            "attributes": {"startDate": None, "preserveCurrentPrice": False},
+            "relationships": {
+                "subscription": {"data": {"type": "subscriptions", "id": subscription_id}},
+                "subscriptionPricePoint": {
+                    "data": {"type": "subscriptionPricePoints", "id": identifier}},
+                "territory": {"data": {"type": "territories", "id": territory}}}}})
+        priced.add(territory)
+    return len(priced)
 
 
 def introductory_offer(client: Client, subscription_id: str, spec: dict) -> str | None:
-    """The free week on the yearly plan, mirroring the StoreKit file.
+    """The free week on the yearly plan, wherever the plan has a price. Mirrors the StoreKit file.
+
+    Per territory like the price, and for the same reason: an offer with no territory relationship is
+    refused outright with "You must provide a value for the relationship 'territory' with this
+    request", and one posted for a single country is a free week in that country alone.
 
     Reported rather than fatal. Everything else here decides whether the plan can be sold; this
     decides whether the first week is free, and a plan that is live without it is still live. If
-    Apple refuses it, the reason is printed and the run carries on.
+    Apple refuses one, the reason is printed and the run carries on.
     """
     offer = spec.get("introductoryOffer")
     if not offer:
         return None
-    if client.collection(f"/v1/subscriptions/{subscription_id}/introductoryOffers?limit=200"):
-        return "offer on record"
     mode = OFFER_MODES.get(offer.get("paymentMode", "free"), "FREE_TRIAL")
     period = offer["subscriptionPeriod"]
-    status, payload = client.call("POST", "/v1/subscriptionIntroductoryOffers", {"data": {
-        "type": "subscriptionIntroductoryOffers",
-        "attributes": {"duration": PERIODS[period], "offerMode": mode, "numberOfPeriods": 1},
-        # No territory relationship: an offer without one is offered wherever the plan is sold.
-        "relationships": {"subscription": {
-            "data": {"type": "subscriptions", "id": subscription_id}}}}})
-    if status >= 300:
-        warn(f"the {period} introductory offer was refused: {problem(payload)}")
+    owner = f"/v1/subscriptions/{subscription_id}"
+    offered = territories_of(client, f"{owner}/introductoryOffers")
+
+    for territory in sorted(territories_of(client, f"{owner}/prices") - offered):
+        status, payload = client.call("POST", "/v1/subscriptionIntroductoryOffers", {"data": {
+            "type": "subscriptionIntroductoryOffers",
+            "attributes": {"duration": PERIODS[period], "offerMode": mode, "numberOfPeriods": 1},
+            "relationships": {
+                "subscription": {"data": {"type": "subscriptions", "id": subscription_id}},
+                "territory": {"data": {"type": "territories", "id": territory}}}}})
+        if status >= 300:
+            warn(f"the {period} introductory offer was refused in {territory}: {problem(payload)}")
+            break
+        offered.add(territory)
+
+    if not offered:
         return None
-    return f"{PERIODS[period].lower().replace('_', ' ')} {mode.lower().replace('_', ' ')}"
+    return (f"{PERIODS[period].lower().replace('_', ' ')} {mode.lower().replace('_', ' ')} "
+            f"in {len(offered)}")
 
 
 # ---------------------------------------------------------------------------
@@ -414,12 +494,27 @@ def purchase_localizations(client: Client, purchase_id: str, key: str) -> int:
     return len(existing)
 
 
-def purchase_price(client: Client, purchase_id: str, price: str) -> None:
+def purchase_price(client: Client, purchase_id: str, price: str) -> int:
     """A price schedule, which is how a non-consumable is priced: a base territory and one price.
 
-    One request creates both. The price does not exist yet, so it travels in `included` and is
-    pointed at by a `${...}` placeholder id, which Apple resolves on the way in.
+    This half of the API does equalize on its own, unlike a subscription's: the schedule names a base
+    territory, Apple derives every other country from it, and the derived rows come back under
+    `automaticPrices`. So it is one request here and a hundred and seventy-five there, for the same
+    outcome. Returns how many territories ended up priced.
+
+    One request creates the schedule and its price. The price does not exist yet, so it travels in
+    `included` and is pointed at by a `${...}` placeholder id, which Apple resolves on the way in.
+    That price needs a territory of its own even though the schedule already names a base territory:
+    without one the request is answered 201 and the schedule comes back with `manualPrices` empty, no
+    automatic prices derived from it, and the product still MISSING_METADATA with nothing rejected.
     """
+    # Counting the prices rather than asking whether a schedule exists. A schedule with nothing in it
+    # is exactly what the paragraph above describes, and it has to be replaced, not reported.
+    schedule = f"/v1/inAppPurchasePriceSchedules/{purchase_id}"
+    priced = counted(client, f"{schedule}/manualPrices") + counted(client, f"{schedule}/automaticPrices")
+    if priced:
+        return priced
+
     point = price_point(client, f"{PURCHASES}/{purchase_id}/pricePoints", price)
     client.expect("POST", "/v1/inAppPurchasePriceSchedules", {
         "data": {
@@ -431,29 +526,42 @@ def purchase_price(client: Client, purchase_id: str, price: str) -> None:
         "included": [{
             "type": "inAppPurchasePrices",
             "id": "${price}",
-            "attributes": {"startDate": None},
-            "relationships": {"inAppPurchasePricePoint": {
-                "data": {"type": "inAppPurchasePricePoints", "id": point}}}}]})
+            "relationships": {
+                "inAppPurchasePricePoint": {
+                    "data": {"type": "inAppPurchasePricePoints", "id": point}},
+                "territory": {"data": {"type": "territories", "id": BASE_TERRITORY}}}}]})
+    return counted(client, f"{schedule}/manualPrices") + counted(client, f"{schedule}/automaticPrices")
 
 
-def purchase_availability(client: Client, purchase_id: str) -> int:
+def territory_list(client: Client) -> list[dict]:
+    """Every territory Apple sells in, about a hundred and seventy-five of them, in one request."""
+    return [{"type": "territories", "id": entry["id"]}
+            for entry in client.collection("/v1/territories?limit=200")]
+
+
+def availability(client: Client, kind: str, product: str, identifier: str) -> int:
     """Everywhere, and everywhere Apple adds later.
 
-    A subscription takes `availableInAllTerritories` when it is created. A non-consumable has no
-    such attribute and wants the list instead, so the list is fetched: about a hundred and
-    seventy-five ids, in one request, sent back in one more.
+    Both product families model this the same way and neither takes it at creation: a subscription
+    used to accept `availableInAllTerritories` as an attribute and the API now answers 409 "'
+    availableInAllTerritories' is not an attribute on the resource 'subscriptions'". So the list is
+    sent afterwards, once, against `subscriptionAvailabilities` or `inAppPurchaseAvailabilities`,
+    with `availableInNewTerritories` for the countries that do not exist yet.
+
+    `kind` is the resource stem ("subscription" or "inAppPurchase") and `product` the path of the
+    thing it belongs to, which is all that differs between the two.
     """
-    existing = client.call("GET", f"{PURCHASES}/{purchase_id}/inAppPurchaseAvailability")[1]
+    relationship = f"{kind}Availability"
+    existing = client.call("GET", f"{product}/{identifier}/{relationship}")[1]
     if existing.get("data"):
-        return total(client, "/v1/inAppPurchaseAvailabilities/"
+        return total(client, f"/v1/{kind}Availabilities/"
                              f"{existing['data']['id']}/availableTerritories?limit=200")
-    territories = [{"type": "territories", "id": entry["id"]}
-                   for entry in client.collection("/v1/territories?limit=200")]
-    client.expect("POST", "/v1/inAppPurchaseAvailabilities", {"data": {
-        "type": "inAppPurchaseAvailabilities",
+    territories = territory_list(client)
+    client.expect("POST", f"/v1/{kind}Availabilities", {"data": {
+        "type": f"{kind}Availabilities",
         "attributes": {"availableInNewTerritories": True},
         "relationships": {
-            "inAppPurchase": {"data": {"type": "inAppPurchases", "id": purchase_id}},
+            kind: {"data": {"type": f"{kind}s", "id": identifier}},
             "availableTerritories": {"data": territories}}}})
     return len(territories)
 
@@ -484,11 +592,12 @@ def main() -> int:
         locales = subscription_localizations(client, identifier, plan(spec["productID"]))
         notes = ["created" if fresh else "on record",
                  spec["recurringSubscriptionPeriod"], f"{locales} locales"]
-        if fresh:
-            subscription_price(client, identifier, spec["displayPrice"])
-        priced = total(client, f"{owner}/prices?limit=200")
-        notes.append(f"{spec['displayPrice']} in {priced} territories" if priced > 0
-                     else f"{spec['displayPrice']}, territories unreadable")
+        # Territories before price, and not the other way round: a subscription price is a row per
+        # territory, so setting one on a plan that is sold nowhere answers 409 "An error occurred
+        # while processing the pricing information", which names neither the cause nor the fix.
+        available = availability(client, "subscription", "/v1/subscriptions", identifier)
+        priced = subscription_price(client, identifier, spec["displayPrice"])
+        notes.append(f"{spec['displayPrice']} in {priced} of {available} territories")
         offer = introductory_offer(client, identifier, spec)
         if offer:
             notes.append(offer)
@@ -505,11 +614,11 @@ def main() -> int:
         owner = f"{PURCHASES}/{identifier}"
         locales = purchase_localizations(client, identifier, plan(spec["productID"]))
         notes = ["created" if fresh else "on record", f"{locales} locales"]
-        if fresh:
-            purchase_price(client, identifier, spec["displayPrice"])
-        available = purchase_availability(client, identifier)
-        notes.append(f"{spec['displayPrice']} in {available} territories" if available > 0
-                     else f"{spec['displayPrice']}, territories unreadable")
+        # Same order as a subscription, for the same reason: a price on a product that is sold
+        # nowhere is refused, and the refusal talks about pricing rather than about territories.
+        available = availability(client, "inAppPurchase", PURCHASES, identifier)
+        priced = purchase_price(client, identifier, spec["displayPrice"])
+        notes.append(f"{spec['displayPrice']} in {priced} of {available} territories")
         notes.append(review_screenshot(client, owner, identifier, PURCHASE_SHOT))
         if not report(spec["productID"], notes, state(client, owner)):
             incomplete.append(spec["productID"])
