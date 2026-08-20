@@ -88,7 +88,12 @@ struct AlarmListView: View {
                 Button(role: .cancel) { app.bridge.clearFailure() } label: { Text("action.ok", bundle: .main) }
             } message: {
                 if let failure = app.bridge.lastFailure {
+                    // The framework's own words, appended. Cryptic on purpose rather than
+                    // hidden: a dialog that says only "iOS refused" leaves the user with
+                    // nothing to try and nothing to report, which is how a scheduling bug
+                    // survives a whole beta.
                     Text(key: failure.messageKey)
+                        + Text(verbatim: failure.detail.isEmpty ? "" : "\n\n\(failure.detail)")
                 }
             }
         }
@@ -262,6 +267,14 @@ private struct AlarmRow: View {
                     if alarm.mission.isIncomplete {
                         Chip(systemImage: "exclamationmark.circle.fill", titleKey: "alarm.needsSetup", tint: Theme.warning, dimmed: false)
                     }
+                    // The row's own honesty check. Everything above it is read from the app's
+                    // store, which knows nothing about whether the system agreed to ring: an
+                    // alarm the app draws and the system has never been told about is the
+                    // worst failure this app has, and until now it looked identical to a
+                    // working one.
+                    if isUnarmed {
+                        Chip(systemImage: "bell.slash.fill", titleKey: "alarm.notArmed", tint: Theme.danger, dimmed: false)
+                    }
                     Spacer(minLength: 0)
                 }
             }
@@ -290,6 +303,15 @@ private struct AlarmRow: View {
 
     private var formatter: ClockFormatter {
         ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
+    }
+
+    /// On, and the system does not have it. Only while permission is granted, because a denied
+    /// permission arms nothing at all and the banner already says so once for the whole list
+    /// rather than on every row.
+    private var isUnarmed: Bool {
+        alarm.isEnabled
+            && app.bridge.authorization == .authorized
+            && !app.bridge.armedIDs.contains(alarm.id)
     }
 
     /// "Every day"/"Weekdays" when the set has a name, otherwise the short day names in the

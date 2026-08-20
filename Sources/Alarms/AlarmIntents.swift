@@ -7,10 +7,17 @@ import Foundation
 ///
 /// The design constraint worth stating: AlarmKit always draws a stop affordance. There is no
 /// API to remove it, and there should not be — a user whose camera is broken must be able to
-/// silence their phone. So "you cannot stop the alarm without completing the mission" is
-/// implemented honestly: pressing stop opens the mission and, if the alarm is set to be
-/// relentless, arms a follow-up a minute later. Clearing the mission is what cancels the
-/// follow-up. Dodging the mission buys a minute, not the morning.
+/// silence their phone. iOS 26.1 went further and draws its own, ignoring anything the app
+/// passes. So "you cannot stop the alarm without completing the mission" cannot be enforced by
+/// withholding a button, and is enforced by what happens after it is pressed instead: the alarm
+/// is re-armed a minute out, and the mission is opened. Only clearing the mission cancels the
+/// re-arm. Dodging it buys a minute, not the morning.
+///
+/// Which of those two happens first is load-bearing. Re-arming comes first, because it is the
+/// half that works with the app in the background, killed, or never brought to the front at
+/// all; opening a screen is a request the system can decline. When it was the other way round,
+/// anything that stopped the mission screen from opening also stopped the alarm from ever coming
+/// back, and the stop button worked exactly as a stop button.
 
 /// Fired by the alert's own stop affordance.
 struct StopAlarmIntent: LiveActivityIntent {

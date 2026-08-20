@@ -39,35 +39,60 @@ struct RootView: View {
             }
         }
         .tint(Theme.accent)
-        // The mission is a full-screen cover, not a sheet: a sheet can be swiped away, and
-        // the whole promise of the app is that this screen does not go away on a swipe.
-        .fullScreenCover(item: missionBinding) { pending in
-            MissionRunnerView(pending: pending)
-        }
-        .fullScreenCover(isPresented: onboardingBinding) {
-            OnboardingView()
+        // A full-screen cover, not a sheet: a sheet can be swiped away, and the whole promise
+        // of the app is that the mission screen does not go away on a swipe.
+        .fullScreenCover(item: takeoverBinding) { takeover in
+            switch takeover {
+            case .mission(let pending):
+                MissionRunnerView(pending: pending)
+            case .onboarding:
+                OnboardingView()
+            }
         }
         .sheet(item: paywallBinding) { reason in
             PaywallView(reason: reason)
         }
     }
 
+    /// The two things that take the whole screen, as one value.
+    ///
+    /// One cover rather than two, and this is a bug fix rather than tidying. A view has a
+    /// single full-screen-cover slot: attach two modifiers to the same view and only one of
+    /// them ever presents, whichever SwiftUI resolves last, and the other is silently dropped.
+    /// The alarm rang, the stop button was pressed, the mission was armed and waiting — and no
+    /// mission screen appeared, because the onboarding cover underneath it owned the slot.
+    /// Expressing the two as one enum makes that unrepresentable, and puts the precedence in
+    /// writing: a ringing alarm outranks onboarding.
+    private enum Takeover: Identifiable {
+        case mission(PendingMission)
+        case onboarding
+
+        /// Keyed by the alarm, so a *different* alarm ringing replaces the screen rather than
+        /// being silently ignored.
+        var id: String {
+            switch self {
+            case .mission(let pending): pending.alarmID.uuidString
+            case .onboarding: "onboarding"
+            }
+        }
+    }
+
+    private var takeover: Takeover? {
+        if let pending = app.bridge.activeMission { return .mission(pending) }
+        if !app.preferences.hasCompletedOnboarding { return .onboarding }
+        return nil
+    }
+
+    /// Read-only from the view's side. Both screens dismiss themselves by changing the state
+    /// this reads — the mission through the bridge, because closing it has to also settle the
+    /// alarm, and onboarding by recording that it is done. A `nil` written here would close
+    /// either one without doing that.
+    private var takeoverBinding: Binding<Takeover?> {
+        Binding(get: { takeover }, set: { _ in })
+    }
+
     private var tabSelection: Binding<AppEnvironment.Tab> {
         Binding(get: { app.selectedTab }, set: { app.selectedTab = $0 })
-    }
-
-    private var missionBinding: Binding<PendingMission?> {
-        // Read-only from the view's side. Dismissal happens through the bridge, because
-        // closing this screen has to also settle the alarm, and a `nil` written here would
-        // close it without doing that.
-        Binding(get: { app.bridge.activeMission }, set: { _ in })
-    }
-
-    private var onboardingBinding: Binding<Bool> {
-        Binding(
-            get: { !app.preferences.hasCompletedOnboarding && app.bridge.activeMission == nil },
-            set: { app.preferences.hasCompletedOnboarding = !$0 }
-        )
     }
 
     private var paywallBinding: Binding<AppEnvironment.PaywallReason?> {

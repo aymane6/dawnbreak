@@ -48,10 +48,22 @@ struct MissionRunnerView: View {
                 vibrate: pending.vibrate
             )
             startTimerIfNeeded()
+            // The mission is being done, so the alarm waiting to come back is pushed out. It is
+            // not cancelled: something has to be armed at every instant until the mission is
+            // cleared, or killing the app here would be the way out.
+            Task { await app.bridge.missionInProgress() }
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
             audio.stop()
+            // This screen going away without the mission being settled is not allowed to be a
+            // way out. `missionCompleted` and `missionAbandoned` both clear the pending mission
+            // before the cover dismisses, so a mission still owed here means the screen was
+            // taken away by something that did not settle it — and then the alarm comes straight
+            // back rather than never.
+            if app.bridge.activeMission?.alarmID == pending.alarmID {
+                Task { await app.bridge.missionLeftUnfinished() }
+            }
         }
         // No interactive dismissal, no swipe: this is the one screen in the app that is
         // deliberately hard to leave. The escape hatch in the corner is the way out.
@@ -204,6 +216,9 @@ struct MissionRunnerView: View {
         } else {
             roundToken += 1
             startTimerIfNeeded()
+            // Progress buys time. A three-round mission is not a dodge, and the alarm coming
+            // back between rounds would be the app fighting the person doing what it asked.
+            Task { await app.bridge.missionInProgress() }
         }
     }
 

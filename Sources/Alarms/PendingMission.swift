@@ -52,6 +52,31 @@ struct PendingMission: Codable, Hashable, Sendable {
         guard let maximum = snooze.maxCount else { return nil }
         return max(0, maximum - snoozeCount)
     }
+
+    /// The alarm to re-arm with, rebuilt from this record rather than looked up.
+    ///
+    /// The follow-up has to happen even when the store cannot answer for the id — the alarm was
+    /// deleted, the app was cold-launched by the intent and the store is still loading, the file
+    /// is unreadable. Every one of those used to end with the alarm never coming back, which is
+    /// the one outcome this app cannot have: a stop that succeeds is a morning lost.
+    ///
+    /// Everything the follow-up needs is here, because it is armed as a one-off at a fixed
+    /// instant: the id, the sound, the mission that names the button, and the label. `hour` and
+    /// `minute` are carried for completeness and are not read — `.fixed(_:)` ignores them.
+    func followUpDraft() -> AlarmDraft {
+        AlarmDraft(
+            id: alarmID,
+            hour: Calendar.current.component(.hour, from: scheduledFor),
+            minute: Calendar.current.component(.minute, from: scheduledFor),
+            label: label,
+            mission: mission,
+            soundName: soundName,
+            volume: volume,
+            vibrate: vibrate,
+            snooze: snooze,
+            relentless: relentless
+        )
+    }
 }
 
 /// Reads and writes the pending mission. Free functions on a namespace rather than a class:
