@@ -1,0 +1,17 @@
+Build 3 fixes what the first two got wrong: editing a saved alarm failed with "iOS refused to schedule this alarm", and the Stop button on a ringing alarm ended the morning with no mission at all.
+
+WHAT TO TEST FIRST
+
+1. Edit an alarm. Set one, save it, open it again, change the time and the mission, save again. No error, and it still rings.
+2. Press Stop while it rings. The mission opens anyway, and if it is not answered the alarm comes back sixty seconds later.
+3. Leave the mission screen, or force quit the app with a mission still owed. The alarm comes straight back.
+4. Answer the mission. Only then is the morning over, and nothing rings again.
+
+ALSO WORTH A LOOK
+
+- The twelve missions, at each difficulty, with several rounds.
+- A locked phone, silent mode, and a Focus mode. The alarm has to ring through all three.
+- Another language: change the iPhone language, then read the alarm and the mission text again.
+- The emergency exit in Settings, on by default, and meant to be the only way out without a mission.
+
+If something is wrong, a screenshot of it says more than a sentence about it. Send it back through TestFlight, or through the support page in Settings.

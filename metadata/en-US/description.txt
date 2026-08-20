@@ -21,7 +21,7 @@ TWELVE MISSIONS
 
 IT DOES NOT LET GO
 
-Stop the alarm without finishing the mission and it comes back in five minutes, on the lock screen, under a title that says why. Set as many rounds as you need: one for a weekday, ten for the morning of a flight.
+Stop the alarm without finishing the mission and it comes back a minute later, on the lock screen, under a title that says why. Set as many rounds as you need: one for a weekday, ten for the morning of a flight.
 
 It rings on the lock screen through Apple's own alarm system, so it works with the app closed, the phone locked, and Do Not Disturb on. There is an emergency exit, in Settings, on by default, because an alarm that cannot be stopped is a hazard and not a feature.
 

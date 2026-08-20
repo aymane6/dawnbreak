@@ -21,7 +21,7 @@ DODICI MISSIONI
 
 NON MOLLA
 
-Ferma la sveglia senza finire la missione e torna dopo cinque minuti, sulla schermata di blocco, con un titolo che dice perché. Imposta i turni che ti servono: uno per un giorno feriale, dieci per la mattina di un volo.
+Ferma la sveglia senza finire la missione e torna dopo un minuto, sulla schermata di blocco, con un titolo che dice perché. Imposta i turni che ti servono: uno per un giorno feriale, dieci per la mattina di un volo.
 
 Suona sulla schermata di blocco tramite il sistema di allarmi di Apple, quindi funziona con l’app chiusa, il telefono bloccato e Non disturbare attivo. C’è un’uscita di emergenza nelle impostazioni, attiva per impostazione predefinita, perché una sveglia che non si può fermare è un pericolo e non una funzione.
 

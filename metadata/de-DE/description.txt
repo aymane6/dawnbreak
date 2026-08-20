@@ -21,7 +21,7 @@ ZWÖLF MISSIONEN
 
 ER LÄSST NICHT LOCKER
 
-Stell den Alarm ohne fertige Mission ab, und er kommt in fünf Minuten zurück, auf den Sperrbildschirm, mit einem Titel, der sagt warum. Stelle so viele Runden ein, wie du brauchst: eine für einen Werktag, zehn für den Morgen eines Flugs.
+Stell den Alarm ohne fertige Mission ab, und er kommt eine Minute später zurück, auf den Sperrbildschirm, mit einem Titel, der sagt warum. Stelle so viele Runden ein, wie du brauchst: eine für einen Werktag, zehn für den Morgen eines Flugs.
 
 Er klingelt über Apples eigenes Alarmsystem auf dem Sperrbildschirm, also bei geschlossener App, gesperrtem Telefon und aktivem Nicht-Störmodus. Es gibt einen Notausgang in den Einstellungen, standardmäßig an, denn ein Alarm, der sich nicht abstellen lässt, ist eine Gefahr und kein Feature.
 

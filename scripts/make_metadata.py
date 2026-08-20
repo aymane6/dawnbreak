@@ -76,8 +76,9 @@ HOW TO SEE THE MAIN FEATURE IN UNDER A MINUTE
 4. Lock the phone and wait. The alarm rings on the lock screen through AlarmKit.
 5. Press the second button on the alert (it is labelled with the mission, not "Open"). The app
    opens on the mission and the alarm is only silenced once the sum is answered.
-6. To see the follow-up: press "Stop" instead. The alarm returns five minutes later under the
-   title "Mission not done".
+6. To see the follow-up: press "Stop" instead. The mission opens anyway, and the alarm returns
+   sixty seconds later under the title "Mission not done". Stopping the alarm is a delay, not a
+   way out: only answering the mission ends it.
 
 PERMISSIONS, AND WHY
 

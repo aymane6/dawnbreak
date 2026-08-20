@@ -129,6 +129,222 @@ RELEASE_NOTES = {
     "zh-Hans": "首个版本。\n\n十二种任务、二十五个闹钟、四档难度，以及一个在你不做任务就关掉后会重新出现在锁定屏幕上的闹钟。支持十二种语言。无需账号，没有广告，数据不离开手机。\n\n如果有问题，在设置里一下就能打开支持页面。发过来的内容会有人看。",
 }
 
+# What a TestFlight tester reads before they install, in the TestFlight app itself. Two resources
+# take it: the app's beta description, which is about the app, and the build's "what to test", which
+# is about this build. The same text serves both, because a tester who has just tapped Install wants
+# the same four things checked either way.
+#
+# Written for a tester and not for a customer, which is why it names the bug it fixes and quotes the
+# error message word for word: the two reports that produced build 3 both arrived as a screenshot of
+# a sentence, and the fastest way to be told the sentence is back is to have shown it here first.
+# Every step is one a tester can do in a minute with no account and no seeded data.
+TESTFLIGHT_NOTES = {
+    "en-US": """Build 3 fixes what the first two got wrong: editing a saved alarm failed with "iOS refused to schedule this alarm", and the Stop button on a ringing alarm ended the morning with no mission at all.
+
+WHAT TO TEST FIRST
+
+1. Edit an alarm. Set one, save it, open it again, change the time and the mission, save again. No error, and it still rings.
+2. Press Stop while it rings. The mission opens anyway, and if it is not answered the alarm comes back sixty seconds later.
+3. Leave the mission screen, or force quit the app with a mission still owed. The alarm comes straight back.
+4. Answer the mission. Only then is the morning over, and nothing rings again.
+
+ALSO WORTH A LOOK
+
+- The twelve missions, at each difficulty, with several rounds.
+- A locked phone, silent mode, and a Focus mode. The alarm has to ring through all three.
+- Another language: change the iPhone language, then read the alarm and the mission text again.
+- The emergency exit in Settings, on by default, and meant to be the only way out without a mission.
+
+If something is wrong, a screenshot of it says more than a sentence about it. Send it back through TestFlight, or through the support page in Settings.""",
+    "ar-SA": """يعالج الإصدار 3 ما أخطأ فيه الإصداران الأولان: تعديل منبه محفوظ كان يفشل برسالة «رفض iOS جدولة هذا المنبه»، وزرّ الإيقاف على منبه يرن كان ينهي الصباح دون أي مهمة.
+
+ما يُختبر أولاً
+
+١. عدّل منبهاً. اضبط واحداً واحفظه، ثم افتحه وغيّر الوقت والمهمة واحفظه مرة أخرى. بلا رسالة خطأ، ويظل يرن.
+٢. اضغط «إيقاف» أثناء الرنين. تُفتح المهمة على أي حال، وإن لم تُنجَز يعود المنبه بعد ستين ثانية.
+٣. اخرج من شاشة المهمة، أو أغلق التطبيق قسراً ومهمة معلّقة. يعود المنبه فوراً.
+٤. أنجز المهمة. عندها فقط ينتهي الصباح ولا يرن شيء بعدها.
+
+يستحق النظر أيضاً
+
+- المهام الاثنتا عشرة، بكل درجات الصعوبة، وبعدة جولات.
+- هاتف مقفل، والوضع الصامت، ونمط تركيز. على المنبه أن يرن في الحالات الثلاث.
+- لغة أخرى: غيّر لغة الآيفون ثم اقرأ شاشة المنبه ونص المهمة من جديد.
+- مخرج الطوارئ في الإعدادات، مُفعَّل افتراضياً، والمقصود أن يكون الطريق الوحيد للخروج دون مهمة.
+
+إن وجدت خطأً، فلقطة شاشة له أبلغ من جملة عنه. أرسلها عبر TestFlight أو من صفحة الدعم في الإعدادات.""",
+    "de-DE": """Build 3 behebt, was die ersten beiden falsch gemacht haben: Das Bearbeiten eines gespeicherten Alarms scheiterte mit „iOS hat diesen Alarm nicht angenommen“, und der Stopp-Knopf am klingelnden Alarm beendete den Morgen ganz ohne Mission.
+
+WAS ZUERST ZU TESTEN IST
+
+1. Einen Alarm bearbeiten. Stellen, speichern, wieder öffnen, Zeit und Mission ändern, erneut speichern. Kein Fehler, und er klingelt weiterhin.
+2. Beim Klingeln auf Stopp drücken. Die Mission öffnet sich trotzdem, und wird sie nicht gelöst, kommt der Alarm sechzig Sekunden später zurück.
+3. Den Missionsbildschirm verlassen oder die App beenden, während eine Mission offen ist. Der Alarm kommt sofort zurück.
+4. Die Mission lösen. Erst dann ist der Morgen vorbei und es klingelt nichts mehr.
+
+AUCH EINEN BLICK WERT
+
+- Die zwölf Missionen, in jedem Schwierigkeitsgrad, mit mehreren Runden.
+- Gesperrtes Telefon, Stummmodus und ein Fokus. Der Alarm muss durch alle drei klingeln.
+- Eine andere Sprache: die iPhone-Sprache umstellen und Alarm- und Missionstexte noch einmal lesen.
+- Der Notausgang in den Einstellungen, standardmäßig an und als einziger Weg ohne Mission gedacht.
+
+Wenn etwas nicht stimmt, sagt ein Screenshot davon mehr als ein Satz darüber. Schick ihn über TestFlight zurück oder über die Support-Seite in den Einstellungen.""",
+    "es-ES": """La versión 3 corrige lo que fallaba en las dos primeras: editar una alarma guardada terminaba en «iOS ha rechazado programar esta alarma», y el botón Detener de una alarma sonando acababa la mañana sin ninguna misión.
+
+QUÉ PROBAR PRIMERO
+
+1. Edita una alarma. Créala, guárdala, vuelve a abrirla, cambia la hora y la misión, guarda otra vez. Sin error, y sigue sonando.
+2. Pulsa Detener mientras suena. La misión se abre igualmente, y si no la resuelves la alarma vuelve sesenta segundos después.
+3. Sal de la pantalla de la misión, o fuerza el cierre de la app con una misión pendiente. La alarma vuelve al instante.
+4. Resuelve la misión. Solo entonces acaba la mañana y no vuelve a sonar nada.
+
+TAMBIÉN MERECE UNA MIRADA
+
+- Las doce misiones, en cada dificultad, con varias rondas.
+- Teléfono bloqueado, modo silencio y un modo de concentración. La alarma tiene que sonar en los tres.
+- Otro idioma: cambia el idioma del iPhone y vuelve a leer la alarma y el texto de la misión.
+- La salida de emergencia en Ajustes, activada por defecto, pensada como la única forma de salir sin misión.
+
+Si algo va mal, una captura dice más que una frase. Envíala por TestFlight o desde la página de soporte en Ajustes.""",
+    "fr-FR": """La version 3 corrige ce que les deux premières faisaient mal : modifier une alarme enregistrée échouait avec « iOS a refusé de programmer cette alarme », et le bouton Arrêter d’une alarme qui sonne mettait fin à la matinée sans aucune mission.
+
+À TESTER EN PREMIER
+
+1. Modifier une alarme. En créer une, l’enregistrer, la réouvrir, changer l’heure et la mission, enregistrer à nouveau. Aucune erreur, et elle sonne toujours.
+2. Appuyer sur Arrêter pendant qu’elle sonne. La mission s’ouvre quand même, et si elle n’est pas résolue l’alarme revient soixante secondes plus tard.
+3. Quitter l’écran de mission, ou forcer la fermeture de l’app avec une mission en cours. L’alarme revient tout de suite.
+4. Résoudre la mission. C’est seulement là que la matinée est finie, et plus rien ne sonne.
+
+À REGARDER AUSSI
+
+- Les douze missions, à chaque difficulté, avec plusieurs manches.
+- Téléphone verrouillé, mode silencieux, et un mode de concentration. L’alarme doit sonner dans les trois cas.
+- Une autre langue : changer la langue de l’iPhone, puis relire l’écran d’alarme et le texte de la mission.
+- La sortie d’urgence dans les réglages, activée par défaut, prévue comme le seul moyen de sortir sans mission.
+
+Si quelque chose ne va pas, une capture d’écran en dit plus qu’une phrase. Renvoyez-la par TestFlight, ou par la page d’assistance dans les réglages.""",
+    "hi": """बिल्ड 3 उन दो गड़बड़ियों को ठीक करता है जो पहले दो बिल्ड में थीं: सेव किया हुआ अलार्म बदलने पर «iOS ने इस अलार्म को शेड्यूल करने से इनकार कर दिया» आता था, और बजते अलार्म का रोकें बटन बिना कोई मिशन दिए सुबह खत्म कर देता था।
+
+पहले क्या जाँचें
+
+1. अलार्म बदलें। एक बनाएँ, सेव करें, फिर खोलें, समय और मिशन बदलें, दोबारा सेव करें। कोई एरर नहीं, और वह बजता भी है।
+2. बजते समय रोकें दबाएँ। मिशन फिर भी खुलता है, और पूरा न करें तो अलार्म साठ सेकंड बाद लौट आता है।
+3. मिशन स्क्रीन छोड़ दें, या मिशन बाकी रहते ऐप को बंद कर दें। अलार्म तुरंत लौट आता है।
+4. मिशन पूरा करें। तभी सुबह खत्म होती है और फिर कुछ नहीं बजता।
+
+इन पर भी नज़र डालें
+
+- बारह मिशन, हर कठिनाई पर, कई राउंड के साथ।
+- लॉक फ़ोन, साइलेंट मोड, और कोई फ़ोकस मोड। अलार्म तीनों में बजना चाहिए।
+- दूसरी भाषा: iPhone की भाषा बदलें, फिर अलार्म और मिशन का टेक्स्ट दोबारा पढ़ें।
+- सेटिंग्स में इमरजेंसी एक्ज़िट, जो डिफ़ॉल्ट रूप से चालू है और मिशन के बिना निकलने का एकमात्र रास्ता है।
+
+कुछ गलत लगे तो उसका स्क्रीनशॉट एक वाक्य से ज़्यादा बताता है। उसे TestFlight से भेजें, या सेटिंग्स में सपोर्ट पेज से।""",
+    "it": """La build 3 corregge quello che sbagliavano le prime due: modificare una sveglia salvata finiva con «iOS ha rifiutato di programmare questa sveglia», e il pulsante Stop su una sveglia che suona chiudeva la mattina senza nessuna missione.
+
+COSA PROVARE PER PRIMO
+
+1. Modifica una sveglia. Creala, salvala, riaprila, cambia ora e missione, salva di nuovo. Nessun errore, e suona ancora.
+2. Premi Stop mentre suona. La missione si apre comunque, e se non la risolvi la sveglia torna sessanta secondi dopo.
+3. Esci dalla schermata della missione, o chiudi forzatamente l'app con una missione in sospeso. La sveglia torna subito.
+4. Risolvi la missione. Solo allora la mattina è finita e non suona più niente.
+
+VALE LA PENA GUARDARE ANCHE
+
+- Le dodici missioni, a ogni difficoltà, con più turni.
+- Telefono bloccato, modalità silenziosa e una modalità di concentrazione. La sveglia deve suonare in tutti e tre i casi.
+- Un'altra lingua: cambia la lingua dell'iPhone e rileggi la sveglia e il testo della missione.
+- L'uscita di emergenza nelle impostazioni, attiva per impostazione predefinita, pensata come l'unico modo di uscire senza missione.
+
+Se qualcosa non va, uno screenshot dice più di una frase. Rimandalo con TestFlight o dalla pagina di assistenza nelle impostazioni.""",
+    "ja": """ビルド 3 では、最初の 2 つのビルドの不具合を 2 件直しました。保存済みのアラームを編集すると「iOS がこのアラームの登録を拒否しました」で失敗する問題と、鳴っているアラームの停止ボタンでミッションなしに朝が終わってしまう問題です。
+
+【まず確認してほしいこと】
+
+1. アラームを編集する。作って保存し、開き直して時刻とミッションを変え、もう一度保存する。エラーは出ず、そのまま鳴ること。
+2. 鳴っている間に停止を押す。それでもミッションが開き、解かなければ 60 秒後にもう一度鳴ること。
+3. ミッション画面から出る、またはミッションが残った状態でアプリを強制終了する。アラームはすぐに戻ってくること。
+4. ミッションを解く。そこで初めて朝が終わり、二度と鳴らないこと。
+
+【あわせて見てほしいところ】
+
+- 12 種類のミッション、各難易度、複数ラウンド。
+- 画面ロック中、消音モード、集中モード。この 3 つとも鳴る必要があります。
+- 別の言語: iPhone の言語を変えて、アラーム画面とミッションの文章をもう一度読む。
+- 設定にある緊急脱出。既定でオンで、ミッションなしに抜ける唯一の道として用意しています。
+
+おかしいところがあれば、文章より画面のスクリーンショットのほうが伝わります。TestFlight から、または設定のサポートページから送ってください。""",
+    "ko": """빌드 3은 앞선 두 빌드의 문제 두 가지를 고쳤습니다. 저장한 알람을 수정하면 「iOS가 이 알람 등록을 거부했습니다」로 실패하던 문제, 그리고 울리는 알람의 정지 버튼이 미션 없이 아침을 끝내던 문제입니다.
+
+【먼저 확인해 주세요】
+
+1. 알람을 수정합니다. 만들고 저장한 뒤 다시 열어 시간과 미션을 바꾸고 또 저장합니다. 오류가 없고, 여전히 울려야 합니다.
+2. 울리는 중에 정지를 누릅니다. 미션은 그래도 열리고, 풀지 않으면 60초 뒤에 알람이 다시 울려야 합니다.
+3. 미션 화면에서 나가거나, 미션이 남은 상태로 앱을 강제 종료합니다. 알람은 곧바로 돌아옵니다.
+4. 미션을 풉니다. 그때서야 아침이 끝나고 다시 울리지 않습니다.
+
+【함께 봐 주세요】
+
+- 미션 12가지, 각 난이도, 여러 라운드.
+- 화면 잠금, 무음 모드, 집중 모드. 세 경우 모두 울려야 합니다.
+- 다른 언어: iPhone 언어를 바꾼 뒤 알람 화면과 미션 문장을 다시 읽어 보세요.
+- 설정의 비상 탈출. 기본으로 켜져 있고, 미션 없이 빠져나가는 유일한 길로 두었습니다.
+
+이상한 점이 있으면 문장보다 화면 스크린샷이 더 잘 전달됩니다. TestFlight로, 또는 설정의 지원 페이지로 보내 주세요.""",
+    "pt-BR": """A build 3 corrige o que as duas primeiras erravam: editar um alarme salvo falhava com «O iOS recusou agendar este alarme», e o botão Parar de um alarme tocando encerrava a manhã sem missão nenhuma.
+
+O QUE TESTAR PRIMEIRO
+
+1. Edite um alarme. Crie, salve, abra de novo, mude a hora e a missão, salve outra vez. Sem erro, e ele continua tocando.
+2. Toque em Parar enquanto ele toca. A missão abre de qualquer forma, e se não for resolvida o alarme volta sessenta segundos depois.
+3. Saia da tela da missão, ou force o fechamento do app com uma missão pendente. O alarme volta na hora.
+4. Resolva a missão. Só então a manhã acaba e nada mais toca.
+
+TAMBÉM VALE OLHAR
+
+- As doze missões, em cada dificuldade, com várias rodadas.
+- Telefone bloqueado, modo silencioso e um modo de foco. O alarme tem que tocar nos três.
+- Outro idioma: troque o idioma do iPhone e leia de novo o alarme e o texto da missão.
+- A saída de emergência nos ajustes, ligada por padrão, feita para ser a única forma de sair sem missão.
+
+Se algo estiver errado, uma captura de tela diz mais que uma frase. Mande de volta pelo TestFlight ou pela página de suporte nos ajustes.""",
+    "ru": """Сборка 3 исправляет то, что было не так в первых двух: изменение сохранённого будильника заканчивалось сообщением «iOS отказался запланировать этот будильник», а кнопка «Стоп» на звонящем будильнике заканчивала утро вообще без задания.
+
+ЧТО ПРОВЕРИТЬ В ПЕРВУЮ ОЧЕРЕДЬ
+
+1. Измените будильник. Создайте, сохраните, откройте снова, поменяйте время и задание, сохраните ещё раз. Без ошибки, и он по-прежнему звонит.
+2. Нажмите «Стоп» во время звонка. Задание всё равно откроется, и если его не выполнить, будильник вернётся через шестьдесят секунд.
+3. Уйдите с экрана задания или закройте приложение принудительно, пока задание не выполнено. Будильник возвращается сразу.
+4. Выполните задание. Только тогда утро закончено, и больше ничего не звонит.
+
+НА ЧТО ЕЩЁ СТОИТ ВЗГЛЯНУТЬ
+
+- Двенадцать заданий, на каждом уровне сложности, в несколько раундов.
+- Заблокированный телефон, беззвучный режим и режим концентрации. Будильник должен звонить во всех трёх.
+- Другой язык: смените язык iPhone и перечитайте экран будильника и текст задания.
+- Аварийный выход в настройках: включён по умолчанию и задуман как единственный способ выйти без задания.
+
+Если что-то не так, снимок экрана скажет больше, чем фраза о нём. Пришлите его через TestFlight или через страницу поддержки в настройках.""",
+    "zh-Hans": """版本 3 修好了前两个版本的两处问题：编辑已保存的闹钟会失败并提示「iOS 拒绝了该闹钟的排程」；正在响的闹钟按下停止后，早晨就结束了，任务根本没出现。
+
+【请先测试这些】
+
+1. 编辑闹钟。新建、保存，再打开，改时间和任务，再保存一次。不应报错，而且照样会响。
+2. 响的时候按停止。任务照样会打开；没做完的话，闹钟应在六十秒后再响。
+3. 离开任务界面，或在任务未完成时强制退出应用。闹钟会立刻回来。
+4. 把任务做完。只有这时早晨才算结束，之后不会再响。
+
+【也值得看看】
+
+- 十二种任务，每一档难度，多个轮次。
+- 锁屏、静音模式，以及专注模式。这三种情况下闹钟都必须响。
+- 换一种语言：改掉 iPhone 的语言，再读一遍闹钟界面和任务文字。
+- 设置里的紧急退出，默认开启，是不做任务离开的唯一出口。
+
+如果哪里不对，一张截图比一句描述更有用。请通过 TestFlight 或设置里的支持页面发回来。""",
+}
+
 # The description. Read on a phone, so the first two lines carry it: the App Store collapses
 # everything after about three lines behind "more", and most readers never tap it.
 #
@@ -160,7 +376,7 @@ TWELVE MISSIONS
 
 IT DOES NOT LET GO
 
-Stop the alarm without finishing the mission and it comes back in five minutes, on the lock screen, under a title that says why. Set as many rounds as you need: one for a weekday, ten for the morning of a flight.
+Stop the alarm without finishing the mission and it comes back a minute later, on the lock screen, under a title that says why. Set as many rounds as you need: one for a weekday, ten for the morning of a flight.
 
 It rings on the lock screen through Apple's own alarm system, so it works with the app closed, the phone locked, and Do Not Disturb on. There is an emergency exit, in Settings, on by default, because an alarm that cannot be stopped is a hazard and not a feature.
 
@@ -208,7 +424,7 @@ Support: https://aymane6.github.io/dawnbreak/support.html""",
 
 لا يتركك
 
-أوقف المنبه دون إتمام المهمة، وسيعود بعد خمس دقائق على شاشة القفل، بعنوان يقول لك السبب. اضبط عدد الجولات كما تحتاج: واحدة ليوم عمل، وعشر لصباح رحلة طيران.
+أوقف المنبه دون إتمام المهمة، وسيعود بعد دقيقة واحدة على شاشة القفل، بعنوان يقول لك السبب. اضبط عدد الجولات كما تحتاج: واحدة ليوم عمل، وعشر لصباح رحلة طيران.
 
 يرن على شاشة القفل عبر نظام المنبهات في Apple نفسه، فيعمل والتطبيق مغلق، والهاتف مقفل، ووضع عدم الإزعاج مفعّل. وهناك مخرج للطوارئ في الإعدادات، مفعّل افتراضياً، لأن منبهاً لا يمكن إيقافه خطرٌ لا ميزة.
 
@@ -256,7 +472,7 @@ ZWÖLF MISSIONEN
 
 ER LÄSST NICHT LOCKER
 
-Stell den Alarm ohne fertige Mission ab, und er kommt in fünf Minuten zurück, auf den Sperrbildschirm, mit einem Titel, der sagt warum. Stelle so viele Runden ein, wie du brauchst: eine für einen Werktag, zehn für den Morgen eines Flugs.
+Stell den Alarm ohne fertige Mission ab, und er kommt eine Minute später zurück, auf den Sperrbildschirm, mit einem Titel, der sagt warum. Stelle so viele Runden ein, wie du brauchst: eine für einen Werktag, zehn für den Morgen eines Flugs.
 
 Er klingelt über Apples eigenes Alarmsystem auf dem Sperrbildschirm, also bei geschlossener App, gesperrtem Telefon und aktivem Nicht-Störmodus. Es gibt einen Notausgang in den Einstellungen, standardmäßig an, denn ein Alarm, der sich nicht abstellen lässt, ist eine Gefahr und kein Feature.
 
@@ -304,7 +520,7 @@ DOCE MISIONES
 
 NO SE RINDE
 
-Para la alarma sin acabar la misión y vuelve a los cinco minutos, en la pantalla bloqueada, con un título que dice por qué. Pon las rondas que necesites: una para un día de semana, diez para la mañana de un vuelo.
+Para la alarma sin acabar la misión y vuelve un minuto después, en la pantalla bloqueada, con un título que dice por qué. Pon las rondas que necesites: una para un día de semana, diez para la mañana de un vuelo.
 
 Suena en la pantalla bloqueada a través del propio sistema de alarmas de Apple, así que funciona con la app cerrada, el teléfono bloqueado y el modo No molestar activado. Hay una salida de emergencia en Ajustes, activada por defecto, porque una alarma que no se puede parar es un peligro y no una función.
 
@@ -352,7 +568,7 @@ DOUZE MISSIONS
 
 ELLE N’ABANDONNE PAS
 
-Arrêtez l’alarme sans finir la mission et elle revient cinq minutes plus tard, sur l’écran verrouillé, avec un titre qui dit pourquoi. Réglez autant de manches qu’il faut : une pour un jour de semaine, dix pour le matin d’un avion.
+Arrêtez l’alarme sans finir la mission et elle revient une minute plus tard, sur l’écran verrouillé, avec un titre qui dit pourquoi. Réglez autant de manches qu’il faut : une pour un jour de semaine, dix pour le matin d’un avion.
 
 Elle sonne sur l’écran verrouillé via le système d’alarmes d’Apple, donc app fermée, téléphone verrouillé, mode Ne pas déranger actif. Il existe une sortie d’urgence, dans les réglages, activée par défaut, parce qu’une alarme impossible à arrêter est un danger et non une fonctionnalité.
 
@@ -400,7 +616,7 @@ Dawnbreak उस अंगूठे को हिसाब से हटा द�
 
 यह छोड़ता नहीं
 
-मिशन पूरा किए बिना अलार्म रोकें और वह पाँच मिनट में लौट आता है, लॉक स्क्रीन पर, ऐसे शीर्षक के साथ जो कारण बताता है। जितने राउंड चाहिए रखें: कार्यदिवस के लिए एक, फ़्लाइट वाली सुबह के लिए दस।
+मिशन पूरा किए बिना अलार्म रोकें और वह एक मिनट में लौट आता है, लॉक स्क्रीन पर, ऐसे शीर्षक के साथ जो कारण बताता है। जितने राउंड चाहिए रखें: कार्यदिवस के लिए एक, फ़्लाइट वाली सुबह के लिए दस।
 
 यह Apple की अपनी अलार्म प्रणाली से लॉक स्क्रीन पर बजता है, यानी ऐप बंद हो, फ़ोन लॉक हो, डू नॉट डिस्टर्ब चालू हो, तब भी। सेटिंग्स में एक आपातकालीन निकास है, डिफ़ॉल्ट रूप से चालू, क्योंकि जो अलार्म रोका न जा सके वह ख़तरा है, सुविधा नहीं।
 
@@ -448,7 +664,7 @@ DODICI MISSIONI
 
 NON MOLLA
 
-Ferma la sveglia senza finire la missione e torna dopo cinque minuti, sulla schermata di blocco, con un titolo che dice perché. Imposta i turni che ti servono: uno per un giorno feriale, dieci per la mattina di un volo.
+Ferma la sveglia senza finire la missione e torna dopo un minuto, sulla schermata di blocco, con un titolo che dice perché. Imposta i turni che ti servono: uno per un giorno feriale, dieci per la mattina di un volo.
 
 Suona sulla schermata di blocco tramite il sistema di allarmi di Apple, quindi funziona con l’app chiusa, il telefono bloccato e Non disturbare attivo. C’è un’uscita di emergenza nelle impostazioni, attiva per impostazione predefinita, perché una sveglia che non si può fermare è un pericolo e non una funzione.
 
@@ -496,7 +712,7 @@ Dawnbreak は、その親指を計算から外します。アラームを黙ら�
 
 【逃がしません】
 
-ミッションを終えずに止めると、5 分後にロック画面へ戻ってきます。理由を書いたタイトルつきで。ラウンド数は必要なだけ設定できます。平日なら 1 回、飛行機の朝なら 10 回。
+ミッションを終えずに止めると、1 分後にロック画面へ戻ってきます。理由を書いたタイトルつきで。ラウンド数は必要なだけ設定できます。平日なら 1 回、飛行機の朝なら 10 回。
 
 Apple 純正のアラーム機構でロック画面に鳴るので、アプリを閉じていても、端末をロックしていても、集中モード中でも動きます。設定には非常口があり、標準で有効です。止められないアラームは機能ではなく危険だからです。
 
@@ -544,7 +760,7 @@ Dawnbreak는 그 엄지를 계산에서 빼버립니다. 알람을 멈추려면 
 
 【봐주지 않습니다】
 
-미션을 끝내지 않고 끄면 5분 뒤 잠금 화면으로 돌아옵니다. 이유를 밝힌 제목과 함께. 라운드는 필요한 만큼 정하세요. 평일에는 한 번, 비행기 타는 아침에는 열 번.
+미션을 끝내지 않고 끄면 1분 뒤 잠금 화면으로 돌아옵니다. 이유를 밝힌 제목과 함께. 라운드는 필요한 만큼 정하세요. 평일에는 한 번, 비행기 타는 아침에는 열 번.
 
 Apple의 알람 시스템으로 잠금 화면에서 울리기 때문에, 앱을 닫아도, 기기를 잠가도, 방해 금지 모드에서도 작동합니다. 설정에는 비상 탈출구가 있고 기본으로 켜져 있습니다. 끌 수 없는 알람은 기능이 아니라 위험이니까요.
 
@@ -592,7 +808,7 @@ DOZE MISSÕES
 
 ELE NÃO DESISTE
 
-Pare o alarme sem terminar a missão e ele volta em cinco minutos, na tela bloqueada, com um título que diz por quê. Coloque quantas rodadas precisar: uma para um dia de semana, dez para a manhã de um voo.
+Pare o alarme sem terminar a missão e ele volta um minuto depois, na tela bloqueada, com um título que diz por quê. Coloque quantas rodadas precisar: uma para um dia de semana, dez para a manhã de um voo.
 
 Ele toca na tela bloqueada pelo próprio sistema de alarmes da Apple, então funciona com o app fechado, o telefone bloqueado e o Não Perturbe ligado. Existe uma saída de emergência nos ajustes, ligada por padrão, porque um alarme que não pode ser parado é um risco e não um recurso.
 
@@ -640,7 +856,7 @@ Dawnbreak убирает палец из этого уравнения. Чтоб
 
 ОН НЕ ОТПУСКАЕТ
 
-Выключите будильник, не закончив задание, и он вернётся через пять минут, на заблокированный экран, с заголовком, который объясняет почему. Раундов можно поставить сколько нужно: один на будний день, десять на утро перед самолётом.
+Выключите будильник, не закончив задание, и он вернётся через минуту, на заблокированный экран, с заголовком, который объясняет почему. Раундов можно поставить сколько нужно: один на будний день, десять на утро перед самолётом.
 
 Он звонит на заблокированном экране через собственную систему будильников Apple, поэтому работает при закрытом приложении, заблокированном телефоне и включённом режиме «Не беспокоить». В настройках есть аварийный выход, включённый по умолчанию: будильник, который нельзя выключить, это опасность, а не функция.
 
@@ -688,7 +904,7 @@ Dawnbreak 把那个拇指从等式里拿掉。要让闹钟安静下来，你得�
 
 【它不会放过你】
 
-没做完任务就关掉，它会在五分钟后回到锁定屏幕，标题会说明原因。轮数由你决定：工作日一轮，赶飞机的早晨十轮。
+没做完任务就关掉，它会在一分钟后回到锁定屏幕，标题会说明原因。轮数由你决定：工作日一轮，赶飞机的早晨十轮。
 
 它通过 Apple 自己的闹钟机制在锁定屏幕响铃，所以应用关闭、手机锁定、开启专注模式时都照样工作。设置里有一个紧急出口，默认开启，因为一个关不掉的闹钟是危险，不是功能。
 
@@ -849,6 +1065,10 @@ FIELDS = (
     ("promotional_text", PROMOTIONAL_TEXT, 170),
     ("description", DESCRIPTION, 4000),
     ("release_notes", RELEASE_NOTES, 4000),
+    # TestFlight rather than the store, and in this table anyway: it is per-locale prose with a
+    # character limit, which is exactly what the checks in `make_metadata.py` exist for, and
+    # `metadata/fr-FR/testflight_notes.txt` is then a file a diff can show like any other.
+    ("testflight_notes", TESTFLIGHT_NOTES, 4000),
 )
 
 #: Written into every locale folder, identical in all of them: they are URLs, not prose.

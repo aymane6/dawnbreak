@@ -21,7 +21,7 @@ DOUZE MISSIONS
 
 ELLE N’ABANDONNE PAS
 
-Arrêtez l’alarme sans finir la mission et elle revient cinq minutes plus tard, sur l’écran verrouillé, avec un titre qui dit pourquoi. Réglez autant de manches qu’il faut : une pour un jour de semaine, dix pour le matin d’un avion.
+Arrêtez l’alarme sans finir la mission et elle revient une minute plus tard, sur l’écran verrouillé, avec un titre qui dit pourquoi. Réglez autant de manches qu’il faut : une pour un jour de semaine, dix pour le matin d’un avion.
 
 Elle sonne sur l’écran verrouillé via le système d’alarmes d’Apple, donc app fermée, téléphone verrouillé, mode Ne pas déranger actif. Il existe une sortie d’urgence, dans les réglages, activée par défaut, parce qu’une alarme impossible à arrêter est un danger et non une fonctionnalité.
 

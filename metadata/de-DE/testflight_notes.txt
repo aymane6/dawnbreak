@@ -1,0 +1,17 @@
+Build 3 behebt, was die ersten beiden falsch gemacht haben: Das Bearbeiten eines gespeicherten Alarms scheiterte mit „iOS hat diesen Alarm nicht angenommen“, und der Stopp-Knopf am klingelnden Alarm beendete den Morgen ganz ohne Mission.
+
+WAS ZUERST ZU TESTEN IST
+
+1. Einen Alarm bearbeiten. Stellen, speichern, wieder öffnen, Zeit und Mission ändern, erneut speichern. Kein Fehler, und er klingelt weiterhin.
+2. Beim Klingeln auf Stopp drücken. Die Mission öffnet sich trotzdem, und wird sie nicht gelöst, kommt der Alarm sechzig Sekunden später zurück.
+3. Den Missionsbildschirm verlassen oder die App beenden, während eine Mission offen ist. Der Alarm kommt sofort zurück.
+4. Die Mission lösen. Erst dann ist der Morgen vorbei und es klingelt nichts mehr.
+
+AUCH EINEN BLICK WERT
+
+- Die zwölf Missionen, in jedem Schwierigkeitsgrad, mit mehreren Runden.
+- Gesperrtes Telefon, Stummmodus und ein Fokus. Der Alarm muss durch alle drei klingeln.
+- Eine andere Sprache: die iPhone-Sprache umstellen und Alarm- und Missionstexte noch einmal lesen.
+- Der Notausgang in den Einstellungen, standardmäßig an und als einziger Weg ohne Mission gedacht.
+
+Wenn etwas nicht stimmt, sagt ein Screenshot davon mehr als ein Satz darüber. Schick ihn über TestFlight zurück oder über die Support-Seite in den Einstellungen.

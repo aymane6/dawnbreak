@@ -21,7 +21,7 @@ DOZE MISSÕES
 
 ELE NÃO DESISTE
 
-Pare o alarme sem terminar a missão e ele volta em cinco minutos, na tela bloqueada, com um título que diz por quê. Coloque quantas rodadas precisar: uma para um dia de semana, dez para a manhã de um voo.
+Pare o alarme sem terminar a missão e ele volta um minuto depois, na tela bloqueada, com um título que diz por quê. Coloque quantas rodadas precisar: uma para um dia de semana, dez para a manhã de um voo.
 
 Ele toca na tela bloqueada pelo próprio sistema de alarmes da Apple, então funciona com o app fechado, o telefone bloqueado e o Não Perturbe ligado. Existe uma saída de emergência nos ajustes, ligada por padrão, porque um alarme que não pode ser parado é um risco e não um recurso.
 

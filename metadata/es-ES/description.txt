@@ -21,7 +21,7 @@ DOCE MISIONES
 
 NO SE RINDE
 
-Para la alarma sin acabar la misión y vuelve a los cinco minutos, en la pantalla bloqueada, con un título que dice por qué. Pon las rondas que necesites: una para un día de semana, diez para la mañana de un vuelo.
+Para la alarma sin acabar la misión y vuelve un minuto después, en la pantalla bloqueada, con un título que dice por qué. Pon las rondas que necesites: una para un día de semana, diez para la mañana de un vuelo.
 
 Suena en la pantalla bloqueada a través del propio sistema de alarmas de Apple, así que funciona con la app cerrada, el teléfono bloqueado y el modo No molestar activado. Hay una salida de emergencia en Ajustes, activada por defecto, porque una alarma que no se puede parar es un peligro y no una función.
 

@@ -5,6 +5,8 @@
 
 Creates, or updates, and then reports:
 
+    TestFlight        the beta description, the feedback address, and what to test on the newest
+                      build, in twelve languages, plus the beta review contact
     app info          name, subtitle and privacy policy URL in twelve languages, two categories
     version 1.0.0     copyright, manual release
     localizations     description, keywords, promotional text, release notes, three URLs, ×12
@@ -70,6 +72,17 @@ VERSION_FIELDS = {
     "support_url": "supportUrl",
     "marketing_url": "marketingUrl",
 }
+
+# metadata/ file to attribute, for the TestFlight side of the same text. Two resources again, and
+# the same split: the beta description belongs to the app, "what to test" belongs to one build. Both
+# read `testflight_notes.txt`, because a tester who has just tapped Install wants the same four
+# things checked either way, and two texts would be one of them going stale.
+BETA_APP_FIELDS = {
+    "testflight_notes": "description",
+    "marketing_url": "marketingUrl",
+    "privacy_url": "privacyPolicyUrl",
+}
+BETA_BUILD_FIELDS = {"testflight_notes": "whatsNew"}
 
 # metadata/review_information/ file to attribute.
 REVIEW_FIELDS = {
@@ -177,7 +190,8 @@ def listings() -> dict[str, dict[str, str]]:
         folder = METADATA / locale
         if not folder.is_dir():
             die(f"metadata/{locale}/ is missing, run scripts/make_metadata.py")
-        wanted = set(APP_INFO_FIELDS) | set(VERSION_FIELDS)
+        wanted = (set(APP_INFO_FIELDS) | set(VERSION_FIELDS)
+                  | set(BETA_APP_FIELDS) | set(BETA_BUILD_FIELDS))
         everything[locale] = {name: text(folder / f"{name}.txt") for name in sorted(wanted)}
     return everything
 
@@ -222,24 +236,119 @@ def check_screenshots() -> dict[str, list[Path]]:
 
 
 def write(client: Client, resource: str, existing: str | None, attributes: dict,
-          relationships: dict | None = None, at_creation: dict | None = None) -> str:
+          relationships: dict | None = None, at_creation: dict | None = None,
+          fatal: bool = True) -> str | None:
     """PATCH what exists, POST what does not.
 
     `at_creation` carries the attributes Apple only takes on the way in, `locale` above all: it is
     part of a localization's identity, and sending it in a PATCH is an error rather than a no-op.
+
+    `fatal=False` is for the TestFlight resources, whose language list is Apple's rather than this
+    project's: a locale TestFlight does not offer is one language of test notes missing, which is
+    worth a warning and not worth abandoning a run that has a listing to finish.
     """
     if existing:
-        client.expect("PATCH", f"/v1/{resource}/{existing}",
-                      {"data": {"type": resource, "id": existing, "attributes": attributes}})
-        return existing
-    body: dict = {"data": {"type": resource, "attributes": {**attributes, **(at_creation or {})}}}
-    if relationships:
-        body["data"]["relationships"] = relationships
-    return client.expect("POST", f"/v1/{resource}", body)["data"]["id"]
+        status, payload = client.call(
+            "PATCH", f"/v1/{resource}/{existing}",
+            {"data": {"type": resource, "id": existing, "attributes": attributes}})
+        if status < 300:
+            return existing
+    else:
+        body: dict = {"data": {"type": resource,
+                               "attributes": {**attributes, **(at_creation or {})}}}
+        if relationships:
+            body["data"]["relationships"] = relationships
+        status, payload = client.call("POST", f"/v1/{resource}", body)
+        if status < 300:
+            return payload["data"]["id"]
+    if fatal:
+        die(f"{resource} answered {status}: {problem(payload)}")
+    return None
 
 
 def by_locale(client: Client, path: str) -> dict[str, str]:
     return {entry["attributes"]["locale"]: entry["id"] for entry in client.collection(path)}
+
+
+# ---------------------------------------------------------------------------
+# TestFlight
+# ---------------------------------------------------------------------------
+
+
+def newest_build(client: Client, app_id: str, number: str) -> dict | None:
+    """The newest build of `number` that has finished processing, or nothing yet.
+
+    Processing takes a few minutes after `scripts/release.sh` returns, so "no build" here usually
+    means "not yet" rather than "not uploaded": both callers report it that way instead of failing.
+    """
+    builds = client.collection(
+        f"/v1/builds?filter[app]={app_id}&filter[preReleaseVersion.version]={number}"
+        "&sort=-uploadedDate&limit=200")
+    ready = [entry for entry in builds if entry["attributes"].get("processingState") == "VALID"]
+    return ready[0] if ready else None
+
+
+def testflight(client: Client, app_id: str, number: str, everything: dict, details: dict) -> None:
+    """What a tester reads in the TestFlight app, in every language the app ships.
+
+    Sent before the App Store listing and outside the freeze that follows it: a version waiting for
+    review still receives builds, and a build with no test notes is a tester guessing which of
+    twelve missions the fix was in. The address here is where their feedback lands, so it is the
+    same one Apple has for the review rather than a second inbox nobody opens.
+    """
+    relationship = {"app": {"data": {"type": "apps", "id": app_id}}}
+    existing = by_locale(client, f"/v1/apps/{app_id}/betaAppLocalizations?limit=200")
+    took = []
+    for locale in LOCALES:
+        attributes = {field: everything[locale][name] for name, field in BETA_APP_FIELDS.items()}
+        attributes["feedbackEmail"] = details["email_address"]
+        if write(client, "betaAppLocalizations", existing.get(locale), attributes,
+                 relationships=relationship, at_creation={"locale": locale}, fatal=False):
+            took.append(locale)
+    good("beta description", f"{len(took)} of {len(LOCALES)} languages, "
+                             f"feedback to {details['email_address']}")
+    refused = sorted(set(LOCALES) - set(took))
+    if refused:
+        warn(f"TestFlight would not take these languages: {', '.join(refused)}")
+
+    good("beta review contact", beta_review_detail(client, app_id, details))
+
+    build = newest_build(client, app_id, number)
+    if not build:
+        warn(f"no processed build of {number} yet, so there is nothing to write test notes on")
+        return
+    relationship = {"build": {"data": {"type": "builds", "id": build["id"]}}}
+    existing = by_locale(client, f"/v1/builds/{build['id']}/betaBuildLocalizations?limit=200")
+    took = []
+    for locale in LOCALES:
+        attributes = {field: everything[locale][name] for name, field in BETA_BUILD_FIELDS.items()}
+        if write(client, "betaBuildLocalizations", existing.get(locale), attributes,
+                 relationships=relationship, at_creation={"locale": locale}, fatal=False):
+            took.append(locale)
+    good("what to test", f"build {build['attributes'].get('version')}, "
+                         f"{len(took)} of {len(LOCALES)} languages")
+
+
+def beta_review_detail(client: Client, app_id: str, details: dict) -> str:
+    """The contact and notes Apple reads before letting a beta out to external testers.
+
+    Filled although every tester today is internal, which needs no review at all: adding an
+    external group is one click in App Store Connect, and Apple refuses that submission with an
+    empty review detail. The same contact and the same notes as the App Store review, because it is
+    the same app and the same person picking up the phone.
+
+    One resource per app, created by Apple with the app record, so this only ever patches. Its id is
+    read rather than assumed to be the app's, which it happens to be today.
+    """
+    status, payload = client.call("GET", f"/v1/apps/{app_id}/betaAppReviewDetail")
+    existing = (payload.get("data") or {}).get("id") if status < 300 else None
+    if not existing:
+        return f"none to fill: {problem(payload)}"
+    attributes = {field: details[name] for name, field in REVIEW_FIELDS.items()}
+    attributes["demoAccountRequired"] = details["demoAccountRequired"]
+    if not write(client, "betaAppReviewDetails", existing, attributes, fatal=False):
+        return "needs a human"
+    return f"{details['email_address']}, no demo account"
 
 
 # ---------------------------------------------------------------------------
@@ -610,31 +719,34 @@ def free(client: Client, app_id: str) -> str:
 
 
 def attach_build(client: Client, app_id: str, version_id: str, number: str) -> str:
-    """The build the version ships, if one has finished processing.
+    """The newest processed build, attached even when an older one already is.
+
+    Not "already attached, nothing to do", which is the bug this sentence replaces: a version keeps
+    pointing at whichever build it was given, and every bug fix uploads another one. Left alone, the
+    submission would carry build 1 while build 3 sits in TestFlight fixing the thing a reviewer is
+    about to find. So the pointer is moved, and what it moved from is printed.
 
     A version with no build cannot be submitted, and the build comes from `scripts/release.sh`, so
-    this reports rather than insists: the newest processed build is attached, and if there is none
-    the reason is the sentence a reader needs.
+    the empty case reports rather than fails: processing takes minutes, and running this again is
+    cheaper than making it wait.
     """
+    newest = newest_build(client, app_id, number)
     status, payload = client.call("GET", f"/v1/appStoreVersions/{version_id}/build")
-    if status < 300 and payload.get("data"):
-        return "already attached"
-    builds = client.collection(
-        f"/v1/builds?filter[app]={app_id}&filter[preReleaseVersion.version]={number}"
-        "&sort=-uploadedDate&limit=200")
-    ready = [entry for entry in builds if entry["attributes"].get("processingState") == "VALID"]
-    if not ready:
-        waiting = [entry["attributes"].get("processingState") for entry in builds]
-        return (f"no processed build for {number} yet" if not waiting
-                else f"the {number} builds are {', '.join(waiting)}")
-    newest = ready[0]
+    attached = (payload.get("data") or {}) if status < 300 else {}
+    was = attached.get("attributes", {}).get("version")
+    if not newest:
+        return (f"none processed yet, keeping build {was}" if was
+                else f"no processed build for {number} yet")
+    if attached.get("id") == newest["id"]:
+        return f"build {was} already attached"
     status, payload = client.call(
         "PATCH", f"/v1/appStoreVersions/{version_id}/relationships/build",
         {"data": {"type": "builds", "id": newest["id"]}})
     if status >= 300:
         warn(f"the build could not be attached: {problem(payload)}")
         return "needs a human"
-    return f"build {newest['attributes'].get('version')} attached"
+    return (f"build {newest['attributes'].get('version')} attached"
+            + (f", replacing build {was}" if was else ""))
 
 
 # ---------------------------------------------------------------------------
@@ -652,6 +764,12 @@ def main() -> int:
     client = Client()
     app = app_record(client)
     good("app record", f"{app['attributes']['name']} ({app['id']})")
+
+    # Before the freeze check below, because TestFlight is not frozen by an App Store submission:
+    # testers keep receiving builds while a version waits for review, and those builds are the ones
+    # that most need saying what changed in them.
+    print(f"\n{BOLD}TestFlight{RESET}")
+    testflight(client, app["id"], number, everything, details)
 
     if staged(client, app["id"]):
         print()

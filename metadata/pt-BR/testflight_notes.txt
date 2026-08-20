@@ -1,0 +1,17 @@
+A build 3 corrige o que as duas primeiras erravam: editar um alarme salvo falhava com «O iOS recusou agendar este alarme», e o botão Parar de um alarme tocando encerrava a manhã sem missão nenhuma.
+
+O QUE TESTAR PRIMEIRO
+
+1. Edite um alarme. Crie, salve, abra de novo, mude a hora e a missão, salve outra vez. Sem erro, e ele continua tocando.
+2. Toque em Parar enquanto ele toca. A missão abre de qualquer forma, e se não for resolvida o alarme volta sessenta segundos depois.
+3. Saia da tela da missão, ou force o fechamento do app com uma missão pendente. O alarme volta na hora.
+4. Resolva a missão. Só então a manhã acaba e nada mais toca.
+
+TAMBÉM VALE OLHAR
+
+- As doze missões, em cada dificuldade, com várias rodadas.
+- Telefone bloqueado, modo silencioso e um modo de foco. O alarme tem que tocar nos três.
+- Outro idioma: troque o idioma do iPhone e leia de novo o alarme e o texto da missão.
+- A saída de emergência nos ajustes, ligada por padrão, feita para ser a única forma de sair sem missão.
+
+Se algo estiver errado, uma captura de tela diz mais que uma frase. Mande de volta pelo TestFlight ou pela página de suporte nos ajustes.
