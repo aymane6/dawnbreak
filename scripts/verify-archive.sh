@@ -184,18 +184,26 @@ else
 
   # `get-task-allow` is what makes a build debuggable, and what `storekitd` reads to decide that an
   # app is a development install: `scripts/shots.sh --review` puts it on one Debug build so the
-  # review screenshot can have prices on it. It must never reach the store, which refuses a
+  # review screenshot can have prices on it. A true one must never reach the store, which refuses a
   # debuggable binary. A distribution profile does not authorise it either, so the usual outcome is a
   # signing failure long before here, and "the usual outcome" is not something to upload on.
+  #
+  # The value is what matters, not the key. Xcode writes `get-task-allow` explicitly as false when it
+  # signs Release with a distribution identity, so grepping for the name flags every correct archive
+  # there is and stops the upload on the one build that was right.
   DEBUGGABLE=()
   for bundle in "$APP" "$WIDGET"; do
     [[ -d "$bundle" ]] || continue
-    if /usr/bin/codesign -d --entitlements - --xml "$bundle" 2>/dev/null | grep -q "get-task-allow"; then
+    BUNDLE_ENTITLEMENTS=$(/usr/bin/codesign -d --entitlements - --xml "$bundle" 2>/dev/null \
+      | /usr/bin/plutil -convert xml1 - -o - 2>/dev/null || true)
+    TASK_ALLOW=$(printf '%s' "$BUNDLE_ENTITLEMENTS" \
+      | /usr/bin/plutil -extract get-task-allow raw - -o - 2>/dev/null || echo absent)
+    if [[ "$TASK_ALLOW" == "true" ]]; then
       DEBUGGABLE+=("$(basename "$bundle")")
     fi
   done
   if [[ ${#DEBUGGABLE[@]} -eq 0 ]]; then
-    pass "not debuggable" "no get-task-allow"
+    pass "not debuggable" "get-task-allow is not true"
   else
     fail "${DEBUGGABLE[*]} carries get-task-allow, which is a Debug entitlement the store rejects"
   fi
