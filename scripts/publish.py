@@ -56,6 +56,9 @@ LOCALES = sorted(store.NAME)
 # requires, and every smaller iPhone is served by scaling it down.
 DISPLAY_TYPE = "APP_IPHONE_67"
 
+# The one platform this app ships on, spelled the way `reviewSubmissions` wants it.
+PLATFORM = "IOS"
+
 # metadata/ file to App Store Connect attribute. Two resources, because Apple splits the listing
 # between what belongs to the app (its name) and what belongs to a version (its description).
 APP_INFO_FIELDS = {"name": "name", "subtitle": "subtitle", "privacy_url": "privacyPolicyUrl"}
@@ -88,12 +91,21 @@ EDITABLE = {
 #
 # Answered here rather than left to a human because every answer is a fact about the app that the
 # repository already settles: there is no violence, no gambling, no web view, no user content, and
-# no advertising. Sent as one PATCH, and reported rather than fatal: Apple adds questions to this
-# form, and a version that is only missing an age rating is still a version worth having.
+# no advertising. The declaration hangs off the *app info*, not the version, and it is one app-wide
+# resource: answering it once answers it for every version. Sent as one PATCH, and reported rather
+# than fatal, because Apple adds questions to this form and a version that is only missing an age
+# rating is still a version worth having.
+#
+# Every one of these is required together: a PATCH naming a subset is refused with one "You must
+# provide a value for the attribute" per absentee, so the whole questionnaire goes in every request.
+# The split between "NONE" and False is Apple's, not a choice: the twelve graded content categories
+# take a level, the capability questions take a yes or no, and sending the wrong JSON type is a 409
+# naming the type it wanted. Both spellings mean the same thing here, which is no.
 AGE_RATING = {
     "alcoholTobaccoOrDrugUseOrReferences": "NONE",
     "contests": "NONE",
     "gamblingSimulated": "NONE",
+    "gunsOrOtherWeapons": "NONE",
     "horrorOrFearThemes": "NONE",
     "matureOrSuggestiveThemes": "NONE",
     "medicalOrTreatmentInformation": "NONE",
@@ -103,15 +115,31 @@ AGE_RATING = {
     "violenceCartoonOrFantasy": "NONE",
     "violenceRealistic": "NONE",
     "violenceRealisticProlongedGraphicOrSadistic": "NONE",
+    "advertising": False,
+    # Whether the app checks how old its user is. It does not, and it does not need to: nothing it
+    # shows is age-gated. Answering yes is a claim Apple can ask to see implemented.
+    "ageAssurance": False,
     "gambling": False,
-    "unrestrictedWebAccess": False,
+    # Wellness *topics*, not wellness activity: the app counts push-ups to prove you are awake and
+    # gives no advice, no diet, no body-image content and no health readings.
+    "healthOrWellnessTopics": False,
     "lootBox": False,
+    "messagingAndChat": False,
+    "parentalControls": False,
+    "socialMedia": False,
+    "unrestrictedWebAccess": False,
+    # Alarm labels are user-written, but they never leave the device, so there is nothing another
+    # user could be shown. The question is about content shared between people.
+    "userGeneratedContent": False,
     # Not a kids' category app: the mission screens assume a reader, and the category is
     # Productivity. Declaring an age band would put it in a programme with stricter rules than the
     # app needs.
     "kidsAgeBand": None,
     "ageRatingOverride": "NONE",
 }
+
+# Nothing in the bundle is licensed from anyone: see `content_rights`.
+CONTENT_RIGHTS = "DOES_NOT_USE_THIRD_PARTY_CONTENT"
 
 # What a placeholder looks like. The listing may not be sent with one: Apple calls this number when
 # a review stalls, and an invented contact turns a two-day question into a rejection.
@@ -268,19 +296,37 @@ def app_info_localizations(client: Client, info_id: str, everything: dict) -> No
 
 
 def version(client: Client, app_id: str, number: str) -> str:
+    """The version record this listing goes on, renumbered rather than duplicated if need be.
+
+    A new app record arrives with a version already on it, called "1.0" whatever the build says, and
+    Apple refuses a second one while that one is open: `POST /v1/appStoreVersions` answers 409 "You
+    cannot create a new version of the App in the current state." Since a build only attaches to a
+    version carrying its own marketing version, and 1.0 is not 1.0.0, the open one is renumbered.
+
+    Any version Apple still takes edits to will do, whatever it is called. One that is closed and
+    already carries this number is fatal, because the next release is a decision in project.yml.
+    """
+    open_versions = []
     for entry in client.collection(f"/v1/apps/{app_id}/appStoreVersions?limit=200"):
         attributes = entry["attributes"]
-        if attributes["versionString"] != number:
-            continue
         state = attributes.get("appStoreState") or attributes.get("appVersionState", "")
-        if state not in EDITABLE:
+        if state in EDITABLE:
+            open_versions.append((entry["id"], attributes["versionString"], state))
+        elif attributes["versionString"] == number:
             die(f"version {number} is {state}, which takes no edits. Bump MARKETING_VERSION in "
                 "project.yml for the next one.")
-        client.expect("PATCH", f"/v1/appStoreVersions/{entry['id']}", {"data": {
-            "type": "appStoreVersions", "id": entry["id"],
-            "attributes": {"copyright": text(METADATA / "copyright.txt")}}})
-        good(f"version {number}", f"{entry['id']}, {state}")
-        return entry["id"]
+
+    if open_versions:
+        identifier, existing, state = open_versions[0]
+        attributes = {"copyright": text(METADATA / "copyright.txt")}
+        if existing != number:
+            attributes["versionString"] = number
+        client.expect("PATCH", f"/v1/appStoreVersions/{identifier}", {"data": {
+            "type": "appStoreVersions", "id": identifier, "attributes": attributes}})
+        good(f"version {number}", f"{identifier}, {state}"
+                                  + (f", renumbered from {existing}" if existing != number else ""))
+        return identifier
+
     created = client.expect("POST", "/v1/appStoreVersions", {"data": {
         "type": "appStoreVersions",
         "attributes": {
@@ -296,25 +342,44 @@ def version(client: Client, app_id: str, number: str) -> str:
     return created["data"]["id"]
 
 
-def version_localizations(client: Client, version_id: str, everything: dict) -> dict[str, str]:
+def first_release(client: Client, app_id: str, version_id: str) -> bool:
+    """Whether this version is the only one the app has ever had, which decides one field below."""
+    return [entry["id"] for entry in client.collection(
+        f"/v1/apps/{app_id}/appStoreVersions?limit=200")] == [version_id]
+
+
+def version_localizations(client: Client, version_id: str, everything: dict,
+                          first_release: bool) -> dict[str, str]:
+    """The description, keywords and the rest, in twelve languages.
+
+    Everything but the release notes, on a first version. Apple answers `whatsNew` on one with 409
+    "Attribute 'whatsNew' cannot be edited at this time", and it is right: there is nothing new about
+    an app nobody has seen, and its own page does not draw the box. The refusal is not partial
+    either, so sending it would lose the description along with it.
+    """
+    fields = {name: field for name, field in VERSION_FIELDS.items()
+              if not (first_release and field == "whatsNew")}
     existing = by_locale(client,
                          f"/v1/appStoreVersions/{version_id}/appStoreVersionLocalizations?limit=200")
     identifiers = {}
     for locale in LOCALES:
-        attributes = {field: everything[locale][name] for name, field in VERSION_FIELDS.items()}
+        attributes = {field: everything[locale][name] for name, field in fields.items()}
         identifiers[locale] = write(
             client, "appStoreVersionLocalizations", existing.get(locale), attributes,
             relationships={"appStoreVersion": {
                 "data": {"type": "appStoreVersions", "id": version_id}}},
             at_creation={"locale": locale})
-    good("version localizations", f"{len(identifiers)} of {len(LOCALES)}, "
-                                 f"{len(VERSION_FIELDS)} fields each")
+    good("version localizations", f"{len(identifiers)} of {len(LOCALES)}, {len(fields)} fields each"
+                                 + (", release notes held back for a first version" if first_release
+                                    else ""))
     return identifiers
 
 
 def review_details(client: Client, version_id: str, details: dict) -> None:
     status, payload = client.call("GET", f"/v1/appStoreVersions/{version_id}/appStoreReviewDetail")
-    existing = payload.get("data", {}).get("id") if status < 300 else None
+    # `or {}` and not a default: a to-one relationship that holds nothing answers 200 with `data`
+    # present and null, so the default never applies and the key is there to be tripped over.
+    existing = (payload.get("data") or {}).get("id") if status < 300 else None
     attributes = {field: details[name] for name, field in REVIEW_FIELDS.items()}
     attributes["demoAccountRequired"] = details["demoAccountRequired"]
     write(client, "appStoreReviewDetails", existing, attributes,
@@ -377,9 +442,16 @@ def upload_screenshots(client: Client, set_id: str, files: list[Path]) -> tuple[
 # ---------------------------------------------------------------------------
 
 
-def age_rating(client: Client, version_id: str) -> str:
-    status, payload = client.call("GET", f"/v1/appStoreVersions/{version_id}/ageRatingDeclaration")
-    declaration = payload.get("data", {}).get("id") if status < 300 else None
+def age_rating(client: Client, info_id: str) -> str:
+    """Answer the questionnaire on the app info.
+
+    On the *app info*, deliberately: `/v1/appStoreVersions/{id}/ageRatingDeclaration` is a 404 that
+    says the relationship does not exist, and the 404 is Apple's, not a typo here. The declaration's
+    own id is the app info's id, which makes the GET look redundant and is why it stays: an id that
+    happens to be equal today is not an id to hard-code.
+    """
+    status, payload = client.call("GET", f"/v1/appInfos/{info_id}/ageRatingDeclaration")
+    declaration = (payload.get("data") or {}).get("id") if status < 300 else None
     if not declaration:
         return "no declaration to answer"
     status, payload = client.call("PATCH", f"/v1/ageRatingDeclarations/{declaration}", {"data": {
@@ -388,7 +460,114 @@ def age_rating(client: Client, version_id: str) -> str:
         warn(f"the age rating was refused: {problem(payload)}\n"
              "  Answer it by hand in App Store Connect: App Information, Age Rating, Edit.")
         return "needs a human"
-    return f"{len(AGE_RATING)} answers, no objectionable content"
+    # What Apple did *not* ask, so that a question added next year shows up here rather than as a
+    # rejected submission. Unanswered is not the same as answered no.
+    answered = payload["data"]["attributes"]
+    unanswered = sorted(name for name, value in answered.items() if value is None) or ["nothing"]
+    return (f"{len(AGE_RATING)} answers, no objectionable content, "
+            f"unanswered: {', '.join(unanswered)}")
+
+
+def staged(client: Client, app_id: str) -> str | None:
+    """The draft submission that has frozen the listing, if there is one.
+
+    A version that is an item of a submission stops taking metadata edits, and so does the app info
+    beside it: `appInfos` goes to READY_FOR_REVIEW and every localization PATCH below is refused. That
+    is not a failure, it is the state this script exists to reach, so it is worth recognising before
+    anything is attempted rather than reporting it as "no editable app info" twenty calls later.
+    """
+    for draft in client.collection(f"/v1/apps/{app_id}/reviewSubmissions?limit=50"):
+        if draft["attributes"]["submittedDate"]:
+            continue
+        if client.collection(f"/v1/reviewSubmissions/{draft['id']}/items?limit=50"):
+            return draft["id"]
+    return None
+
+
+def submission(client: Client, app_id: str, version_id: str) -> str:
+    """Stage the review submission, and stop one click short of sending it.
+
+    Worth doing even though nobody here will press the button, because adding the version to a
+    submission is the only complete pre-flight Apple offers. Every other check in this file knows one
+    field; this call knows the whole list, and it answers with it: a 409 whose associated errors name
+    the app privacy answers, the pricing, the content rights, each against the path it belongs to.
+    Nothing else in the API will tell you the version is short of something.
+
+    What it deliberately does not do is `PATCH {"submitted": true}`. That hands the app to Apple's
+    reviewers under someone else's developer account and their legal declarations, which is a person's
+    act. A staged submission is also reversible from the browser, and a sent one is not.
+    """
+    for draft in client.collection(f"/v1/apps/{app_id}/reviewSubmissions?limit=50"):
+        if draft["attributes"]["submittedDate"]:
+            continue
+        identifier = draft["id"]
+        break
+    else:
+        status, payload = client.call("POST", "/v1/reviewSubmissions", {"data": {
+            "type": "reviewSubmissions",
+            "attributes": {"platform": PLATFORM},
+            "relationships": {"app": {"data": {"type": "apps", "id": app_id}}}}})
+        if status >= 300:
+            warn(f"the submission could not be staged: {problem(payload)}")
+            return "needs a human"
+        identifier = payload["data"]["id"]
+
+    items = client.collection(f"/v1/reviewSubmissions/{identifier}/items"
+                              "?include=appStoreVersion&limit=50")
+    held = {(item.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id")
+            for item in items}
+    if version_id in held:
+        return f"{len(items)} item staged, ready to send"
+
+    status, payload = client.call("POST", "/v1/reviewSubmissionItems", {"data": {
+        "type": "reviewSubmissionItems",
+        "relationships": {
+            "reviewSubmission": {"data": {"type": "reviewSubmissions", "id": identifier}},
+            "appStoreVersion": {"data": {"type": "appStoreVersions", "id": version_id}}}}})
+    if status >= 300:
+        warn("Apple will not review this version yet:\n  " + problem(payload).replace("; ", "\n  "))
+        return "not reviewable yet"
+    # The three products are not items of their own: `reviewSubmissionItems` has no relationship for
+    # a subscription or a purchase, and on a first version Apple reviews everything that is ready to
+    # submit alongside the app. `scripts/iap.py` is what makes them ready.
+    return "version staged, ready to send"
+
+
+def content_rights(client: Client, app_id: str) -> str:
+    """Whether the app ships anything somebody else owns.
+
+    It does not, and that is a fact about this repository rather than an opinion: the eight alarm
+    tones are synthesised by `scripts/make-sounds.swift`, the icon by `scripts/make-icon.swift`,
+    there is no bundled font, and `DawnbreakKit` declares no package dependencies. Left unanswered
+    this alone blocks the submission, and it is not a question a person needs to weigh.
+    """
+    status, payload = client.call("GET", f"/v1/apps/{app_id}?fields[apps]=contentRightsDeclaration")
+    declared = payload["data"]["attributes"]["contentRightsDeclaration"] if status < 300 else None
+    if declared == CONTENT_RIGHTS:
+        return "no third party content"
+    status, payload = client.call("PATCH", f"/v1/apps/{app_id}", {"data": {
+        "type": "apps", "id": app_id,
+        "attributes": {"contentRightsDeclaration": CONTENT_RIGHTS}}})
+    if status >= 300:
+        warn(f"the content rights declaration was refused: {problem(payload)}")
+        return "needs a human"
+    return "no third party content, newly declared"
+
+
+def priced_in(client: Client, app_id: str) -> int:
+    """How many territories the app itself has a price in.
+
+    Counted, not inferred from the schedule existing, because an empty schedule exists: see `free`.
+    Both collections answer 404 while the schedule holds nothing, which is not an error to report
+    but the answer zero.
+    """
+    territories = 0
+    for relationship in ("manualPrices", "automaticPrices"):
+        status, payload = client.call(
+            "GET", f"/v1/appPriceSchedules/{app_id}/{relationship}?limit=200")
+        if status < 300:
+            territories += payload.get("meta", {}).get("paging", {}).get("total", 0)
+    return territories
 
 
 def free(client: Client, app_id: str) -> str:
@@ -396,10 +575,15 @@ def free(client: Client, app_id: str) -> str:
 
     An app with no price schedule cannot be submitted, and this app is free: the three products are
     what it sells. Only ever set when absent, because changing what an app costs is a decision.
+
+    The `territory` on the included price is what makes the schedule hold anything. Without it Apple
+    answers 201 and builds a schedule with no prices in it, then refuses the submission from
+    somewhere else entirely: "App is not eligible for submission until pricing has been set", about a
+    schedule that reads as present. Same trap as the purchase schedules in `scripts/iap.py`.
     """
-    status, payload = client.call("GET", f"/v1/apps/{app_id}/appPriceSchedule")
-    if status < 300 and payload.get("data"):
-        return "already priced"
+    already = priced_in(client, app_id)
+    if already:
+        return f"already free in {already} territories"
     points = client.collection(f"/v1/apps/{app_id}/appPricePoints?filter[territory]=USA&limit=200")
     zero = next((point for point in points
                  if point["attributes"]["customerPrice"] in ("0", "0.0", "0.00")), None)
@@ -416,12 +600,13 @@ def free(client: Client, app_id: str) -> str:
             "type": "appPrices",
             "id": "${price}",
             "attributes": {"startDate": None},
-            "relationships": {"appPricePoint": {
-                "data": {"type": "appPricePoints", "id": zero["id"]}}}}]})
+            "relationships": {
+                "appPricePoint": {"data": {"type": "appPricePoints", "id": zero["id"]}},
+                "territory": {"data": {"type": "territories", "id": "USA"}}}}]})
     if status >= 300:
         warn(f"the price schedule was refused: {problem(payload)}")
         return "needs a human"
-    return "free, in every territory Apple equalizes to"
+    return f"free in {priced_in(client, app_id)} territories"
 
 
 def attach_build(client: Client, app_id: str, version_id: str, number: str) -> str:
@@ -468,16 +653,27 @@ def main() -> int:
     app = app_record(client)
     good("app record", f"{app['attributes']['name']} ({app['id']})")
 
+    if staged(client, app["id"]):
+        print()
+        say(f"Version {number} is staged for review, and the listing is frozen while it is")
+        print("  Nothing to send: App Store Connect refuses metadata edits while a submission holds")
+        print("  the version. To change the listing, take it out of the draft first:\n")
+        print("    Distribution → Vérification de l'app → the draft → remove the item\n")
+        print("  and re-run this. To send it instead: the same draft, Envoyer pour vérification.")
+        return 0
+
     print(f"\n{BOLD}App information{RESET}")
     info_id = app_info(client, app["id"])
     categories(client, info_id)
     app_info_localizations(client, info_id, everything)
+    good("age rating", age_rating(client, info_id))
 
     print(f"\n{BOLD}Version {number}{RESET}")
     version_id = version(client, app["id"], number)
-    localizations = version_localizations(client, version_id, everything)
+    localizations = version_localizations(client, version_id, everything,
+                                         first_release(client, app["id"], version_id))
     review_details(client, version_id, details)
-    good("age rating", age_rating(client, version_id))
+    good("content rights", content_rights(client, app["id"]))
     good("price", free(client, app["id"]))
     good("build", attach_build(client, app["id"], version_id, number))
 
@@ -488,14 +684,19 @@ def main() -> int:
         good(locale, f"{held} in the {DISPLAY_TYPE} set"
                      + (f", {written} uploaded" if written else ", nothing new"))
 
+    print(f"\n{BOLD}Submission{RESET}")
+    good("review submission", submission(client, app["id"], version_id))
+
     print()
     state = client.expect("GET", f"/v1/appStoreVersions/{version_id}")["data"]["attributes"]
     say(f"Version {number} is {state.get('appStoreState') or state.get('appVersionState', '?')}")
     print("  What is left is a person, not a script:\n")
     print("    App Store Connect → Dawnbreak → Distribution → read the page as a reviewer will")
-    print("    → Add for Review → Submit\n")
-    print("  Before that, the version needs a processed build (scripts/release.sh) and the three")
-    print("  products ready to submit (scripts/iap.py). Both say so themselves when they are not.")
+    print("    → Vérification de l'app / App Review → the draft → Envoyer pour vérification\n")
+    print("  App privacy is the one required answer no API can give: it is web-only, under")
+    print("  Distribution → Confidentialité de l'app, and it has to be published, not just saved.")
+    print("  Everything else the version needs, this script sends, and the submission step above")
+    print("  refuses to stage anything Apple would not review.")
     return 0
 
 

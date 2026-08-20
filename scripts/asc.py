@@ -206,15 +206,25 @@ class Client:
 
 
 def problem(payload: dict) -> str:
-    """Apple's error envelope, in one line. `detail` is the useful field; `title` is generic."""
+    """Apple's error envelope, in one line. `detail` is the useful field; `title` is generic.
+
+    `meta.associatedErrors` is walked, because a refused submission keeps its reasons there and only
+    there: the top level says "This resource cannot be reviewed, please check associated errors to
+    see why", and each reason underneath names an attribute on some other resource entirely, with the
+    path it belongs to. Dropping them turns the most informative answer this API gives into the least.
+    """
     errors = payload.get("errors", [])
     if not errors:
         return json.dumps(payload)[:300]
-    return "; ".join(
-        entry.get("detail") or entry.get("title", "")
-        + (f" ({entry['source']['pointer']})" if entry.get("source", {}).get("pointer") else "")
-        for entry in errors
-    )
+    lines = []
+    for entry in errors:
+        pointer = entry.get("source", {}).get("pointer")
+        text = entry.get("detail") or entry.get("title", "")
+        lines.append(f"{text} ({pointer})" if pointer else text)
+        for path, associated in (entry.get("meta", {}).get("associatedErrors") or {}).items():
+            lines += [f"{path} {nested.get('detail') or nested.get('title', '')}"
+                      for nested in associated]
+    return "; ".join(lines)
 
 
 def app_record(client: Client, bundle_id: str = BUNDLE_ID) -> dict:

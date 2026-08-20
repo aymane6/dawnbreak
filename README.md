@@ -271,21 +271,23 @@ fastlane's `deliver` reads for metadata. Nothing here runs fastlane. `publish.py
 themselves rather than asking the generators again, so what Apple receives is what `git diff` showed.
 
 `iap.py` creates the group, the two subscriptions and the non-consumable, twelve localizations each,
-the price in the base territory, the free introductory week on the yearly plan, and the review
-screenshot on all three. Then it asks Apple for each product's state and prints it: `MISSING_METADATA`
-against `READY_TO_SUBMIT` is the only honest answer to whether a product is finished, and it is
-Apple's answer rather than the script's.
+the price in all 175 territories, the free introductory week on the yearly plan in each of them, and
+the review screenshot on all three. Then it asks Apple for each product's state and prints it:
+`MISSING_METADATA` against `READY_TO_SUBMIT` is the only honest answer to whether a product is
+finished, and it is Apple's answer rather than the script's. A price is one row per territory, and a
+product available in 175 countries and priced in one is exactly what `MISSING_METADATA` means.
 
 `publish.py` writes the app info (name, subtitle and privacy URL in twelve languages, plus the two
-categories), version 1.0.0, the twelve version localizations, the review details, the age rating
-questionnaire, a free price schedule, and the seventy-two screenshots into the 6.9-inch set, then
-attaches the newest processed build. It does not submit for review, and will not: that step is
-irreversible from a script's point of view, and the page deserves to be read once by a person the way
-a reviewer will read it.
+categories), the age rating questionnaire, version 1.0.0, the twelve version localizations, the
+review details, the content rights declaration, a free price schedule in every territory, and the
+seventy-two screenshots into the 6.9-inch set; attaches the newest processed build; and stages the
+review submission. It stops there. Sending the submission is a person's act, and staging is what
+makes the rest of this readable: adding the version to a submission is the only call in the API that
+answers with everything the version is still missing, each reason against the resource it belongs to.
 
 Three things stay with a signed-in human, because Apple exposes them nowhere else: the API answers
-`POST /v1/apps` with `The resource 'apps' does not allow 'CREATE'`, and has no app-group resource at
-all.
+`POST /v1/apps` with `The resource 'apps' does not allow 'CREATE'`, has no app-group resource at all,
+and has no resource of any name for the app privacy answers.
 
 1. **The app record.** Create it once in App Store Connect with bundle id `com.aymbam.dawnbreak`,
    the name from `metadata/en-US/name.txt`, primary language English. Nothing can be uploaded to
@@ -293,16 +295,17 @@ all.
    found".
 2. **The App Group.** `group.com.aymbam.dawnbreak`, at developer.apple.com, ticked on both App IDs.
    See the TestFlight section above; `scripts/provision.py` does the rest.
-3. **The review contact.** `CONTACT` in `scripts/make_metadata.py` still holds a placeholder email
-   and phone number, and the preflight fails on both by design, as does `publish.py` rather than
-   sending them. Put real ones in and re-run `make_metadata.py`. Apple uses them when a review
-   stalls, and an invented value costs a review cycle rather than saving one.
+3. **The app privacy answers.** Distribution → Confidentialité de l'app → Démarrer → "Non, nous ne
+   collectons aucune donnée via cette app" → Publier. Published, not merely saved: a saved answer
+   still fails the submission with "You must have published answers to your app's data usages". This
+   is the same claim `Resources/PrivacyInfo.xcprivacy` makes with an empty
+   `NSPrivacyCollectedDataTypes` and the privacy policy makes in twelve languages. Nothing here has
+   an analytics SDK, a network call, or a tracking permission.
 
-Then, in App Store Connect: read the version page, Add for Review, Submit.
-
-The privacy answers in App Store Connect are "Data Not Collected", which is what
-`Resources/PrivacyInfo.xcprivacy` declares and what the privacy policy says. Nothing here has an
-analytics SDK, a network call, or a tracking permission.
+Then, in App Store Connect: read the version page the way a reviewer will, then Distribution →
+Vérification de l'app → the draft `publish.py` staged → Envoyer pour vérification. Re-running
+`publish.py` while that draft exists changes nothing and says so: a staged version takes no metadata
+edits, and the way back to editing is to remove the item from the draft.
 
 ## The pages
 
