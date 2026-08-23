@@ -1,16 +1,17 @@
-Build 4 behebt den Kern der letzten Meldung: Math oder Stopp auf dem klingelnden Alarm zu drücken bewirkte gar nichts. Keine Mission, kein zweites Klingeln. Die Ursache war interner Zustand, mit dem die Sperrbildschirm-Knöpfe sprechen konnten, ohne dass etwas dahinter war; sie erreichen jetzt immer den echten Alarm, und der Alarm kann im Hintergrund nicht mehr stillschweigend entschärft werden.
+Build 5 ist der, den du dir gewünscht hast. Drei neue Dinge.
 
-WAS ZUERST ZU TESTEN IST
+EINE MISSION AUSPROBIEREN, BEVOR MAN IHR VERTRAUT
+Im Alarm-Editor, unter der Mission: „Diese Mission ausprobieren". Gleiche Aufgabe, gleiche Schwierigkeit, gleicher Timer — aber nichts ist scharf, und das X in der Ecke geht immer. Prüfe, ob brutal wirklich brutal ist, ohne einen 06:00-Termin zu buchen.
 
-1. Einen Alarm auf in ein, zwei Minuten stellen, Telefon sperren, klingeln lassen. Den nach der Mission benannten Knopf drücken. Die App muss direkt auf der Mission öffnen.
-2. Noch einmal klingeln lassen und stattdessen Stopp drücken. Die Mission öffnet sich trotzdem, und wird sie nicht gelöst, kommt der Alarm sechzig Sekunden später zurück.
-3. Den Missionsbildschirm verlassen oder die App mit ungelöster Mission beenden. Der Alarm kommt sofort zurück.
-4. Einen gespeicherten Alarm bearbeiten: Zeit und Mission ändern, speichern. Kein Fehler, und er klingelt weiterhin.
+MISSIONEN VERKETTEN
+Ebenfalls im Editor: „Folgemissionen". Bis zu drei. Löse die erste Mission, und der Alarm klingelt Minuten später mit der nächsten — erst schütteln, zehn Minuten später kommt er zurück und verlangt eine Zeichnung, Schritte oder Kniebeugen. Erst die letzte beendet den Morgen. Warten zwischen Missionen ist gratis; sich drücken weiterhin nicht.
 
-AUCH EINEN BLICK WERT
+EIN KLARERER MISSIONSBILDSCHIRM
+Die Anweisung ist jetzt groß und weiß, die Sequenz-Pads leuchten voll mit echtem Blitz und spürbarem Tick, Memory-Kacheln markieren das Gewählte, und jeder Tastendruck antwortet dem Daumen. Die Haptik gehorcht dem Schalter in den Einstellungen.
 
-- Die zwölf Missionen, in jedem Schwierigkeitsgrad, mit mehreren Runden.
-- Stummmodus und ein Fokus. Der Alarm muss durch beide klingeln.
-- Eine andere Sprache: die iPhone-Sprache umstellen und Alarm- und Missionstexte noch einmal lesen.
+PRÜFENSWERT
+1. Mission im Editor testen, mit X verlassen, nichts speichern: Es darf kein Alarm existieren.
+2. Zwei Missionen im Minutenabstand verketten, klingeln lassen, die erste lösen, warten: Der zweite Ring muss kommen, benannt nach seiner Mission.
+3. Die Sequenz-Mission nachts bei wenig Helligkeit: Alles muss offensichtlich bleiben.
 
-Wenn etwas nicht stimmt, sagt ein Screenshot mehr als ein Satz. Schick ihn über TestFlight oder über die Support-Seite in den Einstellungen.
+Wenn etwas nicht stimmt, sagt ein Screenshot mehr als ein Satz. TestFlight oder die Support-Seite in den Einstellungen.

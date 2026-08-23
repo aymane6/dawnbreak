@@ -1,16 +1,17 @@
-A build 4 corrige o coração do último relato: tocar em Cálculo ou Parar no alarme tocando não fazia absolutamente nada. Sem missão, sem segundo toque. A causa era um estado interno com o qual os botões da tela bloqueada podiam acabar falando no vazio; agora eles sempre alcançam o alarme real, e o alarme não pode mais ser desarmado em silêncio em segundo plano.
+A build 5 é a que você pediu. Três novidades.
 
-O QUE TESTAR PRIMEIRO
+TESTE UMA MISSÃO ANTES DE CONFIAR NELA
+No editor do alarme, abaixo da missão, toque em «Testar esta missão». Mesmo desafio, mesma dificuldade, mesmo cronômetro, mas nada armado, e o X no canto sempre sai. Confira que o brutal é brutal mesmo sem hora marcada às 06:00.
 
-1. Crie um alarme para daqui a um ou dois minutos, bloqueie o telefone, deixe tocar. Toque no botão com o nome da missão. O app deve abrir direto na missão.
-2. Deixe tocar de novo e toque em Parar. A missão abre mesmo assim, e se não for resolvida o alarme volta sessenta segundos depois.
-3. Saia da tela da missão, ou force o fechamento com a missão sem resolver. O alarme volta na hora.
-4. Edite um alarme salvo: mude a hora e a missão, salve. Sem erro, e ele continua tocando.
+ENCADEIE MISSÕES
+Também no editor: «Missões de acompanhamento». Até três. Conclua a primeira e o alarme toca de novo minutos depois com a próxima: primeiro sacudir, dez minutos depois ele volta pedindo um desenho, passos ou agachamentos. Só a última encerra a manhã. Esperar entre missões é de graça; se esquivar continua não sendo.
 
-TAMBÉM VALE OLHAR
+UMA TELA DE MISSÃO MAIS CLARA
+A instrução agora é grande e branca, os painéis da sequência são coloridos com clarão de verdade e um toque que se sente, as peças da memória marcam o que você já escolheu, e cada tecla responde ao polegar. A vibração obedece ao interruptor dos ajustes.
 
-- As doze missões, em cada dificuldade, com várias rodadas.
-- Modo silencioso e um modo de foco. O alarme tem que tocar nos dois.
-- Outro idioma: troque o idioma do iPhone e leia de novo o alarme e o texto da missão.
+VALE CONFERIR
+1. Teste uma missão pelo editor, saia pelo X, não salve nada: nenhum alarme deve existir.
+2. Encadeie duas missões com um minuto de intervalo, deixe tocar, conclua a primeira, espere: o segundo toque tem que vir, com o nome da missão.
+3. A missão de sequência à noite, brilho baixo: tudo deve continuar óbvio.
 
-Se algo estiver errado, uma captura de tela diz mais que uma frase. Mande pelo TestFlight ou pela página de suporte nos ajustes.
+Se algo estiver errado, uma captura diz mais que uma frase. TestFlight ou a página de suporte nos ajustes.

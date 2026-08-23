@@ -24,6 +24,9 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
     /// Ramp the in-app volume from silence to `volume` over this many seconds. 0 = off.
     public var gentleWakeSeconds: Int
     public var snooze: SnoozePolicy
+    /// Missions the alarm demands again after this one is cleared, each a few minutes out.
+    /// Empty for a plain alarm. See `FollowOnMission` for why the count is capped.
+    public var followOns: [FollowOnMission]
     /// Re-arm the alarm this many minutes later if the mission screen is abandoned. This
     /// is the "it rings again if you dodge the mission" behaviour.
     public var relentless: Bool
@@ -52,6 +55,7 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
         repeatDays: Set<Weekday> = [],
         isEnabled: Bool = true,
         mission: MissionConfig = .default,
+        followOns: [FollowOnMission] = [],
         soundName: String = AlarmSound.default.rawValue,
         volume: Double = 0.9,
         vibrate: Bool = true,
@@ -67,6 +71,7 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
         self.repeatDays = repeatDays
         self.isEnabled = isEnabled
         self.mission = mission
+        self.followOns = Array(followOns.prefix(FollowOnMission.maximumCount))
         self.soundName = soundName
         self.volume = min(max(volume, 0), 1)
         self.vibrate = vibrate
@@ -88,6 +93,7 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
         repeatDays = try c.decodeIfPresent(Set<Weekday>.self, forKey: .repeatDays) ?? []
         isEnabled = try c.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
         mission = try c.decodeIfPresent(MissionConfig.self, forKey: .mission) ?? .default
+        followOns = try c.decodeIfPresent([FollowOnMission].self, forKey: .followOns) ?? []
         soundName = try c.decodeIfPresent(String.self, forKey: .soundName) ?? AlarmSound.default.rawValue
         volume = try c.decodeIfPresent(Double.self, forKey: .volume) ?? 0.9
         vibrate = try c.decodeIfPresent(Bool.self, forKey: .vibrate) ?? true

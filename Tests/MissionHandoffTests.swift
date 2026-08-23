@@ -382,6 +382,146 @@ struct MissionHandoffTests {
         #expect(bridge.armedIDs == [alarm.id])
     }
 
+    // MARK: - Chained missions
+
+    @Test("Clearing a stage with a follow-on arms the next ring instead of ending the morning")
+    func clearingAStageArmsTheNextOne() async {
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30,
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .easy), minutesAfter: 10)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, store) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+        #expect(stage1.totalStages == 2)
+
+        await bridge.missionCompleted(stage1)
+
+        // The screen comes down, but the morning is not over: the alarm is armed ten
+        // minutes out, and the record on disk already names the next mission.
+        #expect(bridge.activeMission == nil)
+        #expect(system.lastFollowUpDelay == 600)
+        #expect(bridge.armedIDs == [alarm.id])
+        let waiting = PendingMissionStore.loadUpcoming()
+        #expect(waiting?.stage == 1)
+        #expect(waiting?.mission.kind == .shake)
+        // Scheduled is not owed: nothing may open the mission screen during the wait.
+        #expect(PendingMissionStore.loadIfFresh() == nil)
+        // And the alarm still stands in the store: the morning is not settled.
+        #expect(store.alarm(id: alarm.id)?.isEnabled == true)
+    }
+
+    @Test("The waiting stage does not re-arm as 'left unfinished' when the app comes forward")
+    func aWaitingStageIsNotAnEscape() async {
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30,
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .steps, difficulty: .easy), minutesAfter: 10)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+        await bridge.missionCompleted(stage1)
+        let armedForStage2 = system.lastFollowUpDelay
+
+        // What the app does on every return to the foreground during the wait.
+        #expect(bridge.restorePendingMission() == false)
+        await bridge.missionLeftUnfinished()
+
+        // Still the ten-minute ring, not an "immediate" one: waiting is not walking away.
+        #expect(system.lastFollowUpDelay == armedForStage2)
+    }
+
+    @Test("The next ring opens the next mission, and dodging it keeps it armed")
+    func theNextRingCarriesTheNextMission() async {
+        // One minute after, the floor, so the stage is already due and the ring can be
+        // played without moving the clock.
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30,
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .easy), minutesAfter: 1)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+        await bridge.missionCompleted(stage1)
+
+        // The second ring's stop press, in whichever process it lands.
+        let relaunched = AlarmBridge(system: system)
+        await relaunched.handleStopPressed(alarmID: alarm.id)
+
+        #expect(relaunched.activeMission?.mission.kind == .shake, "the second ring did not carry the second mission")
+        #expect(relaunched.activeMission?.stage == 1)
+        #expect(system.lastFollowUpDelay == AlarmBridge.relentlessDelay, "dodging stage two did not re-arm it")
+    }
+
+    @Test("Clearing the last stage settles the whole morning")
+    func clearingTheLastStageSettlesTheMorning() async {
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30,
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .easy), minutesAfter: 1)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, store) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+        await bridge.missionCompleted(stage1)
+        await bridge.handleMissionRequested(alarmID: alarm.id)
+        guard let stage2 = bridge.activeMission, stage2.stage == 1 else {
+            Issue.record("stage two never opened"); return
+        }
+
+        await bridge.missionCompleted(stage2)
+
+        #expect(bridge.activeMission == nil)
+        #expect(PendingMissionStore.load() == nil)
+        // A one-shot is retired only once the whole chain is done.
+        #expect(store.alarm(id: alarm.id)?.isEnabled == false)
+        #expect(bridge.armedIDs.isEmpty)
+    }
+
+    @Test("Reconciliation leaves the ring between two stages alone")
+    func reconcileLeavesAWaitingStageAlone() async {
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30, repeatDays: [.monday],
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .easy), minutesAfter: 10)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+        await bridge.missionCompleted(stage1)
+
+        await bridge.reconcile()
+
+        // Still the one-off that continues the morning, not Monday's recurrence.
+        #expect(system.calls.last == .followUp(alarm.id))
+    }
+
+    @Test("The escape hatch abandons the whole chain, not one stage of it")
+    func abandoningAbandonsTheChain() async {
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30,
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .easy), minutesAfter: 1)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+
+        await bridge.missionAbandoned(stage1)
+
+        #expect(PendingMissionStore.load() == nil, "a follow-on outlived the emergency exit")
+        #expect(bridge.armedIDs.isEmpty)
+    }
+
     // MARK: - The shared bridge's stores
 
     @Test("Building a throwaway environment does not steal the shared bridge's stores")

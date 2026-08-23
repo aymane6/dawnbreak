@@ -107,7 +107,7 @@ final class FakeAlarmSystem: AlarmScheduler {
         try arm(alarm.id, as: .schedule(alarm.id))
     }
 
-    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date) async throws {
+    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date, titled: LocalizedStringResource?) async throws {
         log.withLock { $0.followUpDates.append(fireDate) }
         try arm(alarm.id, as: .followUp(alarm.id))
     }

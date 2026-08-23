@@ -46,9 +46,9 @@ struct MemoryMissionView: View {
     }
 
     private var grid: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
             ForEach(0..<challenge.side, id: \.self) { row in
-                HStack(spacing: 8) {
+                HStack(spacing: 10) {
                     ForEach(0..<challenge.side, id: \.self) { column in
                         let index = row * challenge.side + column
                         tile(index)
@@ -67,14 +67,31 @@ struct MemoryMissionView: View {
         return Button {
             tap(index)
         } label: {
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 14)
                 .fill(fill(isLit: isLit, isChosen: isChosen, isMistake: isMistake))
                 .aspectRatio(1, contentMode: .fit)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.hairline, lineWidth: 1))
+                .overlay {
+                    // A picked tile carries a mark as well as a colour: at 06:00 "which
+                    // ones have I already tapped" must survive a glance, not a comparison
+                    // of two orange tints.
+                    if isChosen {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 17, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                }
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(isLit ? .white.opacity(0.85) : Theme.hairline, lineWidth: isLit ? 2.5 : 1)
+                )
+                .shadow(color: Theme.dawnStart.opacity(isLit ? 0.6 : 0), radius: isLit ? 16 : 0)
+                .scaleEffect(isLit || isChosen ? 1.04 : 1)
         }
         .buttonStyle(.plain)
         .disabled(phase == .preview)
-        .animation(.easeOut(duration: 0.18), value: isLit)
+        .animation(.spring(duration: 0.22), value: isLit)
+        .animation(.spring(duration: 0.22), value: isChosen)
         .accessibilityLabel(Text(localized("mission.memory.tile", index + 1)))
         .accessibilityAddTraits(isChosen ? [.isSelected] : [])
     }
@@ -82,8 +99,10 @@ struct MemoryMissionView: View {
     private func fill(isLit: Bool, isChosen: Bool, isMistake: Bool) -> AnyShapeStyle {
         if isMistake { return AnyShapeStyle(Theme.danger) }
         if isLit { return AnyShapeStyle(Theme.dawnGradient) }
-        if isChosen { return AnyShapeStyle(Theme.accent.opacity(0.75)) }
-        return AnyShapeStyle(Theme.surfaceRaised)
+        if isChosen { return AnyShapeStyle(Theme.accent) }
+        // Brighter than the standard raised surface: sixteen dark tiles on a dark canvas
+        // was a grid that had to be hunted for.
+        return AnyShapeStyle(Color(hex: 0x272C42))
     }
 
     private func tap(_ index: Int) {
@@ -94,6 +113,7 @@ struct MemoryMissionView: View {
             callbacks.mistake()
             return
         }
+        Haptics.tap()
         selection.insert(index)
         if challenge.isComplete(selection: selection) {
             callbacks.cleared()
@@ -102,6 +122,13 @@ struct MemoryMissionView: View {
 }
 
 /// Repeat a growing sequence of coloured pads.
+///
+/// Rebuilt after the first beta round, whose verdict was "c'était pas fou". The failures
+/// were legibility ones: pads at a third of their colour read as four grey squares to
+/// half-open eyes, a flash that only changed opacity was easy to miss, and a tap that
+/// changed nothing on screen felt ignored. Every state now has a loud answer — resting pads
+/// are richly coloured, the playback flash lifts, glows and ticks, the user's own taps
+/// flash back the same way, and whose turn it is is written above the grid.
 struct SequenceMissionView: View {
     let config: MissionConfig
     let callbacks: MissionCallbacks
@@ -131,17 +158,30 @@ struct SequenceMissionView: View {
             instructionKey: MissionKind.sequence.instructionKey,
             instruction: isPlayingBack ? localized("mission.sequence.watch") : nil
         ) {
-            VStack(spacing: 16) {
-                Text(localized("mission.sequence.step", round, challenge.steps.count))
-                    .font(Theme.captionFont.monospacedDigit())
-                    .foregroundStyle(Theme.textTertiary)
+            VStack(spacing: 18) {
+                HStack(spacing: 10) {
+                    Text(localized("mission.sequence.step", round, challenge.steps.count))
+                        .font(.system(size: 17, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(Theme.accent)
+                        .contentTransition(.numericText())
+                    // Progress the eye can track without reading: one dot per step of the
+                    // sequence already survived.
+                    HStack(spacing: 5) {
+                        ForEach(1...challenge.steps.count, id: \.self) { step in
+                            Circle()
+                                .fill(step < round ? Theme.accent : Theme.surfaceRaised)
+                                .frame(width: 7, height: 7)
+                        }
+                    }
+                }
+                .animation(.easeOut(duration: 0.2), value: round)
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2), spacing: 12) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 2), spacing: 14) {
                     ForEach(0..<SequenceChallenge.padCount, id: \.self) { pad in
                         padButton(pad)
                     }
                 }
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 24)
             }
         }
         .task { await playback() }
@@ -149,20 +189,27 @@ struct SequenceMissionView: View {
 
     private func padButton(_ pad: Int) -> some View {
         let isOn = highlighted == pad
+        let color = Self.padColors[pad]
         return Button { tap(pad) } label: {
-            RoundedRectangle(cornerRadius: 18)
-                .fill(Self.padColors[pad].opacity(isOn ? 1 : 0.32))
+            RoundedRectangle(cornerRadius: 22)
+                .fill(color.opacity(isOn ? 1 : 0.62))
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: Self.padSymbols[pad])
-                        .font(.system(size: 26))
-                        .foregroundStyle(.white.opacity(isOn ? 1 : 0.45))
+                        .font(.system(size: 36, weight: .bold))
+                        .foregroundStyle(.white.opacity(isOn ? 1 : 0.9))
+                        .scaleEffect(isOn ? 1.15 : 1)
                 }
-                .scaleEffect(isOn ? 1.04 : 1)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22)
+                        .stroke(.white.opacity(isOn ? 0.9 : 0.12), lineWidth: isOn ? 3 : 1)
+                )
+                .shadow(color: color.opacity(isOn ? 0.8 : 0), radius: isOn ? 22 : 0)
+                .scaleEffect(isOn ? 1.06 : 1)
         }
         .buttonStyle(.plain)
         .disabled(isPlayingBack)
-        .animation(.easeOut(duration: 0.12), value: isOn)
+        .animation(.spring(duration: 0.22), value: isOn)
         .accessibilityLabel(Text(localized("mission.sequence.pad", pad + 1)))
     }
 
@@ -174,9 +221,10 @@ struct SequenceMissionView: View {
         try? await Task.sleep(for: .milliseconds(500))
         for pad in challenge.prefix(round: round) {
             highlighted = pad
-            try? await Task.sleep(for: .milliseconds(420))
+            Haptics.tap()
+            try? await Task.sleep(for: .milliseconds(440))
             highlighted = nil
-            try? await Task.sleep(for: .milliseconds(160))
+            try? await Task.sleep(for: .milliseconds(180))
         }
         isPlayingBack = false
     }
@@ -187,6 +235,10 @@ struct SequenceMissionView: View {
             callbacks.mistake()
             return
         }
+        // The user's own tap answers back exactly like the playback did: same flash, same
+        // glow, same tick. A pad that stays inert under a correct press reads as a miss.
+        Haptics.tap()
+        flash(pad)
         guard challenge.isRoundComplete(tapped, round: round) else { return }
 
         if round >= challenge.steps.count {
@@ -194,6 +246,14 @@ struct SequenceMissionView: View {
         } else {
             round += 1
             Task { await playback() }
+        }
+    }
+
+    private func flash(_ pad: Int) {
+        highlighted = pad
+        Task {
+            try? await Task.sleep(for: .milliseconds(180))
+            if highlighted == pad && !isPlayingBack { highlighted = nil }
         }
     }
 }

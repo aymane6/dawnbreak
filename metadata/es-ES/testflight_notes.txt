@@ -1,16 +1,17 @@
-La versión 4 corrige el corazón del último informe: pulsar Cálculo o Detener en la alarma sonando no hacía nada en absoluto. Ni misión ni segundo toque. La causa era un estado interno con el que los botones de la pantalla bloqueada podían acabar hablando sin nada detrás; ahora siempre llegan a la alarma real, y la alarma ya no puede desarmarse en silencio en segundo plano.
+La versión 5 es la que pediste. Tres novedades.
 
-QUÉ PROBAR PRIMERO
+PRUEBA UNA MISIÓN ANTES DE FIARTE
+En el editor de la alarma, bajo la misión, toca «Probar esta misión». Mismo reto, misma dificultad, mismo temporizador, pero sin nada armado, y la X de la esquina siempre sale. Comprueba que brutal es brutal sin cita a las 06:00.
 
-1. Pon una alarma a uno o dos minutos, bloquea el teléfono, deja que suene. Pulsa el botón con el nombre de la misión. La app debe abrirse directamente en la misión.
-2. Hazla sonar otra vez y pulsa Detener. La misión se abre igualmente, y si no la resuelves la alarma vuelve sesenta segundos después.
-3. Sal de la pantalla de la misión, o fuerza el cierre con la misión sin resolver. La alarma vuelve al instante.
-4. Edita una alarma guardada: cambia la hora y la misión, guarda. Sin error, y sigue sonando.
+ENCADENA MISIONES
+También en el editor: «Misiones de seguimiento». Añade hasta tres. Supera la primera y la alarma vuelve a sonar minutos después con la siguiente: primero agitar, y diez minutos más tarde vuelve pidiendo un dibujo, pasos o sentadillas. Solo la última termina la mañana. Esperar entre misiones es gratis; escaquearse sigue sin serlo.
 
-TAMBIÉN MERECE UNA MIRADA
+UNA PANTALLA DE MISIÓN MÁS CLARA
+La instrucción ahora es grande y blanca, los paneles de secuencia van a todo color con destello real y un tic que se siente, las casillas de memoria marcan lo ya elegido, y cada tecla responde al pulgar. La háptica obedece al interruptor de Ajustes.
 
-- Las doce misiones, en cada dificultad, con varias rondas.
-- Modo silencio y un modo de concentración. La alarma tiene que sonar en ambos.
-- Otro idioma: cambia el idioma del iPhone y vuelve a leer la alarma y el texto de la misión.
+MERECE COMPROBARSE
+1. Prueba una misión desde el editor, sal con la X, no guardes nada: no debe existir ninguna alarma.
+2. Encadena dos misiones con un minuto de separación, deja sonar, supera la primera, espera: el segundo toque debe llegar, con el nombre de su misión.
+3. La misión de secuencia de noche, con poco brillo: todo debe seguir siendo obvio.
 
-Si algo va mal, una captura dice más que una frase. Envíala por TestFlight o desde la página de soporte en Ajustes.
+Si algo va mal, una captura dice más que una frase. TestFlight o la página de soporte en Ajustes.

@@ -139,198 +139,210 @@ RELEASE_NOTES = {
 # a sentence, and the fastest way to be told the sentence is back is to have shown it here first.
 # Every step is one a tester can do in a minute with no account and no seeded data.
 TESTFLIGHT_NOTES = {
-    "en-US": """Build 4 fixes the heart of the last report: pressing Math or Stop on the ringing alarm did nothing at all. No mission, no second ring. The cause was internal state the lock screen's buttons could end up talking to with nothing behind it; they now always reach the real alarm, and the alarm can no longer be silently disarmed in the background.
+    "en-US": """Build 5 is the one you asked for. Three new things.
 
-WHAT TO TEST FIRST
+TRY A MISSION BEFORE TRUSTING IT
+In the alarm editor, under the mission, tap "Try this mission". Same challenge, same difficulty, same timer — but nothing armed, and the X in the corner always leaves. Check that brutal really is brutal without booking a 06:00 appointment.
 
-1. Set an alarm a minute or two ahead, lock the phone, let it ring. Press the button named after the mission. The app must open straight onto the mission.
-2. Ring it again and press Stop instead. The mission still opens, and if it is not solved the alarm returns sixty seconds later.
-3. Leave the mission screen, or force quit the app with the mission unsolved. The alarm comes straight back.
-4. Edit a saved alarm: change the time and the mission, save. No error, and it still rings.
+CHAIN MISSIONS
+Also in the editor: "Follow-up missions". Add up to three. Clear the first mission and the alarm rings again a few minutes later with the next one — shake first, then ten minutes later it comes back asking for a drawing, steps or squats. Only clearing the last one ends the morning. Waiting between missions is free; dodging one still is not.
 
-ALSO WORTH A LOOK
+A CLEANER MISSION SCREEN
+The instruction is now big and white, the sequence pads are full-colour with a real flash and a tick you can feel, memory tiles mark what you already picked, and every keypad press answers your thumb. The haptics obey the switch in Settings.
 
-- The twelve missions, at each difficulty, with several rounds.
-- Silent mode and a Focus mode. The alarm has to ring through both.
-- Another language: change the iPhone language, then read the alarm and the mission text again.
+WORTH CHECKING
+1. Try a mission from the editor, leave it with the X, save nothing: no alarm should exist.
+2. Chain two missions one minute apart, let it ring, clear the first, wait: the second ring must come, named after its mission.
+3. The sequence mission at night, screen brightness low: everything should still be obvious.
 
-If something is wrong, a screenshot says more than a sentence. Send it through TestFlight, or through the support page in Settings.""",
-    "ar-SA": """يعالج الإصدار 4 جوهر آخر بلاغ: الضغط على «حساب» أو «إيقاف» أثناء الرنين لم يكن يفعل شيئاً على الإطلاق. لا مهمة ولا رنين ثانٍ. كان السبب حالة داخلية قد تخاطبها أزرار شاشة القفل ولا شيء خلفها؛ صارت الأزرار تصل دائماً إلى المنبه الحقيقي، ولم يعد ممكناً نزع سلاح المنبه بصمت في الخلفية.
+If something is wrong, a screenshot says more than a sentence. TestFlight or the support page in Settings.""",
+    "ar-SA": """الإصدار 5 هو ما طلبته. ثلاثة أشياء جديدة.
 
-ما يُختبر أولاً
+جرّب المهمة قبل أن تثق بها
+في محرر المنبه، تحت المهمة، اضغط «جرّب هذه المهمة». التحدي نفسه والصعوبة نفسها والمؤقت نفسه، لكن لا شيء مضبوط، وعلامة X في الزاوية تخرج دائماً. تأكد أن «القاسي» قاسٍ فعلاً دون موعد عند السادسة صباحاً.
 
-١. اضبط منبهاً بعد دقيقة أو دقيقتين، اقفل الهاتف، ودعه يرن. اضغط الزر الذي يحمل اسم المهمة. يجب أن يفتح التطبيق على المهمة مباشرة.
-٢. دعه يرن مجدداً واضغط «إيقاف» هذه المرة. تُفتح المهمة على أي حال، وإن لم تُحل يعود المنبه بعد ستين ثانية.
-٣. اخرج من شاشة المهمة، أو أغلق التطبيق قسراً والمهمة لم تُحل. يعود المنبه فوراً.
-٤. عدّل منبهاً محفوظاً: غيّر الوقت والمهمة واحفظ. بلا خطأ، ويظل يرن.
+سلسلة مهام
+في المحرر أيضاً: «مهام المتابعة». أضف حتى ثلاث. أنجز المهمة الأولى وسيرن المنبه مجدداً بعد دقائق بالمهمة التالية: هزّ الهاتف أولاً، وبعد عشر دقائق يعود طالباً رسماً أو خطوات أو تمرينات قرفصاء. إنجاز الأخيرة وحده يُنهي الصباح. الانتظار بين المهام مجاني؛ التهرب من إحداها ما زال ليس كذلك.
 
-يستحق النظر أيضاً
+شاشة مهمة أوضح
+التعليمات الآن كبيرة وبيضاء، ولوحات التسلسل بألوان كاملة مع وميض حقيقي ونقرة تشعر بها، ومربعات الذاكرة تُعلّم ما اخترته، وكل ضغطة على اللوحة تجيب إبهامك. الاهتزازات تطيع مفتاح الإعدادات.
 
-- المهام الاثنتا عشرة، بكل درجات الصعوبة، وبعدة جولات.
-- الوضع الصامت ونمط تركيز. على المنبه أن يرن فيهما.
-- لغة أخرى: غيّر لغة الآيفون ثم اقرأ شاشة المنبه ونص المهمة من جديد.
+يستحق التحقق
+١. جرّب مهمة من المحرر، اخرج بعلامة X، لا تحفظ شيئاً: يجب ألا يوجد أي منبه.
+٢. اربط مهمتين بفاصل دقيقة، دعه يرن، أنجز الأولى، انتظر: يجب أن يأتي الرنين الثاني باسم مهمته.
+٣. مهمة التسلسل ليلاً بإضاءة منخفضة: يجب أن يبقى كل شيء واضحاً.
 
-إن وجدت خطأً، فلقطة شاشة أبلغ من جملة. أرسلها عبر TestFlight أو من صفحة الدعم في الإعدادات.""",
-    "de-DE": """Build 4 behebt den Kern der letzten Meldung: Math oder Stopp auf dem klingelnden Alarm zu drücken bewirkte gar nichts. Keine Mission, kein zweites Klingeln. Die Ursache war interner Zustand, mit dem die Sperrbildschirm-Knöpfe sprechen konnten, ohne dass etwas dahinter war; sie erreichen jetzt immer den echten Alarm, und der Alarm kann im Hintergrund nicht mehr stillschweigend entschärft werden.
+إن وجدت خطأً، فلقطة شاشة أبلغ من جملة. عبر TestFlight أو صفحة الدعم في الإعدادات.""",
+    "de-DE": """Build 5 ist der, den du dir gewünscht hast. Drei neue Dinge.
 
-WAS ZUERST ZU TESTEN IST
+EINE MISSION AUSPROBIEREN, BEVOR MAN IHR VERTRAUT
+Im Alarm-Editor, unter der Mission: „Diese Mission ausprobieren". Gleiche Aufgabe, gleiche Schwierigkeit, gleicher Timer — aber nichts ist scharf, und das X in der Ecke geht immer. Prüfe, ob brutal wirklich brutal ist, ohne einen 06:00-Termin zu buchen.
 
-1. Einen Alarm auf in ein, zwei Minuten stellen, Telefon sperren, klingeln lassen. Den nach der Mission benannten Knopf drücken. Die App muss direkt auf der Mission öffnen.
-2. Noch einmal klingeln lassen und stattdessen Stopp drücken. Die Mission öffnet sich trotzdem, und wird sie nicht gelöst, kommt der Alarm sechzig Sekunden später zurück.
-3. Den Missionsbildschirm verlassen oder die App mit ungelöster Mission beenden. Der Alarm kommt sofort zurück.
-4. Einen gespeicherten Alarm bearbeiten: Zeit und Mission ändern, speichern. Kein Fehler, und er klingelt weiterhin.
+MISSIONEN VERKETTEN
+Ebenfalls im Editor: „Folgemissionen". Bis zu drei. Löse die erste Mission, und der Alarm klingelt Minuten später mit der nächsten — erst schütteln, zehn Minuten später kommt er zurück und verlangt eine Zeichnung, Schritte oder Kniebeugen. Erst die letzte beendet den Morgen. Warten zwischen Missionen ist gratis; sich drücken weiterhin nicht.
 
-AUCH EINEN BLICK WERT
+EIN KLARERER MISSIONSBILDSCHIRM
+Die Anweisung ist jetzt groß und weiß, die Sequenz-Pads leuchten voll mit echtem Blitz und spürbarem Tick, Memory-Kacheln markieren das Gewählte, und jeder Tastendruck antwortet dem Daumen. Die Haptik gehorcht dem Schalter in den Einstellungen.
 
-- Die zwölf Missionen, in jedem Schwierigkeitsgrad, mit mehreren Runden.
-- Stummmodus und ein Fokus. Der Alarm muss durch beide klingeln.
-- Eine andere Sprache: die iPhone-Sprache umstellen und Alarm- und Missionstexte noch einmal lesen.
+PRÜFENSWERT
+1. Mission im Editor testen, mit X verlassen, nichts speichern: Es darf kein Alarm existieren.
+2. Zwei Missionen im Minutenabstand verketten, klingeln lassen, die erste lösen, warten: Der zweite Ring muss kommen, benannt nach seiner Mission.
+3. Die Sequenz-Mission nachts bei wenig Helligkeit: Alles muss offensichtlich bleiben.
 
-Wenn etwas nicht stimmt, sagt ein Screenshot mehr als ein Satz. Schick ihn über TestFlight oder über die Support-Seite in den Einstellungen.""",
-    "es-ES": """La versión 4 corrige el corazón del último informe: pulsar Cálculo o Detener en la alarma sonando no hacía nada en absoluto. Ni misión ni segundo toque. La causa era un estado interno con el que los botones de la pantalla bloqueada podían acabar hablando sin nada detrás; ahora siempre llegan a la alarma real, y la alarma ya no puede desarmarse en silencio en segundo plano.
+Wenn etwas nicht stimmt, sagt ein Screenshot mehr als ein Satz. TestFlight oder die Support-Seite in den Einstellungen.""",
+    "es-ES": """La versión 5 es la que pediste. Tres novedades.
 
-QUÉ PROBAR PRIMERO
+PRUEBA UNA MISIÓN ANTES DE FIARTE
+En el editor de la alarma, bajo la misión, toca «Probar esta misión». Mismo reto, misma dificultad, mismo temporizador, pero sin nada armado, y la X de la esquina siempre sale. Comprueba que brutal es brutal sin cita a las 06:00.
 
-1. Pon una alarma a uno o dos minutos, bloquea el teléfono, deja que suene. Pulsa el botón con el nombre de la misión. La app debe abrirse directamente en la misión.
-2. Hazla sonar otra vez y pulsa Detener. La misión se abre igualmente, y si no la resuelves la alarma vuelve sesenta segundos después.
-3. Sal de la pantalla de la misión, o fuerza el cierre con la misión sin resolver. La alarma vuelve al instante.
-4. Edita una alarma guardada: cambia la hora y la misión, guarda. Sin error, y sigue sonando.
+ENCADENA MISIONES
+También en el editor: «Misiones de seguimiento». Añade hasta tres. Supera la primera y la alarma vuelve a sonar minutos después con la siguiente: primero agitar, y diez minutos más tarde vuelve pidiendo un dibujo, pasos o sentadillas. Solo la última termina la mañana. Esperar entre misiones es gratis; escaquearse sigue sin serlo.
 
-TAMBIÉN MERECE UNA MIRADA
+UNA PANTALLA DE MISIÓN MÁS CLARA
+La instrucción ahora es grande y blanca, los paneles de secuencia van a todo color con destello real y un tic que se siente, las casillas de memoria marcan lo ya elegido, y cada tecla responde al pulgar. La háptica obedece al interruptor de Ajustes.
 
-- Las doce misiones, en cada dificultad, con varias rondas.
-- Modo silencio y un modo de concentración. La alarma tiene que sonar en ambos.
-- Otro idioma: cambia el idioma del iPhone y vuelve a leer la alarma y el texto de la misión.
+MERECE COMPROBARSE
+1. Prueba una misión desde el editor, sal con la X, no guardes nada: no debe existir ninguna alarma.
+2. Encadena dos misiones con un minuto de separación, deja sonar, supera la primera, espera: el segundo toque debe llegar, con el nombre de su misión.
+3. La misión de secuencia de noche, con poco brillo: todo debe seguir siendo obvio.
 
-Si algo va mal, una captura dice más que una frase. Envíala por TestFlight o desde la página de soporte en Ajustes.""",
-    "fr-FR": """La version 4 corrige le cœur du dernier signalement : appuyer sur Calcul ou sur Arrêter pendant la sonnerie ne faisait rien du tout. Pas de mission, pas de deuxième sonnerie. La cause était un état interne auquel les boutons de l'écran verrouillé pouvaient parler dans le vide ; ils atteignent désormais toujours la vraie alarme, et l'alarme ne peut plus être désarmée en silence en arrière-plan.
+Si algo va mal, una captura dice más que una frase. TestFlight o la página de soporte en Ajustes.""",
+    "fr-FR": """La version 5 est celle que tu as demandée. Trois nouveautés.
 
-À TESTER EN PREMIER
+ESSAYER UNE MISSION AVANT DE S'Y FIER
+Dans l'éditeur d'alarme, sous la mission : « Essayer cette mission ». Même défi, même difficulté, même minuteur, mais rien n'est armé, et le X dans le coin sort toujours. Vérifie que brutal est vraiment brutal sans prendre rendez-vous à 6 h.
 
-1. Régler une alarme à une ou deux minutes, verrouiller le téléphone, la laisser sonner. Appuyer sur le bouton qui porte le nom de la mission. L'app doit s'ouvrir directement sur la mission.
-2. La faire sonner à nouveau et appuyer sur Arrêter cette fois. La mission s'ouvre quand même, et si elle n'est pas résolue l'alarme revient soixante secondes plus tard.
-3. Quitter l'écran de mission, ou forcer la fermeture de l'app avec la mission non résolue. L'alarme revient tout de suite.
-4. Modifier une alarme enregistrée : changer l'heure et la mission, enregistrer. Aucune erreur, et elle sonne toujours.
+ENCHAÎNER LES MISSIONS
+Dans l'éditeur aussi : « Missions de suivi ». Jusqu'à trois. Réussis la première mission et l'alarme resonne quelques minutes plus tard avec la suivante : secouer d'abord, puis dix minutes après elle revient demander un dessin, des pas ou des squats. Seule la dernière met fin à la matinée. Attendre entre deux missions est gratuit ; esquiver ne l'est toujours pas.
 
-À REGARDER AUSSI
+UN ÉCRAN DE MISSION PLUS LISIBLE
+La consigne est maintenant grande et blanche, les pavés de séquence sont en pleine couleur avec un vrai flash et une pulsation qu'on sent, les tuiles de mémoire marquent ce qui est déjà choisi, et chaque touche du clavier répond au pouce. Les vibrations obéissent à l'interrupteur des réglages.
 
-- Les douze missions, à chaque difficulté, avec plusieurs manches.
-- Le mode silencieux et un mode de concentration. L'alarme doit sonner dans les deux cas.
-- Une autre langue : changer la langue de l'iPhone, puis relire l'écran d'alarme et le texte de la mission.
+À VÉRIFIER
+1. Essayer une mission depuis l'éditeur, sortir par le X, ne rien enregistrer : aucune alarme ne doit exister.
+2. Enchaîner deux missions à une minute d'écart, laisser sonner, réussir la première, attendre : la deuxième sonnerie doit venir, nommée d'après sa mission.
+3. La mission séquence de nuit, luminosité basse : tout doit rester évident.
 
-Si quelque chose ne va pas, une capture d'écran en dit plus qu'une phrase. Envoyez-la par TestFlight, ou par la page d'assistance dans les réglages.""",
-    "hi": """बिल्ड 4 पिछली रिपोर्ट की जड़ ठीक करता है: बजते अलार्म पर गणित या रोकें दबाने से कुछ भी नहीं होता था। न मिशन, न दूसरी घंटी। वजह एक अंदरूनी स्थिति थी जिससे लॉक स्क्रीन के बटन खाली हाथ बात कर सकते थे; अब वे हमेशा असली अलार्म तक पहुँचते हैं, और अलार्म अब पीछे से चुपचाप निष्क्रिय नहीं किया जा सकता।
+Si quelque chose ne va pas, une capture d'écran en dit plus qu'une phrase. TestFlight ou la page d'assistance dans les réglages.""",
+    "hi": """बिल्ड 5 वही है जो आपने माँगा था। तीन नई चीज़ें।
 
-पहले क्या जाँचें
+भरोसा करने से पहले मिशन आज़माएँ
+अलार्म एडिटर में, मिशन के नीचे, «यह मिशन आज़माएँ» दबाएँ। वही चुनौती, वही कठिनाई, वही टाइमर, पर कुछ भी सेट नहीं, और कोने का X हमेशा बाहर निकालता है। बिना सुबह 6 बजे की मुलाक़ात बुक किए जाँच लें कि brutal सच में brutal है।
 
-1. एक-दो मिनट आगे का अलार्म लगाएँ, फ़ोन लॉक करें, बजने दें। मिशन के नाम वाला बटन दबाएँ। ऐप को सीधे मिशन पर खुलना चाहिए।
-2. फिर बजने दें और इस बार रोकें दबाएँ। मिशन फिर भी खुलता है, और हल न करें तो अलार्म साठ सेकंड बाद लौट आता है।
-3. मिशन स्क्रीन छोड़ दें, या मिशन अनसुलझा रहते ऐप बंद कर दें। अलार्म तुरंत लौट आता है।
-4. सेव किया अलार्म बदलें: समय और मिशन बदलकर सेव करें। कोई एरर नहीं, और वह बजता भी है।
+मिशन की कड़ी बनाएँ
+एडिटर में ही: «फ़ॉलो-अप मिशन»। तीन तक जोड़ें। पहला मिशन पूरा करें और अलार्म कुछ मिनट बाद अगले मिशन के साथ फिर बजेगा: पहले फ़ोन हिलाना, फिर दस मिनट बाद वह ड्रॉइंग, कदम या स्क्वैट माँगता लौटेगा। सुबह आख़िरी मिशन से ही खत्म होती है। मिशनों के बीच इंतज़ार मुफ़्त है; बचकर निकलना अब भी नहीं।
 
-इन पर भी नज़र डालें
+साफ़-सुथरी मिशन स्क्रीन
+निर्देश अब बड़ा और सफ़ेद है, सीक्वेंस पैड पूरे रंग में असली चमक और महसूस होने वाली थाप के साथ हैं, मेमोरी टाइलें बताती हैं कि आपने क्या चुना, और कीपैड की हर दबाव अँगूठे को जवाब देती है। हैप्टिक्स सेटिंग्स के स्विच को मानती हैं।
 
-- बारह मिशन, हर कठिनाई पर, कई राउंड के साथ।
-- साइलेंट मोड और फ़ोकस मोड। दोनों में अलार्म बजना चाहिए।
-- दूसरी भाषा: iPhone की भाषा बदलें, फिर अलार्म और मिशन का टेक्स्ट दोबारा पढ़ें।
+जाँचने लायक
+1. एडिटर से मिशन आज़माएँ, X से निकलें, कुछ सेव न करें: कोई अलार्म नहीं होना चाहिए।
+2. एक मिनट के अंतर से दो मिशन जोड़ें, बजने दें, पहला पूरा करें, रुकें: दूसरी घंटी आनी चाहिए, अपने मिशन के नाम से।
+3. रात में कम रोशनी पर सीक्वेंस मिशन: सब कुछ साफ़ दिखना चाहिए।
 
-कुछ गलत लगे तो स्क्रीनशॉट एक वाक्य से ज़्यादा बताता है। उसे TestFlight से या सेटिंग्स के सपोर्ट पेज से भेजें।""",
-    "it": """La build 4 corregge il cuore dell'ultima segnalazione: premere Calcolo o Stop sulla sveglia che suona non faceva assolutamente nulla. Nessuna missione, nessun secondo squillo. La causa era uno stato interno con cui i pulsanti della schermata di blocco potevano finire a parlare a vuoto; ora raggiungono sempre la sveglia vera, e la sveglia non può più essere disarmata in silenzio in background.
+कुछ गलत लगे तो स्क्रीनशॉट एक वाक्य से ज़्यादा कहता है। TestFlight या सेटिंग्स का सपोर्ट पेज।""",
+    "it": """La build 5 è quella che hai chiesto. Tre novità.
 
-COSA PROVARE PER PRIMO
+PROVA UNA MISSIONE PRIMA DI FIDARTI
+Nell'editor della sveglia, sotto la missione, tocca «Prova questa missione». Stessa sfida, stessa difficoltà, stesso timer, ma niente è attivo, e la X nell'angolo esce sempre. Verifica che brutale sia davvero brutale senza appuntamento alle 06:00.
 
-1. Imposta una sveglia a uno o due minuti, blocca il telefono, lasciala suonare. Premi il pulsante con il nome della missione. L'app deve aprirsi direttamente sulla missione.
-2. Falla suonare di nuovo e premi Stop. La missione si apre comunque, e se non la risolvi la sveglia torna sessanta secondi dopo.
-3. Esci dalla schermata della missione, o chiudi forzatamente l'app con la missione irrisolta. La sveglia torna subito.
-4. Modifica una sveglia salvata: cambia ora e missione, salva. Nessun errore, e suona ancora.
+CONCATENA LE MISSIONI
+Sempre nell'editor: «Missioni successive». Fino a tre. Superi la prima e la sveglia suona di nuovo qualche minuto dopo con la successiva: prima scuotere, dieci minuti dopo torna chiedendo un disegno, passi o squat. Solo l'ultima chiude la mattina. Aspettare tra le missioni è gratis; svicolare ancora no.
 
-VALE LA PENA GUARDARE ANCHE
+UNA SCHERMATA MISSIONE PIÙ CHIARA
+L'istruzione ora è grande e bianca, i pad della sequenza sono a colori pieni con un vero lampo e un tocco che si sente, le tessere della memoria segnano ciò che hai già scelto, e ogni tasto risponde al pollice. La vibrazione obbedisce all'interruttore nelle impostazioni.
 
-- Le dodici missioni, a ogni difficoltà, con più turni.
-- La modalità silenziosa e una modalità di concentrazione. La sveglia deve suonare in entrambe.
-- Un'altra lingua: cambia la lingua dell'iPhone e rileggi la sveglia e il testo della missione.
+DA CONTROLLARE
+1. Prova una missione dall'editor, esci con la X, non salvare nulla: non deve esistere nessuna sveglia.
+2. Concatena due missioni a un minuto di distanza, lascia suonare, supera la prima, aspetta: il secondo squillo deve arrivare, col nome della sua missione.
+3. La missione sequenza di notte, luminosità bassa: tutto deve restare ovvio.
 
-Se qualcosa non va, uno screenshot dice più di una frase. Invialo con TestFlight o dalla pagina di assistenza nelle impostazioni.""",
-    "ja": """ビルド 4 は、前回の報告の核心を直しました。鳴っているアラームで「計算」や「停止」を押しても何も起きなかった問題です。ミッションも 2 度目のアラームもなし。原因は、ロック画面のボタンが中身のない内部状態に話しかけてしまうことがあったため。ボタンは常に本物のアラームに届くようになり、アラームがバックグラウンドで静かに解除されることもなくなりました。
+Se qualcosa non va, uno screenshot dice più di una frase. TestFlight o la pagina di assistenza nelle impostazioni.""",
+    "ja": """ビルド 5 は、リクエストいただいたものです。新しいことが 3 つ。
 
-【まず確認してほしいこと】
+アラームに任せる前にミッションを試す
+アラーム編集画面のミッションの下にある「このミッションを試す」をタップ。同じ課題、同じ難易度、同じタイマー。でも何も作動せず、隅の X でいつでも出られます。「ブルータル」が本当にブルータルかどうか、朝 6 時の予約なしで確かめられます。
 
-1. 1〜2 分後のアラームを作り、画面をロックして鳴らす。ミッション名のボタンを押す。アプリがミッション画面で直接開くこと。
-2. もう一度鳴らし、今度は停止を押す。それでもミッションが開き、解かなければ 60 秒後にもう一度鳴ること。
-3. ミッション画面から出る、または未解決のままアプリを強制終了する。アラームはすぐ戻ってくること。
-4. 保存済みのアラームを編集する。時刻とミッションを変えて保存。エラーが出ず、そのまま鳴ること。
+ミッションをつなげる
+同じく編集画面の「追いミッション」。最大 3 つ。最初のミッションをクリアすると、数分後にアラームが次のミッションと共にまた鳴ります。まず振って、10 分後には絵を描く、歩く、スクワットなどを要求して戻ってきます。朝が終わるのは最後の 1 つをクリアしたときだけ。ミッションの間の待ち時間は自由、ごまかしは今まで通り不可。
 
-【あわせて見てほしいところ】
+見やすくなったミッション画面
+指示は大きく白い文字に。シーケンスのパッドはフルカラーで、はっきり光り、指に伝わる振動つき。メモリーのタイルは選んだものに印がつき、キーパッドはすべての押下に応えます。振動は設定のスイッチに従います。
 
-- 12 種類のミッション、各難易度、複数ラウンド。
-- 消音モードと集中モード。どちらでも鳴る必要があります。
-- 別の言語: iPhone の言語を変えて、アラーム画面とミッションの文章をもう一度読む。
+確認してほしいこと
+1. 編集画面からミッションを試し、X で出て、何も保存しない。アラームが存在しないこと。
+2. 1 分間隔で 2 つのミッションをつなぎ、鳴らして最初をクリアし、待つ。2 度目のアラームがミッション名つきで来ること。
+3. 夜、画面を暗くしてシーケンスミッション。すべてがはっきり見えること。
 
-おかしいところがあれば、文章よりスクリーンショットのほうが伝わります。TestFlight から、または設定のサポートページから送ってください。""",
-    "ko": """빌드 4는 지난 보고의 핵심을 고쳤습니다. 울리는 알람에서 계산이나 정지를 눌러도 아무 일도 일어나지 않던 문제입니다. 미션도, 두 번째 알람도 없었습니다. 원인은 잠금 화면 버튼이 실체 없는 내부 상태와 대화할 수 있었기 때문입니다. 이제 버튼은 항상 실제 알람에 닿고, 알람이 백그라운드에서 조용히 해제되는 일도 없습니다.
+おかしいところがあれば、文章よりスクリーンショットで。TestFlight か、設定のサポートページから。""",
+    "ko": """빌드 5는 요청하신 그대로입니다. 새로운 것 세 가지.
 
-【먼저 확인해 주세요】
+믿기 전에 미션을 해보기
+알람 편집기에서 미션 아래 「이 미션 미리 해보기」를 누르세요. 같은 도전, 같은 난이도, 같은 타이머. 하지만 아무것도 설정되지 않고, 구석의 X는 언제나 나갈 수 있습니다. 새벽 6시 약속 없이 '브루탈'이 정말 브루탈인지 확인하세요.
 
-1. 1~2분 뒤 알람을 만들고 화면을 잠근 채 울립니다. 미션 이름이 적힌 버튼을 누릅니다. 앱이 곧바로 미션 화면으로 열려야 합니다.
-2. 다시 울리고 이번에는 정지를 누릅니다. 미션은 그래도 열리고, 풀지 않으면 60초 뒤 알람이 다시 울려야 합니다.
-3. 미션 화면에서 나가거나, 미션을 풀지 않은 채 앱을 강제 종료합니다. 알람은 곧바로 돌아옵니다.
-4. 저장한 알람을 수정합니다. 시간과 미션을 바꾸고 저장. 오류가 없고, 여전히 울려야 합니다.
+미션 이어 붙이기
+역시 편집기에서: 「후속 미션」. 최대 3개. 첫 미션을 끝내면 몇 분 뒤 알람이 다음 미션과 함께 다시 울립니다. 먼저 흔들기, 10분 뒤엔 그림 그리기나 걷기, 스쿼트를 요구하며 돌아옵니다. 마지막 미션을 끝내야 아침이 끝납니다. 미션 사이의 기다림은 무료지만, 회피는 여전히 아닙니다.
 
-【함께 봐 주세요】
+더 선명해진 미션 화면
+지시문은 이제 크고 하얗게, 시퀀스 패드는 진짜 번쩍임과 손끝에 느껴지는 진동과 함께 풀 컬러로, 메모리 타일은 이미 고른 것을 표시하고, 키패드는 모든 누름에 답합니다. 진동은 설정의 스위치를 따릅니다.
 
-- 미션 12가지, 각 난이도, 여러 라운드.
-- 무음 모드와 집중 모드. 두 경우 모두 울려야 합니다.
-- 다른 언어: iPhone 언어를 바꾼 뒤 알람 화면과 미션 문장을 다시 읽어 보세요.
+확인해 주세요
+1. 편집기에서 미션을 해보고 X로 나가서 아무것도 저장하지 않기: 알람이 없어야 합니다.
+2. 1분 간격으로 미션 두 개를 잇고, 울리게 두고, 첫 번째를 끝내고 기다리기: 두 번째 알람이 미션 이름과 함께 와야 합니다.
+3. 밤에 화면을 어둡게 하고 시퀀스 미션: 모든 것이 또렷해야 합니다.
 
-이상한 점이 있으면 문장보다 스크린샷이 더 잘 전달됩니다. TestFlight로, 또는 설정의 지원 페이지로 보내 주세요.""",
-    "pt-BR": """A build 4 corrige o coração do último relato: tocar em Cálculo ou Parar no alarme tocando não fazia absolutamente nada. Sem missão, sem segundo toque. A causa era um estado interno com o qual os botões da tela bloqueada podiam acabar falando no vazio; agora eles sempre alcançam o alarme real, e o alarme não pode mais ser desarmado em silêncio em segundo plano.
+이상하면 문장보다 스크린샷이 낫습니다. TestFlight 또는 설정의 지원 페이지로.""",
+    "pt-BR": """A build 5 é a que você pediu. Três novidades.
 
-O QUE TESTAR PRIMEIRO
+TESTE UMA MISSÃO ANTES DE CONFIAR NELA
+No editor do alarme, abaixo da missão, toque em «Testar esta missão». Mesmo desafio, mesma dificuldade, mesmo cronômetro, mas nada armado, e o X no canto sempre sai. Confira que o brutal é brutal mesmo sem hora marcada às 06:00.
 
-1. Crie um alarme para daqui a um ou dois minutos, bloqueie o telefone, deixe tocar. Toque no botão com o nome da missão. O app deve abrir direto na missão.
-2. Deixe tocar de novo e toque em Parar. A missão abre mesmo assim, e se não for resolvida o alarme volta sessenta segundos depois.
-3. Saia da tela da missão, ou force o fechamento com a missão sem resolver. O alarme volta na hora.
-4. Edite um alarme salvo: mude a hora e a missão, salve. Sem erro, e ele continua tocando.
+ENCADEIE MISSÕES
+Também no editor: «Missões de acompanhamento». Até três. Conclua a primeira e o alarme toca de novo minutos depois com a próxima: primeiro sacudir, dez minutos depois ele volta pedindo um desenho, passos ou agachamentos. Só a última encerra a manhã. Esperar entre missões é de graça; se esquivar continua não sendo.
 
-TAMBÉM VALE OLHAR
+UMA TELA DE MISSÃO MAIS CLARA
+A instrução agora é grande e branca, os painéis da sequência são coloridos com clarão de verdade e um toque que se sente, as peças da memória marcam o que você já escolheu, e cada tecla responde ao polegar. A vibração obedece ao interruptor dos ajustes.
 
-- As doze missões, em cada dificuldade, com várias rodadas.
-- Modo silencioso e um modo de foco. O alarme tem que tocar nos dois.
-- Outro idioma: troque o idioma do iPhone e leia de novo o alarme e o texto da missão.
+VALE CONFERIR
+1. Teste uma missão pelo editor, saia pelo X, não salve nada: nenhum alarme deve existir.
+2. Encadeie duas missões com um minuto de intervalo, deixe tocar, conclua a primeira, espere: o segundo toque tem que vir, com o nome da missão.
+3. A missão de sequência à noite, brilho baixo: tudo deve continuar óbvio.
 
-Se algo estiver errado, uma captura de tela diz mais que uma frase. Mande pelo TestFlight ou pela página de suporte nos ajustes.""",
-    "ru": """Сборка 4 исправляет суть последнего отчёта: нажатие «Счёт» или «Стоп» на звонящем будильнике не делало вообще ничего. Ни задания, ни второго звонка. Причиной было внутреннее состояние, с которым кнопки заблокированного экрана могли говорить в пустоту; теперь они всегда достигают настоящего будильника, и будильник больше нельзя незаметно обезвредить в фоне.
+Se algo estiver errado, uma captura diz mais que uma frase. TestFlight ou a página de suporte nos ajustes.""",
+    "ru": """Сборка 5 — та, о которой вы просили. Три новинки.
 
-ЧТО ПРОВЕРИТЬ В ПЕРВУЮ ОЧЕРЕДЬ
+ПОПРОБОВАТЬ ЗАДАНИЕ ДО ТОГО, КАК ДОВЕРИТЬСЯ ЕМУ
+В редакторе будильника, под заданием: «Попробовать это задание». Та же задача, та же сложность, тот же таймер — но ничего не заведено, а крестик в углу всегда выпускает. Проверьте, что «жестокий» и правда жестокий, без встречи в 06:00.
 
-1. Поставьте будильник на минуту-две вперёд, заблокируйте телефон, дайте ему зазвонить. Нажмите кнопку с названием задания. Приложение должно открыться сразу на задании.
-2. Дайте зазвонить ещё раз и нажмите «Стоп». Задание всё равно откроется, и если его не выполнить, будильник вернётся через шестьдесят секунд.
-3. Уйдите с экрана задания или закройте приложение принудительно с нерешённым заданием. Будильник возвращается сразу.
-4. Измените сохранённый будильник: поменяйте время и задание, сохраните. Без ошибки, и он по-прежнему звонит.
+ЦЕПОЧКА ЗАДАНИЙ
+Там же, в редакторе: «Задания вдогонку». До трёх. Выполните первое — и будильник зазвонит снова через несколько минут со следующим: сначала потрясти телефон, а через десять минут он вернётся и попросит рисунок, шаги или приседания. Утро заканчивается только на последнем. Ждать между заданиями — бесплатно; увиливать — по-прежнему нет.
 
-НА ЧТО ЕЩЁ СТОИТ ВЗГЛЯНУТЬ
+БОЛЕЕ ЧИТАЕМЫЙ ЭКРАН ЗАДАНИЯ
+Инструкция теперь крупная и белая, панели последовательности — в полном цвете, с настоящей вспышкой и ощутимым откликом, плитки памяти отмечают уже выбранное, и каждая клавиша отвечает пальцу. Вибрация слушается переключателя в настройках.
 
-- Двенадцать заданий, на каждом уровне сложности, в несколько раундов.
-- Беззвучный режим и режим концентрации. Будильник должен звонить в обоих.
-- Другой язык: смените язык iPhone и перечитайте экран будильника и текст задания.
+СТОИТ ПРОВЕРИТЬ
+1. Попробуйте задание из редактора, выйдите крестиком, ничего не сохраняйте: будильника быть не должно.
+2. Свяжите два задания с интервалом в минуту, дайте зазвонить, выполните первое, подождите: второй звонок должен прийти, названный по своему заданию.
+3. Задание с последовательностью ночью, при низкой яркости: всё должно оставаться очевидным.
 
-Если что-то не так, снимок экрана скажет больше, чем фраза. Пришлите его через TestFlight или через страницу поддержки в настройках.""",
-    "zh-Hans": """版本 4 修复了上次报告的核心问题：闹钟响起时按「计算」或「停止」完全没有反应。没有任务，也没有第二次响铃。原因是锁屏按钮可能对着一个空壳内部状态说话；现在按钮始终能触达真正的闹钟，闹钟也不会再在后台被悄悄解除。
+Если что-то не так, снимок экрана скажет больше фразы. TestFlight или страница поддержки в настройках.""",
+    "zh-Hans": """版本 5 就是你要的那个。三件新事。
 
-【请先测试这些】
+先试任务，再信任它
+在闹钟编辑器里，任务下方点「试玩这个任务」。同样的挑战、同样的难度、同样的计时器，但什么都不会触发，角落的 X 随时能退出。不用预约早上六点，就能确认「残酷」是不是真的残酷。
 
-1. 设一个一两分钟后的闹钟，锁屏，让它响。按下写着任务名的按钮。应用必须直接打开任务界面。
-2. 再让它响一次，这次按停止。任务照样会打开；没做完的话，闹钟应在六十秒后再响。
-3. 离开任务界面，或在任务未完成时强制退出应用。闹钟会立刻回来。
-4. 编辑已保存的闹钟：改时间和任务，再保存。不报错，而且照样会响。
+任务接力
+同样在编辑器里：「后续任务」。最多加三个。完成第一个任务后，闹钟几分钟后会带着下一个再响：先摇手机，十分钟后它回来要你画画、走步或深蹲。只有完成最后一个，早晨才算结束。任务之间的等待免费；躲掉一个仍然不行。
 
-【也值得看看】
+更清晰的任务界面
+指令现在又大又白，序列彩块全彩显示、真正会闪、还有指尖能感到的震动，记忆方块会标出你已选过的，键盘每次按下都有回应。震动听从设置里的开关。
 
-- 十二种任务，每一档难度，多个轮次。
-- 静音模式和专注模式。两种情况下都必须响。
-- 换一种语言：改掉 iPhone 的语言，再读一遍闹钟界面和任务文字。
+值得一试
+1. 从编辑器试玩任务，按 X 退出，不保存任何东西：不应存在任何闹钟。
+2. 把两个任务隔一分钟接起来，让它响，完成第一个，等着：第二次响铃必须到来，并以它的任务命名。
+3. 夜里低亮度下玩序列任务：一切都应一目了然。
 
-如果哪里不对，一张截图比一句描述更有用。请通过 TestFlight 或设置里的支持页面发回来。""",
+有问题的话，截图比一句话更有用。TestFlight 或设置里的支持页面。""",
 }
 
 # The description. Read on a phone, so the first two lines carry it: the App Store collapses

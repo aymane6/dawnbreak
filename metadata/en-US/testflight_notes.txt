@@ -1,16 +1,17 @@
-Build 4 fixes the heart of the last report: pressing Math or Stop on the ringing alarm did nothing at all. No mission, no second ring. The cause was internal state the lock screen's buttons could end up talking to with nothing behind it; they now always reach the real alarm, and the alarm can no longer be silently disarmed in the background.
+Build 5 is the one you asked for. Three new things.
 
-WHAT TO TEST FIRST
+TRY A MISSION BEFORE TRUSTING IT
+In the alarm editor, under the mission, tap "Try this mission". Same challenge, same difficulty, same timer — but nothing armed, and the X in the corner always leaves. Check that brutal really is brutal without booking a 06:00 appointment.
 
-1. Set an alarm a minute or two ahead, lock the phone, let it ring. Press the button named after the mission. The app must open straight onto the mission.
-2. Ring it again and press Stop instead. The mission still opens, and if it is not solved the alarm returns sixty seconds later.
-3. Leave the mission screen, or force quit the app with the mission unsolved. The alarm comes straight back.
-4. Edit a saved alarm: change the time and the mission, save. No error, and it still rings.
+CHAIN MISSIONS
+Also in the editor: "Follow-up missions". Add up to three. Clear the first mission and the alarm rings again a few minutes later with the next one — shake first, then ten minutes later it comes back asking for a drawing, steps or squats. Only clearing the last one ends the morning. Waiting between missions is free; dodging one still is not.
 
-ALSO WORTH A LOOK
+A CLEANER MISSION SCREEN
+The instruction is now big and white, the sequence pads are full-colour with a real flash and a tick you can feel, memory tiles mark what you already picked, and every keypad press answers your thumb. The haptics obey the switch in Settings.
 
-- The twelve missions, at each difficulty, with several rounds.
-- Silent mode and a Focus mode. The alarm has to ring through both.
-- Another language: change the iPhone language, then read the alarm and the mission text again.
+WORTH CHECKING
+1. Try a mission from the editor, leave it with the X, save nothing: no alarm should exist.
+2. Chain two missions one minute apart, let it ring, clear the first, wait: the second ring must come, named after its mission.
+3. The sequence mission at night, screen brightness low: everything should still be obvious.
 
-If something is wrong, a screenshot says more than a sentence. Send it through TestFlight, or through the support page in Settings.
+If something is wrong, a screenshot says more than a sentence. TestFlight or the support page in Settings.

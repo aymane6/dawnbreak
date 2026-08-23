@@ -12,13 +12,18 @@ struct MissionScaffold<Challenge: View, Control: View>: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // The instruction is the loudest text on the screen, deliberately. It is read by
+            // someone who has been awake for four seconds: body-sized secondary grey was
+            // typography for the person who wrote it, not the person squinting at it.
             Text(instruction ?? localized(instructionKey))
-                .font(Theme.bodyFont)
-                .foregroundStyle(Theme.textSecondary)
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundStyle(Theme.textPrimary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 28)
                 .padding(.top, 18)
+                .contentTransition(.opacity)
+                .animation(.easeOut(duration: 0.2), value: instruction)
 
             Spacer(minLength: 12)
 

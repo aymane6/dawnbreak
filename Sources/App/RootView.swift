@@ -58,6 +58,9 @@ struct RootView: View {
         .onChange(of: app.bridge.activeMission != nil) { _, ringing in
             if ringing { app.paywallReason = nil }
         }
+        .onChange(of: app.preferences.hapticsEnabled) { _, enabled in
+            Haptics.isEnabled = enabled
+        }
     }
 
     /// The two things that take the whole screen, as one value.

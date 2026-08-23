@@ -26,7 +26,7 @@ final class AppEnvironment {
     enum Tab: Hashable { case alarms, stats, settings }
 
     enum PaywallReason: String, Identifiable, Hashable, CaseIterable {
-        case alarmLimit, premiumMission, difficultyLocked, roundsLocked, historyLocked, manual
+        case alarmLimit, premiumMission, difficultyLocked, roundsLocked, historyLocked, chainLocked, manual
         var id: String { rawValue }
 
         var headlineKey: String {
@@ -36,6 +36,7 @@ final class AppEnvironment {
             case .difficultyLocked: "paywall.reason.difficulty"
             case .roundsLocked: "paywall.reason.rounds"
             case .historyLocked: "paywall.reason.history"
+            case .chainLocked: "paywall.reason.chain"
             case .manual: "paywall.reason.manual"
             }
         }
@@ -66,6 +67,9 @@ final class AppEnvironment {
         subscription = SubscriptionStore(pinnedEntitlement: entitlement)
         self.bridge = bridge
         bridge.attach(alarms: alarms, log: log)
+        // The settings toggle for this predates anything that obeyed it; `Haptics` is the
+        // mirror the leaf views consult. Seeded here, kept current by `RootView`.
+        Haptics.isEnabled = preferences.hapticsEnabled
     }
 
     var entitlement: Entitlement { subscription.entitlement }
@@ -84,6 +88,8 @@ final class AppEnvironment {
             count > entitlement.maximumRounds ? .roundsLocked : nil
         case .history(let days):
             days > entitlement.maximumHistoryDays ? .historyLocked : nil
+        case .followOns(let count):
+            count > entitlement.maximumFollowOns ? .chainLocked : nil
         }
     }
 
@@ -93,6 +99,7 @@ final class AppEnvironment {
         case difficulty(Difficulty)
         case rounds(Int)
         case history(Int)
+        case followOns(Int)
     }
 
     /// Returns true when the action is allowed; otherwise raises the paywall and returns

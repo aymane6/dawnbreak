@@ -355,8 +355,12 @@ private struct MissionChip: View {
         HStack(spacing: 5) {
             Image(systemName: mission.kind.systemImage)
                 .font(.system(size: 11, weight: .semibold))
+            // One line, shrunk before wrapped: a capsule two words tall reads as a defect,
+            // and French mission names run half again as long as the English ones.
             Text(key: mission.kind.titleKey)
                 .font(.system(size: 12, weight: .medium, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             if mission.rounds > 1 {
                 Text(verbatim: "×\(mission.rounds.formatted(.number.grouping(.never)))")
                     .font(.system(size: 12, weight: .semibold, design: .rounded).monospacedDigit())
@@ -381,6 +385,8 @@ private struct Chip: View {
                 .font(.system(size: 11, weight: .semibold))
             Text(key: titleKey)
                 .font(.system(size: 12, weight: .medium, design: .rounded))
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 5)

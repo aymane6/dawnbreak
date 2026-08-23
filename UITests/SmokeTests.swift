@@ -39,6 +39,32 @@ final class SmokeTests: UITestCase {
         XCTAssertTrue(element(AccessibilityID.addAlarm, in: app).exists)
     }
 
+    /// The editor's two newest promises: a mission can be tried before anything is armed, and
+    /// the rehearsal's exit is always there and always works — nobody does squats to leave a
+    /// settings screen. The follow-on chain's add button is checked in the same pass.
+    func testAMissionCanBeRehearsedFromTheEditorAndLeft() {
+        let app = launch(.alarms)
+        waitFor(AccessibilityID.alarmRow, in: app).tap()
+        waitFor(AccessibilityID.editorSave, in: app)
+
+        XCTAssertTrue(element(AccessibilityID.editorChainAdd, in: app).exists,
+                      "the follow-on chain is missing from the editor")
+
+        let tryButton = element(AccessibilityID.editorTryMission, in: app)
+        XCTAssertTrue(tryButton.exists, "the try-this-mission button is missing")
+        tryButton.tap()
+
+        waitFor(AccessibilityID.missionHeader, in: app)
+        let exit = waitFor(AccessibilityID.missionExit, in: app)
+        exit.tap()
+        XCTAssertTrue(
+            element(AccessibilityID.missionHeader, in: app).waitForNonExistence(timeout: 5),
+            "the rehearsal did not close on its exit"
+        )
+        XCTAssertTrue(element(AccessibilityID.editorSave, in: app).waitForExistence(timeout: 5),
+                      "leaving the rehearsal lost the editor")
+    }
+
     /// The promise the whole app rests on: the mission screen does not go away because someone
     /// swiped at it half asleep.
     ///
@@ -81,7 +107,9 @@ final class SmokeTests: UITestCase {
 
     func testTheSettingsScreenComesUp() {
         let app = launch(.settings)
-        waitFor(AccessibilityID.settingsAppearance, in: app)
+        // Below the fold on the smaller phones: the appearance picker proves both that the
+        // screen came up and that its list scrolls.
+        scrollTo(AccessibilityID.settingsAppearance, in: app)
         assertNothingIsCoveringTheScreen(app)
     }
 

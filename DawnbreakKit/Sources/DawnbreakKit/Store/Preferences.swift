@@ -95,6 +95,9 @@ public enum Entitlement: String, Codable, Hashable, Sendable {
     /// idea works, which is what the free tier is for.
     public var maximumAlarms: Int { self == .pro ? 25 : 1 }
     public var maximumRounds: Int { self == .pro ? MissionConfig.maxRounds : 1 }
+    /// Follow-on missions per alarm. Pro, like extra rounds and for the same reason: both
+    /// multiply how much one alarm demands, and one demand is what free exists to prove.
+    public var maximumFollowOns: Int { self == .pro ? FollowOnMission.maximumCount : 0 }
 
     /// How far back the stats screen may look. Free sees the last week.
     ///

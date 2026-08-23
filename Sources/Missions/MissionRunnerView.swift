@@ -9,7 +9,14 @@ import UIKit
 /// what keeps "three rounds of maths" from being reimplemented twelve times.
 struct MissionRunnerView: View {
     @Environment(\.app) private var app
+    @Environment(\.dismiss) private var dismiss
     let pending: PendingMission
+    /// `.alarm` is the real thing. `.rehearsal` is the editor's "try this mission": same
+    /// challenge, same rounds, but no audio, no alarm behind it, no record written, and a
+    /// door that is always open — nobody should have to do squats to leave a settings screen.
+    var mode: Mode = .alarm
+
+    enum Mode { case alarm, rehearsal }
 
     @State private var roundsCleared = 0
     @State private var audio = AlarmAudio()
@@ -23,6 +30,8 @@ struct MissionRunnerView: View {
 
     private enum Phase { case running, succeeded }
 
+    private var isRehearsal: Bool { mode == .rehearsal }
+
     var body: some View {
         ZStack {
             Theme.canvas.ignoresSafeArea()
@@ -31,7 +40,7 @@ struct MissionRunnerView: View {
             case .running:
                 running
             case .succeeded:
-                MissionSuccessView(pending: pending, roundsCleared: roundsCleared) {
+                MissionSuccessView(pending: pending, roundsCleared: roundsCleared, isRehearsal: isRehearsal) {
                     Task { await finish() }
                 }
             }
@@ -41,13 +50,16 @@ struct MissionRunnerView: View {
         // through counting squats.
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
+            // The round timer runs in both modes: the time limit is part of the difficulty,
+            // and showing someone an untimed rehearsal of a timed mission would be a lie.
+            startTimerIfNeeded()
+            guard !isRehearsal else { return }
             audio.start(
                 soundName: pending.soundName,
                 volume: pending.volume,
                 rampSeconds: 0,
                 vibrate: pending.vibrate
             )
-            startTimerIfNeeded()
             // The mission is being done, so the alarm waiting to come back is pushed out. It is
             // not cancelled: something has to be armed at every instant until the mission is
             // cleared, or killing the app here would be the way out.
@@ -56,6 +68,7 @@ struct MissionRunnerView: View {
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
             audio.stop()
+            guard !isRehearsal else { return }
             // This screen going away without the mission being settled is not allowed to be a
             // way out. `missionCompleted` and `missionAbandoned` both clear the pending mission
             // before the cover dismisses, so a mission still owed here means the screen was
@@ -67,6 +80,8 @@ struct MissionRunnerView: View {
         }
         // No interactive dismissal, no swipe: this is the one screen in the app that is
         // deliberately hard to leave. The escape hatch in the corner is the way out.
+        // A rehearsal keeps that off too — its exit is the always-present X, not a swipe
+        // nobody discovers.
         .interactiveDismissDisabled()
     }
 
@@ -97,7 +112,7 @@ struct MissionRunnerView: View {
     private var header: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                Image(systemName: "alarm.waves.left.and.right.fill")
+                Image(systemName: systemImage)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(Theme.accent)
                     .symbolEffect(.variableColor.iterative, options: .repeating)
@@ -113,19 +128,40 @@ struct MissionRunnerView: View {
                         .foregroundStyle(Theme.textPrimary)
                         .lineLimit(1)
                         .accessibilityIdentifier(AccessibilityID.missionHeader)
-                    Text(ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
-                        .full(hour: hourNow, minute: minuteNow))
-                        .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
-                        .foregroundStyle(Theme.textSecondary)
+                    if isRehearsal {
+                        Text("mission.rehearsal", bundle: .main)
+                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .foregroundStyle(Theme.warning)
+                    } else {
+                        Text(ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
+                            .full(hour: hourNow, minute: minuteNow))
+                            .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
 
                 Spacer(minLength: 8)
+
+                if pending.totalStages > 1 && !isRehearsal {
+                    StageBadge(stage: pending.stage + 1, total: pending.totalStages)
+                }
 
                 if let secondsLeft {
                     CountdownPill(seconds: secondsLeft)
                 }
 
-                if app.preferences.emergencyExitEnabled {
+                if isRehearsal {
+                    // Always present, no confirmation: a rehearsal is a settings screen in
+                    // costume, and it must never hold anyone hostage.
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Theme.textSecondary)
+                            .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
+                    }
+                    .accessibilityLabel(Text("action.cancel", bundle: .main))
+                    .accessibilityIdentifier(AccessibilityID.missionExit)
+                } else if app.preferences.emergencyExitEnabled {
                     Button { showingExitConfirmation = true } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 13, weight: .bold))
@@ -182,7 +218,7 @@ struct MissionRunnerView: View {
     }
 
     @ViewBuilder private var footer: some View {
-        if pending.canSnooze {
+        if pending.canSnooze && !isRehearsal {
             VStack(spacing: 6) {
                 Button {
                     Task { await snooze() }
@@ -209,6 +245,7 @@ struct MissionRunnerView: View {
 
     private func clearRound() {
         audio.acknowledge()
+        Haptics.success()
         roundsCleared += 1
         if roundsCleared >= pending.mission.rounds {
             audio.stop()
@@ -218,7 +255,9 @@ struct MissionRunnerView: View {
             startTimerIfNeeded()
             // Progress buys time. A three-round mission is not a dodge, and the alarm coming
             // back between rounds would be the app fighting the person doing what it asked.
-            Task { await app.bridge.missionInProgress() }
+            if !isRehearsal {
+                Task { await app.bridge.missionInProgress() }
+            }
         }
     }
 
@@ -226,6 +265,7 @@ struct MissionRunnerView: View {
     /// punishing a sleepy mistake by making the alarm unclearable would be cruel and would
     /// also be the kind of thing that gets an app one-starred.
     private func registerMistake() {
+        Haptics.error()
         flashMistake = true
         Task {
             try? await Task.sleep(for: .milliseconds(320))
@@ -258,6 +298,10 @@ struct MissionRunnerView: View {
     // MARK: - Outcomes
 
     private func finish() async {
+        guard !isRehearsal else {
+            dismiss()
+            return
+        }
         await app.bridge.missionCompleted(pending)
     }
 
@@ -273,6 +317,11 @@ struct MissionRunnerView: View {
 
     private var hourNow: Int { Calendar.current.component(.hour, from: Date()) }
     private var minuteNow: Int { Calendar.current.component(.minute, from: Date()) }
+
+    /// Named so `make_strings` skips it: these are SF Symbol names, not localization keys.
+    private var systemImage: String {
+        isRehearsal ? "figure.run" : "alarm.waves.left.and.right.fill"
+    }
 }
 
 /// What a mission view can tell the runner. Two closures, because a mission has exactly two
@@ -316,6 +365,22 @@ private struct RoundProgress: View {
     }
 }
 
+/// "2/4" when the morning is a chain, so the user knows the shape of what they owe.
+private struct StageBadge: View {
+    let stage: Int
+    let total: Int
+
+    var body: some View {
+        Text(verbatim: "\(stage.formatted(.number.grouping(.never)))/\(total.formatted(.number.grouping(.never)))")
+            .font(.system(size: 13, weight: .bold, design: .rounded).monospacedDigit())
+            .foregroundStyle(Theme.accent)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Theme.accent.opacity(0.16), in: .capsule)
+            .accessibilityLabel(localized("mission.stage.a11y", stage, total))
+    }
+}
+
 private struct CountdownPill: View {
     let seconds: Int
 
@@ -337,6 +402,7 @@ private struct MissionSuccessView: View {
     @Environment(\.app) private var app
     let pending: PendingMission
     let roundsCleared: Int
+    var isRehearsal = false
     let onDone: () -> Void
 
     @State private var appeared = false
@@ -345,7 +411,7 @@ private struct MissionSuccessView: View {
         VStack(spacing: 22) {
             Spacer()
 
-            Image(systemName: "sun.max.fill")
+            Image(systemName: systemImage)
                 .font(.system(size: 74))
                 .foregroundStyle(Theme.dawnGradient)
                 .scaleEffect(appeared ? 1 : 0.6)
@@ -355,13 +421,23 @@ private struct MissionSuccessView: View {
                 Text("mission.done.title", bundle: .main)
                     .font(Theme.titleFont)
                     .foregroundStyle(Theme.textPrimary)
-                Text(localized("mission.done.body", DurationCopy.spent(elapsed)))
-                    .font(Theme.bodyFont)
-                    .foregroundStyle(Theme.textSecondary)
-                    .multilineTextAlignment(.center)
+                if let next = pending.upNext, !isRehearsal {
+                    // The morning is not over: say so before the screen goes away, or the
+                    // next ring reads as a malfunction rather than as the deal that was made.
+                    Text(localized("mission.done.nextStage", next.minutesAfter))
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(localized("mission.done.body", DurationCopy.spent(elapsed)))
+                        .font(Theme.bodyFont)
+                        .foregroundStyle(Theme.textSecondary)
+                        .multilineTextAlignment(.center)
+                }
             }
 
-            if streak > 1 {
+            if streak > 1 && !isRehearsal && pending.upNext == nil {
                 HStack(spacing: 6) {
                     Image(systemName: "flame.fill")
                     Text(localized("mission.done.streak", streak))
@@ -376,7 +452,11 @@ private struct MissionSuccessView: View {
             Spacer()
 
             Button(action: onDone) {
-                Text("mission.done.action", bundle: .main)
+                if pending.upNext != nil && !isRehearsal {
+                    Text("action.ok", bundle: .main)
+                } else {
+                    Text("mission.done.action", bundle: .main)
+                }
             }
             .buttonStyle(DawnButtonStyle())
             .padding(.horizontal, Theme.Metric.gutter)
@@ -388,6 +468,12 @@ private struct MissionSuccessView: View {
     }
 
     private var elapsed: TimeInterval { Date().timeIntervalSince(pending.startedAt) }
+
+    /// A sunrise while stages remain, full sun when the morning is truly over. Named so
+    /// `make_strings` skips it: SF Symbol names, not localization keys.
+    private var systemImage: String {
+        pending.upNext == nil ? "sun.max.fill" : "sunrise.fill"
+    }
 
     /// Includes this morning, which is not yet in the log: the record is written when the
     /// runner finishes, and showing "streak 0" on the screen that celebrates the streak

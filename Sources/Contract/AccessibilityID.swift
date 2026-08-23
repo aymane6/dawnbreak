@@ -23,6 +23,9 @@ enum AccessibilityID {
 
     static let editorSave = "ax.editor.save"
     static let editorCancel = "ax.editor.cancel"
+    /// "Try this mission" in the editor, and the row that adds a follow-on to the chain.
+    static let editorTryMission = "ax.editor.try"
+    static let editorChainAdd = "ax.editor.chainAdd"
 
     /// Proof that the mission screen is up. The header, not the escape hatch below it, which a
     /// user can switch off in settings and is therefore not always on screen.

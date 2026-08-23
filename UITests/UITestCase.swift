@@ -70,6 +70,24 @@ class UITestCase: XCTestCase {
         return element
     }
 
+    /// Waits for an element that may live below the fold of a lazy container.
+    ///
+    /// A SwiftUI `List` only realises the rows on screen, so an identifier further down does
+    /// not exist to XCUITest until the list is scrolled — `waitForExistence` alone answers a
+    /// layout question, not a correctness one, and whether a row is above the fold changes
+    /// with the device and the language. Scrolls a screen at a time until the element turns
+    /// up or the swipes run out.
+    @discardableResult
+    func scrollTo(_ identifier: String, in app: XCUIApplication, maxSwipes: Int = 6) -> XCUIElement {
+        let target = element(identifier, in: app)
+        if target.waitForExistence(timeout: 5) { return target }
+        for _ in 0..<maxSwipes where !target.exists {
+            app.swipeUp()
+        }
+        XCTAssertTrue(target.exists, "\(identifier) never appeared, even after scrolling")
+        return target
+    }
+
     /// A beat for the last animation to land.
     ///
     /// XCUITest waits for the app to be idle before a query or a tap, but `XCUIScreen.screenshot`

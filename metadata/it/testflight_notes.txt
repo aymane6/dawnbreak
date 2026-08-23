@@ -1,16 +1,17 @@
-La build 4 corregge il cuore dell'ultima segnalazione: premere Calcolo o Stop sulla sveglia che suona non faceva assolutamente nulla. Nessuna missione, nessun secondo squillo. La causa era uno stato interno con cui i pulsanti della schermata di blocco potevano finire a parlare a vuoto; ora raggiungono sempre la sveglia vera, e la sveglia non può più essere disarmata in silenzio in background.
+La build 5 è quella che hai chiesto. Tre novità.
 
-COSA PROVARE PER PRIMO
+PROVA UNA MISSIONE PRIMA DI FIDARTI
+Nell'editor della sveglia, sotto la missione, tocca «Prova questa missione». Stessa sfida, stessa difficoltà, stesso timer, ma niente è attivo, e la X nell'angolo esce sempre. Verifica che brutale sia davvero brutale senza appuntamento alle 06:00.
 
-1. Imposta una sveglia a uno o due minuti, blocca il telefono, lasciala suonare. Premi il pulsante con il nome della missione. L'app deve aprirsi direttamente sulla missione.
-2. Falla suonare di nuovo e premi Stop. La missione si apre comunque, e se non la risolvi la sveglia torna sessanta secondi dopo.
-3. Esci dalla schermata della missione, o chiudi forzatamente l'app con la missione irrisolta. La sveglia torna subito.
-4. Modifica una sveglia salvata: cambia ora e missione, salva. Nessun errore, e suona ancora.
+CONCATENA LE MISSIONI
+Sempre nell'editor: «Missioni successive». Fino a tre. Superi la prima e la sveglia suona di nuovo qualche minuto dopo con la successiva: prima scuotere, dieci minuti dopo torna chiedendo un disegno, passi o squat. Solo l'ultima chiude la mattina. Aspettare tra le missioni è gratis; svicolare ancora no.
 
-VALE LA PENA GUARDARE ANCHE
+UNA SCHERMATA MISSIONE PIÙ CHIARA
+L'istruzione ora è grande e bianca, i pad della sequenza sono a colori pieni con un vero lampo e un tocco che si sente, le tessere della memoria segnano ciò che hai già scelto, e ogni tasto risponde al pollice. La vibrazione obbedisce all'interruttore nelle impostazioni.
 
-- Le dodici missioni, a ogni difficoltà, con più turni.
-- La modalità silenziosa e una modalità di concentrazione. La sveglia deve suonare in entrambe.
-- Un'altra lingua: cambia la lingua dell'iPhone e rileggi la sveglia e il testo della missione.
+DA CONTROLLARE
+1. Prova una missione dall'editor, esci con la X, non salvare nulla: non deve esistere nessuna sveglia.
+2. Concatena due missioni a un minuto di distanza, lascia suonare, supera la prima, aspetta: il secondo squillo deve arrivare, col nome della sua missione.
+3. La missione sequenza di notte, luminosità bassa: tutto deve restare ovvio.
 
-Se qualcosa non va, uno screenshot dice più di una frase. Invialo con TestFlight o dalla pagina di assistenza nelle impostazioni.
+Se qualcosa non va, uno screenshot dice più di una frase. TestFlight o la pagina di assistenza nelle impostazioni.

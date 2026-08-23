@@ -371,6 +371,25 @@ struct DecodingTests {
         #expect(alarm.mission.kind == .math)
         #expect(alarm.snooze.isAllowed)
         #expect(alarm.soundName == AlarmSound.default.rawValue)
+        #expect(alarm.followOns.isEmpty)              // pre-chain stores carry no follow-ons
+    }
+
+    @Test("A follow-on chain survives the round trip, and its delay is clamped on the way in")
+    func followOnsRoundTripAndClamp() throws {
+        let original = AlarmDraft(
+            hour: 6, minute: 0,
+            mission: MissionConfig(kind: .math, difficulty: .hard),
+            followOns: [
+                FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .hard), minutesAfter: 10),
+                FollowOnMission(mission: MissionConfig(kind: .steps, difficulty: .hard), minutesAfter: 999),
+            ]
+        )
+        #expect(original.followOns[1].minutesAfter == FollowOnMission.maximumMinutes,
+                "an out-of-range delay was stored as typed")
+
+        let data = try JSONFileStore<AlarmDraft>.encoder.encode(original)
+        let restored = try JSONFileStore<AlarmDraft>.decoder.decode(AlarmDraft.self, from: data)
+        #expect(restored.followOns == original.followOns)
     }
 
     /// Every field survives the round trip. `createdAt` is checked to the millisecond

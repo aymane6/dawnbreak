@@ -159,7 +159,12 @@ struct Keypad: View {
         tint: Color = Theme.textPrimary,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        Button {
+            // Every accepted keypress ticks. A keypad that answers only on screen is one a
+            // half-asleep thumb double-presses, and "77" is a wrong answer twice over.
+            Haptics.tap()
+            action()
+        } label: {
             Text(displayText(for: label))
                 .font(.system(size: 25, weight: .semibold, design: .rounded))
                 .frame(maxWidth: .infinity, minHeight: 58)

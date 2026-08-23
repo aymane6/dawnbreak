@@ -226,11 +226,11 @@ final class AlarmBridge {
             Self.journal.warning("reconcile skipped: the daemon could not be asked")
             return
         }
-        // A mission still owed is not reconciled away. Its alarm is armed as a one-off
-        // follow-up, so the store would look "not armed on its normal schedule" and the loop
-        // below would replace the follow-up with tomorrow's alarm — cancelling the one ring
-        // that was going to make the user get up.
-        let owed = PendingMissionStore.loadIfFresh()?.alarmID
+        // A mission still owed is not reconciled away — nor one *scheduled*: between two
+        // chained stages the alarm is armed as a one-off follow-up, so the store would look
+        // "not armed on its normal schedule" and the loop below would replace the ring that
+        // continues the morning with one tomorrow. `loadUpcoming` covers both.
+        let owed = PendingMissionStore.loadUpcoming()?.alarmID
         // What this process armed counts as armed even when the snapshot has not caught up:
         // a successful read can still be a stale one, and re-arming on its say-so starts with
         // a cancel of the very alarm in question.
@@ -426,7 +426,11 @@ final class AlarmBridge {
     /// unreadable store cannot be the reason the alarm fails to come back. Reusing the id
     /// matters: a fresh id per dodge would leak an unbounded number of scheduled alarms into
     /// the system, and AlarmKit has a hard cap.
-    private func armFollowUp(_ pending: PendingMission, after delay: TimeInterval) async {
+    private func armFollowUp(
+        _ pending: PendingMission,
+        after delay: TimeInterval,
+        titled title: LocalizedStringResource? = nil
+    ) async {
         // Same duplicate-id refusal as `schedule`, and it bites hardest here: a repeating alarm
         // is put back by the system the moment it stops ringing, so the id is always taken by
         // the time a dodge tries to reuse it, and the follow-up would never arm. This is the
@@ -434,7 +438,7 @@ final class AlarmBridge {
         Self.journal.info("arming follow-up for \(pending.alarmID.uuidString, privacy: .public), cancel first")
         system.cancel(id: pending.alarmID)
         do {
-            try await system.scheduleFollowUp(pending.followUpDraft(), at: Date().addingTimeInterval(delay))
+            try await system.scheduleFollowUp(pending.followUpDraft(), at: Date().addingTimeInterval(delay), titled: title)
             armedIDs.insert(pending.alarmID)
             Self.journal.info("follow-up armed \(Int(delay), privacy: .public)s out for \(pending.alarmID.uuidString, privacy: .public)")
         } catch {
@@ -448,7 +452,8 @@ final class AlarmBridge {
             do {
                 try await system.scheduleFollowUp(
                     pending.followUpDraft(),
-                    at: Date().addingTimeInterval(max(delay, 30))
+                    at: Date().addingTimeInterval(max(delay, 30)),
+                    titled: title
                 )
                 armedIDs.insert(pending.alarmID)
                 Self.journal.info("follow-up armed on retry for \(pending.alarmID.uuidString, privacy: .public)")
@@ -466,10 +471,33 @@ final class AlarmBridge {
 
     // MARK: - Mission outcome
 
-    /// The mission was cleared. Cancels the follow-up, closes the wake record, and puts the
-    /// alarm back on its normal schedule.
+    /// The mission was cleared. If the alarm carries another one, the morning is not over:
+    /// the next stage is written down and the alarm armed to ring again a few minutes out.
+    /// Only clearing the last stage stands the alarm down.
     func missionCompleted(_ pending: PendingMission) async {
         let now = Date()
+
+        if let followOn = pending.upNext,
+           let next = pending.nextStage(ringingAt: now.addingTimeInterval(TimeInterval(followOn.minutesAfter * 60))) {
+            log.amendLatest(alarmID: pending.alarmID) { record in
+                record.snoozeCount = pending.snoozeCount
+                record.dodgeCount = pending.dodgeCount
+            }
+            // The next stage goes to disk *before* the screen comes down, and before the
+            // arm: whichever process the ring's intent lands in, the record has to already
+            // say which mission the morning is on. `notBefore` keeps it from opening the
+            // mission screen during the wait.
+            PendingMissionStore.save(next)
+            activeMission = nil
+            Self.journal.info("stage \(pending.stage + 1, privacy: .public) cleared, arming stage \(next.stage + 1, privacy: .public) in \(followOn.minutesAfter, privacy: .public)m")
+            await armFollowUp(
+                next,
+                after: TimeInterval(followOn.minutesAfter * 60),
+                titled: LocalizedStringResource(stringLiteral: next.mission.kind.titleKey)
+            )
+            return
+        }
+
         log.amendLatest(alarmID: pending.alarmID) { record in
             record.dismissedAt = now
             record.outcome = pending.snoozeCount > 0 ? .completedAfterSnoozes : .completed
@@ -564,7 +592,10 @@ protocol AlarmScheduler: Sendable {
     /// Silent when there is nothing to cancel: the caller wants the end state, not the call.
     func cancel(id: UUID)
     func schedule(_ alarm: AlarmDraft) async throws
-    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date) async throws
+    /// `titled` overrides the alert's title: nil means the "Mission not done" of a dodged
+    /// alarm, and a chained stage passes its own mission's name instead — the ring that
+    /// continues a morning is not a reproach.
+    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date, titled: LocalizedStringResource?) async throws
 }
 
 /// One coherent read of the daemon's state: everything armed, and the subset ringing right now.
@@ -662,9 +693,9 @@ struct AlarmSystem: AlarmScheduler {
     /// Arms the same alarm as a one-off at `fireDate`, under the same id, with a title that
     /// says why it came back. Reusing the id matters: a fresh id per dodge would leak an
     /// unbounded number of scheduled alarms into the system, and AlarmKit has a hard cap.
-    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date) async throws {
+    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date, titled title: LocalizedStringResource?) async throws {
         let presentation = AlarmPresentation(alert: alert(
-            title: LocalizedStringResource("alarm.followUpTitle", defaultValue: "Mission not done"),
+            title: title ?? LocalizedStringResource("alarm.followUpTitle", defaultValue: "Mission not done"),
             for: alarm
         ))
 

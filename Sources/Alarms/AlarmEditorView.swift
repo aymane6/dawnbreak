@@ -9,6 +9,9 @@ struct AlarmEditorView: View {
     @State private var draft: AlarmDraft
     @State private var enrolling = false
     @State private var previewingSound = false
+    /// The mission being tried out, built from the draft at the moment the button is
+    /// pressed. Nothing is armed: see `MissionRunnerView.Mode.rehearsal`.
+    @State private var rehearsing: PendingMission?
     private let isNew: Bool
 
     init(alarm: AlarmDraft, isNew: Bool) {
@@ -27,6 +30,7 @@ struct AlarmEditorView: View {
 
                     labelCard
                     missionCard
+                    chainCard
                     soundCard
                     behaviourCard
 
@@ -66,6 +70,9 @@ struct AlarmEditorView: View {
                 EnrollmentView(mission: draft.mission.kind) { enrollment in
                     draft.mission.enrollment = enrollment
                 }
+            }
+            .fullScreenCover(item: $rehearsing) { pending in
+                MissionRunnerView(pending: pending, mode: .rehearsal)
             }
         }
         .presentationDragIndicator(.visible)
@@ -134,6 +141,81 @@ struct AlarmEditorView: View {
                 ), maximum: app.entitlement.maximumRounds)
 
                 MissionPreviewRow(mission: draft.mission)
+
+                // "Try this mission": the challenge exactly as the alarm will pose it, without
+                // arming anything. This is how someone finds out what "brutal" means at 14:00
+                // rather than at 06:00.
+                Button {
+                    var sample = draft
+                    sample.volume = 0
+                    sample.vibrate = false
+                    var pending = PendingMission(alarm: sample, scheduledFor: Date())
+                    pending.followOns = []
+                    rehearsing = pending
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "play.circle.fill")
+                        Text("editor.tryMission", bundle: .main)
+                    }
+                    .font(Theme.bodyFont.weight(.semibold))
+                    .foregroundStyle(draft.mission.isIncomplete ? Theme.textTertiary : Theme.accent)
+                    .frame(maxWidth: .infinity, minHeight: Theme.Metric.minimumTarget)
+                    .background(Theme.accent.opacity(draft.mission.isIncomplete ? 0.06 : 0.13), in: .rect(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                .disabled(draft.mission.isIncomplete)
+                .accessibilityIdentifier(AccessibilityID.editorTryMission)
+            }
+        }
+    }
+
+    /// The follow-on chain: what the alarm demands again after this mission is cleared.
+    private var chainCard: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 14) {
+                SectionLabel(titleKey: "editor.chain")
+
+                Text("editor.chain.detail", bundle: .main)
+                    .font(Theme.captionFont)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                ForEach($draft.followOns) { $followOn in
+                    FollowOnRow(followOn: $followOn, position: (draft.followOns.firstIndex(where: { $0.id == followOn.id }) ?? 0) + 2) {
+                        draft.followOns.removeAll { $0.id == followOn.id }
+                    }
+                }
+
+                if draft.followOns.count < FollowOnMission.maximumCount {
+                    Button {
+                        guard app.allow(.followOns(draft.followOns.count + 1)) else { return }
+                        draft.followOns.append(FollowOnMission(
+                            mission: MissionConfig(kind: .shake, difficulty: draft.mission.difficulty)
+                        ))
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus.circle.fill")
+                            Text("editor.chain.add", bundle: .main)
+                            if app.entitlement.maximumFollowOns == 0 {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Theme.warning)
+                            }
+                        }
+                        .font(Theme.bodyFont.weight(.medium))
+                        .foregroundStyle(Theme.accent)
+                        .frame(maxWidth: .infinity, minHeight: Theme.Metric.minimumTarget)
+                        .background(Theme.surfaceRaised, in: .rect(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier(AccessibilityID.editorChainAdd)
+                }
+
+                if app.entitlement.maximumFollowOns == 0 {
+                    Text("editor.chain.freeLimit", bundle: .main)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.textTertiary)
+                }
             }
         }
     }
@@ -255,6 +337,15 @@ struct AlarmEditorView: View {
     private func save() {
         var alarm = draft
         alarm.isEnabled = true
+        // One difficulty per alarm: the picker above governs the whole morning, and a chain
+        // whose second mission silently kept an older difficulty would be a surprise at 06:10.
+        // One round each, too — the chain is already the multiplier.
+        alarm.followOns = alarm.followOns.map { followOn in
+            var adjusted = followOn
+            adjusted.mission.difficulty = alarm.mission.difficulty
+            adjusted.mission.rounds = 1
+            return adjusted
+        }
         app.alarms.upsert(alarm)
         Task { await app.bridge.schedule(alarm) }
         dismiss()
@@ -519,6 +610,84 @@ private struct RoundsStepper: View {
                     .foregroundStyle(Theme.accent)
             }
         }
+    }
+}
+
+/// One follow-on: which mission comes next and how many minutes of grace precede it.
+///
+/// The picker offers only the missions that need no enrollment: a follow-on with an
+/// unphotographed reference object would make the alarm unclearable, and threading the whole
+/// enrollment flow through this row buys nothing the main mission slot does not already offer.
+private struct FollowOnRow: View {
+    @Binding var followOn: FollowOnMission
+    /// 2 for the first follow-on: the alarm's own mission is number 1.
+    let position: Int
+    let onDelete: () -> Void
+
+    private static let delays = [1, 2, 5, 10, 15, 20, 30, 45, 60]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Text(verbatim: "\(position.formatted(.number.grouping(.never)))")
+                    .font(.system(size: 13, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 26, height: 26)
+                    .background(Theme.accent.opacity(0.16), in: .circle)
+
+                Picker(selection: $followOn.mission.kind) {
+                    ForEach(choices) { kind in
+                        Label {
+                            Text(key: kind.titleKey)
+                        } icon: {
+                            Image(systemName: kind.systemImage)
+                        }
+                        .tag(kind)
+                    }
+                } label: {
+                    Text("editor.mission", bundle: .main)
+                }
+                .pickerStyle(.menu)
+                .tint(Theme.textPrimary)
+                .labelsHidden()
+
+                Spacer(minLength: 0)
+
+                Button(action: onDelete) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(Theme.textTertiary)
+                        .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("action.deleteAlarm", bundle: .main))
+            }
+
+            HStack {
+                Text("editor.chain.after", bundle: .main)
+                    .font(Theme.captionFont)
+                    .foregroundStyle(Theme.textSecondary)
+                Spacer()
+                Picker(selection: $followOn.minutesAfter) {
+                    ForEach(Self.delays, id: \.self) { minutes in
+                        Text(localized("duration.minutes", minutes)).tag(minutes)
+                    }
+                } label: {
+                    Text("editor.chain.after", bundle: .main)
+                }
+                .pickerStyle(.menu)
+                .tint(Theme.accent)
+                .labelsHidden()
+            }
+        }
+        .padding(12)
+        .background(Theme.surfaceRaised.opacity(0.6), in: .rect(cornerRadius: 12))
+    }
+
+    private var choices: [MissionKind] {
+        MissionKind.allCases
+            .filter { !$0.needsEnrollment }
+            .sorted { $0.effortRank < $1.effortRank }
     }
 }
 
