@@ -1,17 +1,19 @@
-La build 5 è quella che hai chiesto. Tre novità.
+La build 10 risolve una cosa che hai trovato tu e io no: hai detto che l'app aveva quattro suonerie. Ne ha quattordici, dalla build 8. Solo quattro erano sullo schermo.
 
-PROVA UNA MISSIONE PRIMA DI FIDARTI
-Nell'editor della sveglia, sotto la missione, tocca «Prova questa missione». Stessa sfida, stessa difficoltà, stesso timer, ma niente è attivo, e la X nell'angolo esce sempre. Verifica che brutale sia davvero brutale senza appuntamento alle 06:00.
+PERCHÉ NE VEDEVI QUATTRO
+Le suonerie erano una striscia orizzontale di piccole caselle dentro la scheda del suono. Quattro stanno su uno schermo da 6,9 pollici, tre su uno da 6,1, l'indicatore di scorrimento era nascosto e niente diceva che ce ne fossero altre. Hai letto bene lo schermo; era lo schermo a mentire.
 
-CONCATENA LE MISSIONI
-Sempre nell'editor: «Missioni successive». Fino a tre. Superi la prima e la sveglia suona di nuovo qualche minuto dopo con la successiva: prima scuotere, dieci minuti dopo torna chiedendo un disegno, passi o squat. Solo l'ultima chiude la mattina. Aspettare tra le missioni è gratis; svicolare ancora no.
+COM'È ADESSO
+La scheda del suono ha una riga: il nome della suoneria attuale, la sua icona di intensità e il numero 14. Toccandola si apre una schermata con tutte e quattordici le caselle, tre per riga, dalla più gentile alla peggiore, tutte visibili insieme e senza scorrimento su qualsiasi iPhone. Toccarne una la seleziona e ne suona un'anteprima.
 
-UNA SCHERMATA MISSIONE PIÙ CHIARA
-L'istruzione ora è grande e bianca, i pad della sequenza sono a colori pieni con un vero lampo e un tocco che si sente, le tessere della memoria segnano ciò che hai già scelto, e ogni tasto risponde al pollice. La vibrazione obbedisce all'interruttore nelle impostazioni.
+COSA IMPEDISCE CHE TORNI
+Un test apre quella schermata e verifica che tutte e quattordici le caselle siano dentro la finestra e toccabili dopo zero passate di dito, in inglese e in arabo. Ho rimesso la vecchia striscia per essere sicuro che fallisca: fallisce. Un secondo test verifica che la suoneria scelta sopravviva al salvataggio e alla riapertura.
 
-DA CONTROLLARE
-1. Prova una missione dall'editor, esci con la X, non salvare nulla: non deve esistere nessuna sveglia.
-2. Concatena due missioni a un minuto di distanza, lascia suonare, supera la prima, aspetta: il secondo squillo deve arrivare, col nome della sua missione.
-3. La missione sequenza di notte, luminosità bassa: tutto deve restare ovvio.
+SULL'AGGIUNTA DI SUONI REGISTRATI
+Hai chiesto fonti open source. Ho verificato le licenze alla fonte, non nei riassunti, e la conclusione è che tutte e quattordici restano sintetizzate. In breve: solo l'audio CC0 può entrare in un binario a pagamento dell'App Store senza chiedere permesso a ogni autore, perché le FAQ di Creative Commons dicono che pubblicare un file CC BY tramite una piattaforma che applica protezione anticopia richiede il permesso espresso del licenziante, e l'App Store la applica. L'elenco completo è nel messaggio che accompagna questa build.
 
-Se qualcosa non va, uno screenshot dice più di una frase. TestFlight o la pagina di assistenza nelle impostazioni.
+VALE LA PENA CONTROLLARE
+1. Editor, riga del suono: deve dire la suoneria attuale e 14. Toccala e conta le caselle.
+2. Ascolta Vespone, Cicalino e Cicala da lì, e Sirena.
+3. Scegline una, salva, riapri la sveglia: deve restare selezionata.
+4. In arabo, la stessa schermata: caselle specchiate e nomi più lunghi; niente deve essere tagliato.

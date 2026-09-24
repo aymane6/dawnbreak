@@ -38,11 +38,10 @@ Apple 純正のアラーム機構でロック画面に鳴るので、アプリ�
 - アカウントなし。ログインなし。広告なし。解析なし
 - データは端末の外に出ません。出す先のサーバーがそもそもありません
 
-【無料版と Pro】
+【すべて無料】
 
-無料版：アラーム 1 個、1 ラウンド、ミッション 3 種類、難易度は「ふつう」まで。
+ミッション 12 種類すべて、難易度 4 段階すべて、最大 10 ラウンド、一週間に必要なだけのアラーム、履歴 90 日分。購入するものはありません。サブスクリプションも広告もアカウントもなし。
 
-Pro：アラーム 25 個、最大 10 ラウンド、ミッション 12 種類すべて、難易度 4 段階すべて、履歴 90 日分。月額、年額、または更新のない買い切り。
-
-プライバシーポリシー：https://aymane6.github.io/dawnbreak/privacy.html
-サポート：https://aymane6.github.io/dawnbreak/support.html
+プライバシーポリシー：https://dawnbreak.app/privacy.html
+利用規約：https://dawnbreak.app/terms.html
+サポート：https://dawnbreak.app/support.html

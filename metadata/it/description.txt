@@ -38,11 +38,10 @@ FATTA COME SI DEVE
 - Nessun account. Nessun accesso. Nessuna pubblicità. Nessuna analisi
 - Niente lascia il telefono. Non c’è nemmeno un server dove andare
 
-GRATIS E PRO
+GRATIS, TUTTO
 
-Gratis: una sveglia, un turno, tre missioni, difficoltà fino a media.
+Tutte le missioni, tutte le difficoltà, fino a dieci turni, tutte le sveglie che la tua settimana richiede, novanta giorni di cronologia. Non c’è nulla da comprare: nessun abbonamento, nessuna pubblicità, nessun account.
 
-Pro: venticinque sveglie, fino a dieci turni, tutte le dodici missioni, tutte e quattro le difficoltà, novanta giorni di cronologia. Mensile, annuale, o un acquisto unico che non si rinnova mai.
-
-Privacy: https://aymane6.github.io/dawnbreak/privacy.html
-Assistenza: https://aymane6.github.io/dawnbreak/support.html
+Privacy: https://dawnbreak.app/privacy.html
+Termini d’uso: https://dawnbreak.app/terms.html
+Assistenza: https://dawnbreak.app/support.html

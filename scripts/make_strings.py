@@ -31,7 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from strings import LOCALES, PLURAL_CATEGORIES, SOURCE_LANGUAGE, rows
-from strings import capture, content, core, infoplist, missions, paywall, plurals, screens
+from strings import capture, content, core, infoplist, missions, plurals, screens
 
 ROOT = Path(__file__).resolve().parent.parent
 # The kit is scanned too: it holds no views, but `MissionKind`, `Difficulty` and
@@ -53,9 +53,6 @@ DERIVED = {
     "typing.sentence.": "TypingChallenge.sentenceKey",
     "stats.window.": "StatsView.Window.titleKey",
     "draw.prompt.": "DrawingPrompt.titleKey",
-    "paywall.plan.": "SubscriptionStore.Product.titleKey",
-    "paywall.period.": "SubscriptionStore.periodKey(for:)",
-    "paywall.reason.": "AppEnvironment.PaywallReason.headlineKey",
     "settings.permission.": "SettingsView.authorizationKey",
     "editor.title.": "AlarmEditorView.titleKey",
     "editor.enroll.": "AlarmEditorView.enrolmentKey",
@@ -93,8 +90,8 @@ NOT_KEY_PREFIXES = ("com.aymbam.", "group.com.aymbam.", "pref.", "ax.")
 KEY_SHAPE = re.compile(r"^[a-z][a-zA-Z0-9]*(?:\.[a-zA-Z0-9]+)+$")
 LITERAL = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
 # An SF Symbol name, recognised by the argument it is passed to rather than by the line it is
-# on: `FeatureRow(systemImage: "flame.fill", titleKey: "paywall.feature.difficulty", …)` puts a
-# symbol and a key on the same line.
+# on: `Label(systemImage: "flame.fill", titleKey: "difficulty.brutal", …)` puts a symbol and a key
+# on the same line.
 SYMBOL_ARGUMENT = re.compile(r"(?:systemName|systemImage)\s*:\s*$")
 # A `var systemImage: String { switch self { … } }` returning bare symbol names. Skipping the
 # whole property keeps this script from needing an entry per symbol as missions are added.
@@ -305,7 +302,6 @@ def build():
         content.SENTENCES, content.DRAW_PROMPTS, content.PREVIEWS,
         screens.ALARMS, screens.EDITOR, screens.ENROLL, screens.ONBOARDING, screens.SETTINGS,
         screens.STATS,
-        paywall.PAYWALL, paywall.PLANS, paywall.PERIODS, paywall.REASONS,
         capture.LABELS, capture.CAPTIONS,
     )
 

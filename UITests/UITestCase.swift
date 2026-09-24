@@ -34,15 +34,12 @@ class UITestCase: XCTestCase {
     /// things the flag also does, which is seed data worth asserting against and keep the app
     /// from asking for the alarm permission on launch. A UI test that has to dismiss a system
     /// alert before it can begin is a UI test that fails the first time Apple rewords the alert.
-    /// `free` seeds the free tier, which only the paywall screenshot wants: everything else is
-    /// photographed with Pro on, and a Pro account cannot reach the purchase screen.
     func launch(
         _ screen: CaptureLaunch.Screen,
-        in locale: CaptureLocale = .english,
-        free: Bool = false
+        in locale: CaptureLocale = .english
     ) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = CaptureLaunch.arguments(for: screen, free: free) + locale.launchArguments
+        app.launchArguments = CaptureLaunch.arguments(for: screen) + locale.launchArguments
         app.launch()
         return app
     }
@@ -77,14 +74,29 @@ class UITestCase: XCTestCase {
     /// layout question, not a correctness one, and whether a row is above the fold changes
     /// with the device and the language. Scrolls a screen at a time until the element turns
     /// up or the swipes run out.
+    ///
+    /// "Turns up" means hittable and inside the window, not merely existing, and that distinction is
+    /// the whole value of this helper. A `List` is lazy, so an identifier below the fold does not
+    /// exist; a `ScrollView` around an ordinary `VStack` is not, so every identifier in it exists
+    /// from the first frame, at whatever coordinates the layout gave it. This method used to return
+    /// on `exists` alone, which meant that against a `ScrollView` it scrolled zero times and handed
+    /// back an element at y = 1399 on a 956-point screen. Tapping that does nothing, silently, and
+    /// the test fails several lines later on whatever the tap was supposed to open.
     @discardableResult
     func scrollTo(_ identifier: String, in app: XCUIApplication, maxSwipes: Int = 6) -> XCUIElement {
         let target = element(identifier, in: app)
-        if target.waitForExistence(timeout: 5) { return target }
-        for _ in 0..<maxSwipes where !target.exists {
+        _ = target.waitForExistence(timeout: 5)
+        for _ in 0..<maxSwipes {
+            if target.exists, target.isHittable, app.windows.firstMatch.frame.contains(target.frame) {
+                return target
+            }
             app.swipeUp()
         }
         XCTAssertTrue(target.exists, "\(identifier) never appeared, even after scrolling")
+        XCTAssertTrue(
+            target.isHittable,
+            "\(identifier) exists at \(target.frame) but cannot be tapped, even after \(maxSwipes) swipes"
+        )
         return target
     }
 

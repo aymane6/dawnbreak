@@ -216,18 +216,25 @@ struct SequenceMissionView: View {
     private func playback() async {
         isPlayingBack = true
         tapped = []
-        // A beat before the first pad, so the user is looking at the grid rather than
-        // missing the first flash while the screen is still animating in.
-        try? await Task.sleep(for: .milliseconds(500))
+        // The cadence comes from the kit so that it is the same number a test can reason about. A
+        // mission whose playback outlasts its own time limit can never be cleared, and that is
+        // exactly what happened here: brutal is eleven pads, which is forty-six seconds of watching
+        // against a thirty-second limit, so the round reset forever and the alarm could only be
+        // escaped through the emergency exit.
+        try? await Task.sleep(for: .seconds(MissionConfig.sequenceLeadIn))
         for pad in challenge.prefix(round: round) {
             highlighted = pad
             Haptics.tap()
-            try? await Task.sleep(for: .milliseconds(440))
+            try? await Task.sleep(for: .seconds(MissionConfig.sequencePadSeconds * Self.litShare))
             highlighted = nil
-            try? await Task.sleep(for: .milliseconds(180))
+            try? await Task.sleep(for: .seconds(MissionConfig.sequencePadSeconds * (1 - Self.litShare)))
         }
         isPlayingBack = false
     }
+
+    /// How much of one pad's time it spends lit. The rest is the gap that makes two identical pads
+    /// in a row readable as two.
+    private static let litShare = 0.71
 
     private func tap(_ pad: Int) {
         tapped.append(pad)

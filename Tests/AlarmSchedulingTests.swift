@@ -45,15 +45,19 @@ final class FakeAlarmSystem: AlarmScheduler {
     let authorizationState: AlarmManager.AuthorizationState
     /// Thrown instead of arming anything, for the paths that only exist to report a refusal.
     private let refusal: (any Error)?
+    /// Run inside a follow-up schedule, before it returns. See `scheduleFollowUp`.
+    private let duringFollowUp: (@Sendable () async -> Void)?
     private let log = Mutex(Log())
 
     init(
         authorization: AlarmManager.AuthorizationState = .authorized,
         refusal: (any Error)? = nil,
-        refusalLimit: Int = .max
+        refusalLimit: Int = .max,
+        duringFollowUp: (@Sendable () async -> Void)? = nil
     ) {
         self.authorizationState = authorization
         self.refusal = refusal
+        self.duringFollowUp = duringFollowUp
         if refusal != nil {
             log.withLock { $0.refusalsLeft = refusalLimit }
         }
@@ -109,6 +113,11 @@ final class FakeAlarmSystem: AlarmScheduler {
 
     func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date, titled: LocalizedStringResource?) async throws {
         log.withLock { $0.followUpDates.append(fireDate) }
+        // The suspension the real call has, made usable. `armFollowUp` is not atomic: the cancel
+        // is synchronous, the schedule is a round trip to the daemon, and whatever the app does
+        // in between lands in the middle of an arm. That is where the stale-follow-up race lives,
+        // and it cannot be provoked at all against a double that returns instantly.
+        if let duringFollowUp { await duringFollowUp() }
         try arm(alarm.id, as: .followUp(alarm.id))
     }
 

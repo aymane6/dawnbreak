@@ -19,7 +19,6 @@ public final class Preferences {
         self.sleepGoalHours = defaults.object(forKey: Key.sleepGoal) as? Double ?? 8
         self.emergencyExitEnabled = defaults.object(forKey: Key.emergencyExit) as? Bool ?? true
         self.appearance = Appearance(rawValue: defaults.string(forKey: Key.appearance) ?? "") ?? .dark
-        self.hasSeenPaywall = defaults.bool(forKey: Key.seenPaywall)
     }
 
     enum Key {
@@ -32,7 +31,6 @@ public final class Preferences {
         static let sleepGoal = "pref.sleepGoalHours"
         static let emergencyExit = "pref.emergencyExit"
         static let appearance = "pref.appearance"
-        static let seenPaywall = "pref.seenPaywall"
     }
 
     /// Dark is the default because the app's main job happens at 06:00 in a dark bedroom.
@@ -58,7 +56,6 @@ public final class Preferences {
     /// App Review rejection and, more to the point, indefensible.
     public var emergencyExitEnabled: Bool { didSet { defaults.set(emergencyExitEnabled, forKey: Key.emergencyExit) } }
     public var appearance: Appearance { didSet { defaults.set(appearance.rawValue, forKey: Key.appearance) } }
-    public var hasSeenPaywall: Bool { didSet { defaults.set(hasSeenPaywall, forKey: Key.seenPaywall) } }
 
     /// Whether to draw times as 24-hour, honouring the override and otherwise the region.
     public var usesTwentyFourHourClock: Bool {
@@ -82,34 +79,5 @@ public final class Preferences {
     /// "sleep by 22:40 to get 8 h".
     public func suggestedBedtime(forWakeAt wake: Date, calendar: Calendar = .autoupdatingCurrent) -> Date? {
         calendar.date(byAdding: .minute, value: -Int(sleepGoalHours * 60), to: wake)
-    }
-}
-
-/// What the user has paid for. Lives in the kit so the mission list can be filtered in a
-/// test without a StoreKit sandbox.
-public enum Entitlement: String, Codable, Hashable, Sendable {
-    case free
-    case pro
-
-    /// Free keeps three no-hardware missions and one alarm. That is enough to prove the
-    /// idea works, which is what the free tier is for.
-    public var maximumAlarms: Int { self == .pro ? 25 : 1 }
-    public var maximumRounds: Int { self == .pro ? MissionConfig.maxRounds : 1 }
-    /// Follow-on missions per alarm. Pro, like extra rounds and for the same reason: both
-    /// multiply how much one alarm demands, and one demand is what free exists to prove.
-    public var maximumFollowOns: Int { self == .pro ? FollowOnMission.maximumCount : 0 }
-
-    /// How far back the stats screen may look. Free sees the last week.
-    ///
-    /// Ninety days is what the paywall and all twelve store descriptions promise Pro buyers, so
-    /// it has to be a number the free tier does not already have: a listing that advertises a
-    /// feature the app gives away is a claim a reviewer can disprove in one tap.
-    public var maximumHistoryDays: Int { self == .pro ? 90 : 7 }
-
-    public func allows(_ kind: MissionKind) -> Bool { self == .pro || !kind.isPremium }
-    public func allows(_ difficulty: Difficulty) -> Bool { self == .pro || difficulty <= .medium }
-
-    public var availableMissions: [MissionKind] {
-        MissionKind.allCases.filter(allows).sorted { $0.effortRank < $1.effortRank }
     }
 }

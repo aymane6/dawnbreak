@@ -29,8 +29,6 @@ struct LocalizationTests {
         }
         keys += StatsView.Window.allCases.map(\.titleKey)
         keys += CaptureLaunch.Screen.allCases.flatMap { [$0.captionKey, $0.subcaptionKey] }
-        keys += SubscriptionStore.Product.allCases.map(\.titleKey)
-        keys += AppEnvironment.PaywallReason.allCases.map(\.headlineKey)
         return keys
     }
 

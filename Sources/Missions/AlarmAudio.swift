@@ -48,7 +48,7 @@ final class AlarmAudio {
             ramp(to: Float(volume), over: rampSeconds)
         }
         if vibrate {
-            startVibrating()
+            startVibrating(matching: AlarmSound(rawValue: soundName)?.loudness ?? .standard)
         }
     }
 
@@ -85,15 +85,28 @@ final class AlarmAudio {
 
     /// A repeating haptic rather than one buzz: the point is to stay awake through the
     /// mission, and a single tap at the start does nothing for that.
-    private func startVibrating() {
+    ///
+    /// The cadence follows the tone, because the two are one decision. Somebody who chose the
+    /// cicadas did not choose them to be tapped politely every three seconds, and somebody who
+    /// chose the sunrise did not ask to be drilled.
+    private func startVibrating(matching loudness: AlarmSound.Loudness) {
         hapticTask = Task {
-            let generator = UIImpactFeedbackGenerator(style: .heavy)
+            let generator = UIImpactFeedbackGenerator(style: loudness >= .harsh ? .rigid : .heavy)
             generator.prepare()
+            // The gap between bursts, and how many hits are in one.
+            let (gap, burst): (Duration, Int) = switch loudness {
+            case .gentle: (.seconds(2.6), 1)
+            case .standard: (.seconds(2), 2)
+            case .harsh: (.milliseconds(900), 3)
+            case .savage: (.milliseconds(420), 4)
+            }
             while !Task.isCancelled {
-                generator.impactOccurred()
-                try? await Task.sleep(for: .milliseconds(700))
-                generator.impactOccurred(intensity: 0.7)
-                try? await Task.sleep(for: .seconds(2))
+                for hit in 0..<burst {
+                    generator.impactOccurred(intensity: hit == 0 ? 1.0 : 0.75)
+                    try? await Task.sleep(for: .milliseconds(loudness >= .harsh ? 110 : 700))
+                    if Task.isCancelled { return }
+                }
+                try? await Task.sleep(for: gap)
             }
         }
     }

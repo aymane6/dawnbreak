@@ -47,25 +47,21 @@ WIDGET_INFO_PLIST = CONFIGURATION / "DawnbreakWidget-Info.plist"
 ENTITLEMENTS = (
     CONFIGURATION / "Dawnbreak.entitlements",
     CONFIGURATION / "DawnbreakWidget.entitlements",
-    # Not shipped and not archived: the Debug-only file that adds `get-task-allow`, which
-    # `scripts/shots.sh --review` passes to xcodebuild so `storekitd` will hold a StoreKit
-    # configuration and the paywall has prices to photograph. Checked here because xcodegen
-    # generates it, and because the app group in it has to be the same string as in the other two.
+    # Not shipped and not archived: the Debug-only file the unit-test bundle signs with, which
+    # adds `get-task-allow` so the tests can be attached to. Checked here because xcodegen
+    # generates it, and because the app group in it has to be the same string as in the other two:
+    # a test that reads a different group reads an empty store and passes for the wrong reason.
     CONFIGURATION / "Dawnbreak-Debug.entitlements",
 )
-STOREKIT = CONFIGURATION / "Dawnbreak.storekit"
 XCODEPROJ = ROOT / "Dawnbreak.xcodeproj"
 PRIVACY_MANIFEST = ROOT / "Resources" / "PrivacyInfo.xcprivacy"
 ICON_SET = ROOT / "Resources" / "Assets.xcassets" / "AppIcon.appiconset"
 FRAMED = ROOT / "build" / "shots" / "framed"
-# Not one of the twelve sets: the picture of the purchase screen that goes with each product, in
-# English, unframed, never published. `scripts/shots.sh --review` writes it.
-REVIEW_SHOT = ROOT / "build" / "shots" / "review" / "paywall.png"
 PREFERENCES = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Store/Preferences.swift"
 MISSION_KIND = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Models/MissionKind.swift"
 MISSION_CONFIG = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Models/MissionConfig.swift"
+STATS = ROOT / "Sources/Stats/StatsView.swift"
 FILE_STORE = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Store/JSONFileStore.swift"
-SUBSCRIPTIONS = ROOT / "Sources/App/SubscriptionStore.swift"
 ENVIRONMENT = ROOT / "Sources/App/AppEnvironment.swift"
 
 APP_BUNDLE_ID = "com.aymbam.dawnbreak"
@@ -76,12 +72,9 @@ APP_GROUP = "group.com.aymbam.dawnbreak"
 SHOT_SIZE = (1320, 2868)
 
 # How the review notes spell the numbers that come out of the Swift, so a limit changed in code is
-# checked against the sentence a reviewer reads. Only the values the two tiers actually use: a
-# number with no spelling here fails loudly rather than skipping its own check.
-NUMBER_WORDS = {
-    1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 7: "seven", 10: "ten",
-    12: "twelve", 25: "twenty-five", 30: "thirty", 90: "ninety",
-}
+# checked against the sentence a reviewer reads. Only the values the copy actually quotes: a number
+# with no spelling here fails loudly rather than skipping its own check.
+NUMBER_WORDS = {4: "four", 10: "ten", 12: "twelve", 90: "ninety"}
 
 # Markers that mean somebody meant to come back to it. Case-sensitive on purpose: lowercase "todo"
 # is a Spanish and Portuguese word that appears in the real listing copy.
@@ -317,75 +310,6 @@ def bundle_ids():
     return f"{len(ids)} ids under {APP_BUNDLE_ID}", problems
 
 
-@check("the in-app purchases match the code")
-def products():
-    """Three product ids, in the Swift and in the local StoreKit configuration.
-
-    The StoreKit file is what the simulator sells and the Swift is what the shipped app asks for. A
-    difference between them is a paywall that works in development and shows nothing in production,
-    which is the most common 2.1 rejection a subscription app gets.
-    """
-    problems = []
-    declared = set(re.findall(r'case \w+ = "(com\.aymbam\.[^"]+)"', read(SUBSCRIPTIONS)))
-    if not declared:
-        problems.append("SubscriptionStore.Product declares no product ids")
-
-    configuration = json.loads(read(STOREKIT))
-    configured = {
-        product["productID"]
-        for group in configuration.get("subscriptionGroups", [])
-        for product in group.get("subscriptions", [])
-    } | {
-        product["productID"]
-        for key in ("products", "nonRenewingSubscriptions")
-        for product in configuration.get(key, [])
-    }
-    if declared != configured:
-        problems.append(f"Swift sells {sorted(declared)}, "
-                        f"Dawnbreak.storekit defines {sorted(configured)}")
-    for identifier in sorted(declared):
-        if not identifier.startswith(APP_BUNDLE_ID + "."):
-            problems.append(f"{identifier} is not under {APP_BUNDLE_ID}")
-    return f"{len(declared)} products", problems
-
-
-@check("every product is named and described in twelve languages", testflight=False)
-def product_copy():
-    """`store.PRODUCT_FIELDS`, which is written to no file and therefore checked by nothing else.
-
-    The listing copy has `metadata/`, so a missing locale shows up as a missing file. The product
-    copy goes straight from Python to App Store Connect, so without this the first thing to notice a
-    thirty-one character display name is Apple, halfway through `scripts/iap.py`, on the second of
-    three products.
-    """
-    problems = []
-    locales = sorted(store.NAME)
-    for name, table, limit in store.PRODUCT_FIELDS:
-        for locale in locales:
-            if locale not in table:
-                problems.append(f"{name} has no {locale}")
-            elif len(table[locale]) > limit:
-                problems.append(f"{name}/{locale} is {len(table[locale])} characters, limit {limit}")
-        for locale in sorted(set(table) - set(locales)):
-            problems.append(f"{name} has {locale}, which the listing does not")
-    if len(store.IAP_GROUP_NAME) > 30:
-        problems.append(f"IAP_GROUP_NAME is {len(store.IAP_GROUP_NAME)} characters, limit 30")
-
-    # The tables are keyed by the last component of the product id, which is how `iap.py` finds the
-    # copy for a product it is about to create. A rename in the StoreKit file would otherwise be
-    # found there, after the product exists and before it has a name.
-    configuration = json.loads(read(STOREKIT))
-    selling = [product["productID"]
-               for group in configuration.get("subscriptionGroups", [])
-               for product in group.get("subscriptions", [])]
-    selling += [product["productID"] for product in configuration.get("products", [])]
-    for identifier in selling:
-        if identifier.rsplit(".", 1)[-1] not in store.IAP_NAME:
-            problems.append(f"{identifier} has no display name in store.IAP_NAME")
-
-    return f"{len(selling)} products × {len(locales)} locales", problems
-
-
 @check("the version is shaped like a version")
 def version():
     """Up to three dot-separated numbers, an integer build, and both plists reading the settings.
@@ -553,56 +477,37 @@ def localizations():
 # What the listing promises
 # ---------------------------------------------------------------------------
 
-def tier_numbers():
-    """The free and paid limits, read out of the Swift that decides them."""
-    entitlement = read(PREFERENCES)
+def promised_numbers() -> dict[str, int | None]:
+    """The four numbers the listing quotes, read out of the Swift that decides them."""
     kinds = read(MISSION_KIND)
-    config = read(MISSION_CONFIG)
-
-    def ternary(name: str):
-        """Both sides of `self == .pro ? 25 : 1`, resolving a named constant if it is one."""
-        match = re.search(rf"var {name}: Int \{{ self == \.pro \? ([\w.]+) : (\d+) \}}", entitlement)
-        if not match:
-            return None, None
-        paid, free = match.group(1), int(match.group(2))
-        if not paid.isdigit():
-            constant = re.search(rf"static let {paid.rpartition('.')[2]} = (\d+)", config)
-            paid = constant.group(1) if constant else None
-        return (int(paid) if paid else None), free
-
-    paid_alarms, free_alarms = ternary("maximumAlarms")
-    paid_rounds, free_rounds = ternary("maximumRounds")
-    paid_history, free_history = ternary("maximumHistoryDays")
 
     # Sliced the way make_metadata slices it: the nested `Capability` enum's cases sit on one line
     # and are not missions.
     body = kinds.partition("public enum MissionKind")[2].partition("public enum Capability")[0]
     missions = re.findall(r"^\s+case [a-z]\w*\s*(?://.*)?$", body, re.MULTILINE)
-    free_kinds = re.search(r"var isPremium: Bool \{\s*switch self \{\s*case ([^:]+): false", kinds)
     difficulties = re.search(r"public enum Difficulty[^{]*\{\s*case ([^\n]+)", kinds)
+    rounds = re.search(r"static let maxRounds = (\d+)", read(MISSION_CONFIG))
+    # The longest window the statistics screen offers, which is what "ninety days of history"
+    # means: nothing prunes the store, so the number a user can actually see is this enum's largest.
+    windows = [int(value) for value in re.findall(r"case \w+ = (\d+)", read(STATS))]
 
     return {
-        "free alarms": free_alarms,
-        "free rounds": free_rounds,
-        "free missions": len(free_kinds.group(1).split(",")) if free_kinds else None,
-        "free history": free_history,
-        "paid alarms": paid_alarms,
-        "paid rounds": paid_rounds,
-        "paid missions": len(missions) or None,
-        "paid history": paid_history,
+        "missions": len(missions) or None,
         "difficulties": len(difficulties.group(1).split(",")) if difficulties else None,
+        "rounds": int(rounds.group(1)) if rounds else None,
+        "history": max(windows) if windows else None,
     }
 
 
-@check("the free and paid tiers are what the review notes say", testflight=False)
-def tiers():
-    """The numbers in the reviewer's instructions, against the numbers in the Swift.
+@check("the listing promises the numbers the binary enforces", testflight=False)
+def promises():
+    """Every number in the reviewer's instructions, against the number in the Swift.
 
-    This is the check that pays for the file. Every number below is printed in the review notes, on
-    the paywall and in twelve store descriptions; a limit raised in `Entitlement` and not in the
-    copy is a 2.3.1 rejection, and it is invisible until a reviewer counts.
+    This is the check that pays for the file. Twelve missions, four difficulties, ten rounds and
+    ninety days are printed in the review notes and in twelve store descriptions; a limit changed in
+    code and not in the copy is a 2.3.1 rejection, and it is invisible until a reviewer counts.
     """
-    numbers = tier_numbers()
+    numbers = promised_numbers()
     problems = [f"could not read the {label} out of the Swift"
                 for label, value in numbers.items() if value is None]
     if problems:
@@ -614,14 +519,10 @@ def tiers():
 
     # Written the way the review notes write them, so a mismatch names the sentence to fix.
     promised = (
-        f"{NUMBER_WORDS[numbers['free alarms']]} alarm",
-        f"{NUMBER_WORDS[numbers['free rounds']]} round",
-        f"{NUMBER_WORDS[numbers['free missions']]} missions",
-        f"{NUMBER_WORDS[numbers['paid alarms']]} alarms",
-        f"{NUMBER_WORDS[numbers['paid rounds']]} rounds",
-        f"{NUMBER_WORDS[numbers['paid missions']]} missions",
+        f"{NUMBER_WORDS[numbers['missions']]} missions",
         f"{NUMBER_WORDS[numbers['difficulties']]} difficulties",
-        f"{NUMBER_WORDS[numbers['paid history']]} days of history",
+        f"{NUMBER_WORDS[numbers['rounds']]} rounds",
+        f"{NUMBER_WORDS[numbers['history']]} days of history",
     )
     # Whitespace collapsed before matching: the notes are hard-wrapped at 96 columns, so "four
     # difficulties" is a phrase with a newline in the middle of it.
@@ -629,41 +530,51 @@ def tiers():
     problems += [f'the review notes never say "{fragment}"'
                  for fragment in promised if fragment not in notes]
 
-    if numbers["paid missions"] != store.MISSION_COUNT:
-        problems.append(f"MissionKind has {numbers['paid missions']} missions, "
+    if numbers["missions"] != store.MISSION_COUNT:
+        problems.append(f"MissionKind has {numbers['missions']} missions, "
                         f"store.MISSION_COUNT says {store.MISSION_COUNT}")
-    # Anything Pro is sold on has to be something free does not already have.
-    for label in ("alarms", "rounds", "missions", "history"):
-        if numbers[f"paid {label}"] <= numbers[f"free {label}"]:
-            problems.append(f"Pro is sold on {label} the free tier already gives away")
-    return (f"free {numbers['free alarms']}/{numbers['free rounds']}/{numbers['free missions']}, "
-            f"pro {numbers['paid alarms']}/{numbers['paid rounds']}/{numbers['paid missions']}, "
-            f"{numbers['paid history']} days"), problems
+    return (f"{numbers['missions']} missions, {numbers['difficulties']} difficulties, "
+            f"{numbers['rounds']} rounds, {numbers['history']} days"), problems
 
 
-@check("every gate can explain itself", testflight=False)
-def paywall_reasons():
-    """Each locked feature raises the paywall with a headline that names what was locked.
+@check("nothing in the app is for sale")
+def nothing_for_sale():
+    """The app is free, and this is what keeps that a fact rather than an intention.
 
-    Guideline 3.1.2 wants the terms where the purchase is offered; the practical failure is softer
-    and worse: a gate added to `AppEnvironment` with no `PaywallReason` shows a sleeper a control
-    that does nothing and no explanation of why.
+    1.0.0 was built with three products and a paywall, and they came out on 2026-09-03 because App
+    Store Connect's API cannot attach an in-app purchase to a review submission: `POST
+    /v1/reviewSubmissionItems` has no relationship for `subscription` or `inAppPurchaseV2`, so a
+    version carrying products can only be sent to Apple by hand. What was removed has to stay
+    removed. Twelve store descriptions and the review notes now say there is nothing to buy, so a
+    StoreKit import added back would make every one of them a false claim under 2.3.1, and the
+    first reader of it would be a reviewer.
     """
     problems = []
-    source = read(ENVIRONMENT)
-    cases = re.search(r"enum PaywallReason[^{]*\{\s*case ([^\n]+)", source)
-    if not cases:
-        return "unreadable", ["AppEnvironment no longer declares PaywallReason"]
 
-    catalogue = json.loads(read(ROOT / "Resources" / "Localizable.xcstrings"))
-    reasons = [reason.strip() for reason in cases.group(1).split(",")]
-    for reason in reasons:
-        key = re.search(rf'case \.{reason}: "(paywall\.reason\.[\w.]+)"', source)
-        if not key:
-            problems.append(f"PaywallReason.{reason} has no headline key")
-        elif key.group(1) not in catalogue["strings"]:
-            problems.append(f"{key.group(1)} is not in Localizable.xcstrings")
-    return f"{len(reasons)} gates, each with a translated headline", problems
+    swift = sorted(path for directory in (ROOT / "Sources", ROOT / "DawnbreakKit" / "Sources")
+                   for path in directory.rglob("*.swift"))
+    for path in swift:
+        source = read(path)
+        if re.search(r"^\s*(@preconcurrency )?import StoreKit", source, re.MULTILINE):
+            problems.append(f"{path.relative_to(ROOT)} imports StoreKit")
+        # A product id is the bundle id with a suffix, which is also how the app group and two
+        # dispatch queue labels are spelled, so only the ones that look like something sold count.
+        for identifier in re.findall(rf'"{re.escape(APP_BUNDLE_ID)}\.(\w+)"', source):
+            if identifier in ("monthly", "yearly", "lifetime", "pro", "premium"):
+                problems.append(f"{path.relative_to(ROOT)} names a product id: {identifier}")
+
+    for leftover in sorted(CONFIGURATION.glob("*.storekit")):
+        problems.append(f"{leftover.relative_to(ROOT)} is a StoreKit configuration, and there is "
+                        "no store to configure")
+
+    # Apple's automated pass reads the description before a human opens the app. A price or a plan
+    # in copy that the binary cannot honour is the cheapest rejection there is.
+    for locale, description in sorted(store.DESCRIPTION.items()):
+        for word in ("€", "$", "£", "/month", "/mois", "per month"):
+            if word in description:
+                problems.append(f"{locale}/description quotes a price ({word})")
+
+    return f"{len(swift)} Swift files, no store", problems
 
 
 @check("the emergency exit is on by default", testflight=False)
@@ -707,30 +618,48 @@ def review_contact():
 
 @check("no placeholder text reached the listing or the pages", testflight=False)
 def placeholders():
-    """The markers that mean a sentence was going to be finished later."""
+    """The markers that mean a sentence was going to be finished later.
+
+    Matched on word boundaries, which is not pedantry: the markers are case-sensitive already
+    because lowercase "todo" is an ordinary Spanish and Portuguese word, and the uppercase form
+    turned out to be one too. "SEIS TONOS NUEVOS, Y TODOS MÁS ALTOS" is a heading in the release
+    notes, and a substring match read it as an unfinished sentence and blocked a release over it.
+    """
     problems = []
+    patterns = [(marker, re.compile(rf"(?<![A-Za-z]){re.escape(marker)}(?![A-Za-z])")) for marker in PLACEHOLDERS]
     for path in sorted((ROOT / "metadata").rglob("*.txt")) + sorted((ROOT / "docs").glob("*.html")):
         text = read(path)
-        for marker in PLACEHOLDERS:
-            if marker in text:
+        for marker, pattern in patterns:
+            if pattern.search(text):
                 problems.append(f"{path.relative_to(ROOT)} contains {marker!r}")
     return "clean", problems
 
 
-@check("the three URLs the listing quotes are pages that exist", testflight=False)
-def urls():
-    """Apple opens the privacy policy during review, and a 404 is an immediate rejection.
+# Which file answers which URL. Read by the check that looks at `docs/` and by the one that fetches
+# the live site, because the second is only worth anything if it is comparing against the first.
+PAGE_URLS = {
+    store.MARKETING_URL: "index.html",
+    store.PRIVACY_URL: "privacy.html",
+    store.TERMS_URL: "terms.html",
+    store.SUPPORT_URL: "support.html",
+}
 
-    Checked against the files rather than over the network: the pages are served from docs/ by
-    GitHub Pages, so if the file is here and the URL ends in its name, the only way to 404 is Pages
-    being switched off, which is the one-time setting the README covers.
+
+@check("the pages the listing and the app link are the pages that exist")
+def urls():
+    """Every URL this product hands a user, against the files and against each other.
+
+    The half that was missing here cost a rejection risk nobody spotted for eight builds: this
+    checked `store.py` against `docs/`, and never once looked at the URLs *compiled into the app*.
+    They had drifted to a username that does not exist and a path with no extension, so the legal
+    links in Settings answered 404 while every check in this file passed. Nothing is for sale now,
+    so 3.1.2 no longer applies, but the privacy policy is still Apple's and the user's to read, and
+    a 404 there is a 5.1.1 rejection instead of a 3.1.2 one.
+
+    So the source of truth is `store.py`, and both the pages and the Swift have to agree with it.
     """
     problems = []
-    expected = {
-        store.MARKETING_URL: "index.html",
-        store.PRIVACY_URL: "privacy.html",
-        store.SUPPORT_URL: "support.html",
-    }
+    expected = PAGE_URLS
     for url, filename in expected.items():
         path = ROOT / "docs" / filename
         if not path.exists():
@@ -741,9 +670,82 @@ def urls():
         sheets = read(path).count('<div class="sheet"')
         if sheets != len(LOCALES):
             problems.append(f"docs/{filename} carries {sheets} languages, expected {len(LOCALES)}")
+
+    # Every https link the app compiles in, wherever it lives, checked against the listing's own
+    # URLs. There is no exemption list any more: with the purchase screen gone, the only links left
+    # in the binary are the two Settings rows, and both are pages in `docs/`.
+    allowed = set(expected)
+    pattern = re.compile(r'URL\(string:\s*"(https://[^"]+)"')
+    for source in sorted((ROOT / "Sources").rglob("*.swift")):
+        for url in pattern.findall(read(source)):
+            if url not in allowed:
+                problems.append(f"{source.relative_to(ROOT)} links {url}, which is not a listing URL")
+
+    # The support address is filed with Apple in one place and typed into the app in another.
+    contact = read(ROOT / "metadata" / "review_information" / "email_address.txt").strip()
+    mailto = re.compile(r'URL\(string:\s*"mailto:([^"?]+)')
+    for source in sorted((ROOT / "Sources").rglob("*.swift")):
+        for address in mailto.findall(read(source)):
+            if address != contact:
+                problems.append(
+                    f"{source.relative_to(ROOT)} writes to {address}, "
+                    f"but review contact is {contact}"
+                )
+
     if not (ROOT / "docs" / ".nojekyll").exists():
-        problems.append("docs/.nojekyll is missing, Pages would run Jekyll over the folder")
-    return f"{len(expected)} pages, all reachable", problems
+        problems.append("docs/.nojekyll is missing")
+    return f"{len(expected)} pages, and every link in the app points at one", problems
+
+
+@check("the live pages are the pages in this repository", testflight=False)
+def urls_live():
+    """The same URLs, fetched, and compared byte for byte with `docs/`.
+
+    Files on disk prove nothing about what a reviewer's browser gets: the pages are served from S3
+    behind CloudFront by `infra/`, the domain is delegated from a registrar by hand, and a
+    certificate that has not validated yet looks exactly like a working site in a diff. `.app` is
+    HSTS-preloaded, so there is no http fallback to be forgiving about either.
+
+    The byte comparison is the half this check was missing, and what it missed was not subtle. On
+    2026-09-03 the app had been stripped of every purchase, `docs/` had been regenerated to say so,
+    and all four URLs answered 200 with our own markup, so this check was green — while the live
+    site, last deployed a week earlier, still described a Dawnbreak Pro subscription, a restore
+    button and a refund policy, in twelve languages, on the exact pages the App Store description
+    links. A reviewer would have opened a subscription EULA for an app with nothing to buy. The
+    pages are a CDK asset, so a fresh `docs/` reaches nobody until `npx cdk deploy DawnbreakSite`
+    copies it up and invalidates the edge; a 200 only proves the *old* deploy is still healthy.
+
+    Review-only, because a TestFlight build does not need the site up; a submission does.
+    """
+    import urllib.error
+    import urllib.request
+
+    problems = []
+    for url, filename in PAGE_URLS.items():
+        local = ROOT / "docs" / filename
+        request = urllib.request.Request(url, method="GET", headers={"User-Agent": "dawnbreak-preflight"})
+        try:
+            with urllib.request.urlopen(request, timeout=15) as response:
+                if response.status != 200:
+                    problems.append(f"{url} answered {response.status}")
+                    continue
+                served = response.read(2_000_000)
+        except urllib.error.HTTPError as error:
+            problems.append(f"{url} answered {error.code}")
+            continue
+        except Exception as error:  # noqa: BLE001 - a DNS or TLS failure reads the same to a reviewer
+            problems.append(f"{url} could not be fetched: {error}")
+            continue
+
+        if b'<div class="sheet"' not in served:
+            problems.append(f"{url} answered 200 but is not one of our pages")
+        elif not local.exists():
+            problems.append(f"{url} is live but there is no docs/{filename} to compare it with")
+        elif served != local.read_bytes():
+            problems.append(
+                f"{url} is not docs/{filename}: the live site is a stale deploy, "
+                f"run `npx cdk deploy DawnbreakSite` from infra/")
+    return f"{len(PAGE_URLS)} URLs, all 200 and byte-identical to docs/", problems
 
 
 @check("the screenshots are complete and uploadable", testflight=False)
@@ -785,32 +787,6 @@ def screenshots():
         problems.append(f"the languages disagree on how many screenshots there are: {counts}")
     return (f"{len(counts)} languages × {min(counts.values(), default=0)} shots at "
             f"{SHOT_SIZE[0]}×{SHOT_SIZE[1]}"), problems
-
-
-@check("the purchase screen has been photographed for review", testflight=False)
-def review_shot():
-    """The picture that goes with each product, which is not one of the twelve sets.
-
-    A subscription submitted without it sits in MISSING_METADATA, and a version with a product in
-    that state cannot be submitted, so a missing file here costs a round trip through Apple's queue
-    to be told.
-    """
-    from PIL import Image
-
-    if not REVIEW_SHOT.exists():
-        return "not taken", [f"{REVIEW_SHOT.relative_to(ROOT)} is missing, "
-                             "run scripts/shots.sh --review"]
-
-    problems = []
-    with Image.open(REVIEW_SHOT) as image:
-        size, mode = image.size, image.mode
-    # App Store Connect refuses a review screenshot below this, and one that small would be
-    # unreadable anyway. The capture is 1320×2868, so this is a floor, not a target.
-    if size[0] < 640 or size[1] < 920:
-        problems.append(f"{size[0]}×{size[1]} is under the 640×920 App Store Connect accepts")
-    if "A" in mode:
-        problems.append("it has an alpha channel, which App Store Connect refuses")
-    return f"{size[0]}×{size[1]} {mode}", problems
 
 
 # ---------------------------------------------------------------------------

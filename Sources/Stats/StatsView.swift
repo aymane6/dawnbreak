@@ -19,27 +19,8 @@ struct StatsView: View {
         var titleKey: String { "stats.window.\(rawValue)" }
     }
 
-    /// The window actually charted, which is not always the one selected: a subscription that
-    /// lapses while ninety days are on screen has to fall back rather than keep showing them.
-    /// Computed instead of clamped on appear so there is no moment where it is stale.
-    private var effectiveWindow: Window {
-        window.rawValue <= app.entitlement.maximumHistoryDays ? window : .week
-    }
-
     private var stats: WakeStats {
-        app.log.stats(window: effectiveWindow.rawValue)
-    }
-
-    /// Selecting a locked window raises the paywall and leaves the selection alone, which is the
-    /// same gate the alarm limit and the harder difficulties go through.
-    private var selection: Binding<Window> {
-        Binding(
-            get: { effectiveWindow },
-            set: { option in
-                guard app.allow(.history(option.rawValue)) else { return }
-                window = option
-            }
-        )
+        app.log.stats(window: window.rawValue)
     }
 
     var body: some View {
@@ -66,20 +47,9 @@ struct StatsView: View {
             .navigationTitle(Text("tab.stats", bundle: .main))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Picker(selection: selection) {
+                    Picker(selection: $window) {
                         ForEach(Window.allCases) { option in
-                            // The lock is on the option rather than hiding it, so a free user can
-                            // see that ninety days exist. Hidden options sell nothing.
-                            if option.rawValue <= app.entitlement.maximumHistoryDays {
-                                Text(key: option.titleKey).tag(option)
-                            } else {
-                                Label {
-                                    Text(key: option.titleKey)
-                                } icon: {
-                                    Image(systemName: "lock.fill")
-                                }
-                                .tag(option)
-                            }
+                            Text(key: option.titleKey).tag(option)
                         }
                     } label: {
                         Text("stats.window", bundle: .main)
@@ -179,7 +149,7 @@ struct StatsView: View {
                     }
                 }
                 .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: effectiveWindow == .week ? 1 : 7)) { _ in
+                    AxisMarks(values: .stride(by: .day, count: window == .week ? 1 : 7)) { _ in
                         AxisGridLine().foregroundStyle(Theme.hairline.opacity(0.5))
                         // `.narrow` so a 90-day window does not overlap its own labels in
                         // languages with long month names.
@@ -230,7 +200,7 @@ struct StatsView: View {
                         }
                     }
                     .chartXAxis {
-                        AxisMarks(values: .stride(by: .day, count: effectiveWindow == .week ? 1 : 7)) { _ in
+                        AxisMarks(values: .stride(by: .day, count: window == .week ? 1 : 7)) { _ in
                             AxisGridLine().foregroundStyle(Theme.hairline.opacity(0.5))
                             AxisValueLabel(format: .dateTime.day().month(.narrow))
                         }

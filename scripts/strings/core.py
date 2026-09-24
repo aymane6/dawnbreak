@@ -15,7 +15,6 @@ CHROME = {
     "action.cancel": ["Cancel", "إلغاء", "Abbrechen", "Cancelar", "Annuler", "रद्द करें", "Annulla", "キャンセル", "취소", "Cancelar", "Отмена", "取消"],
     "action.delete": ["Delete", "حذف", "Löschen", "Eliminar", "Supprimer", "हटाएँ", "Elimina", "削除", "삭제", "Excluir", "Удалить", "删除"],
     "action.deleteAlarm": ["Delete alarm", "حذف المنبه", "Alarm löschen", "Eliminar alarma", "Supprimer l’alarme", "अलार्म हटाएँ", "Elimina sveglia", "アラームを削除", "알람 삭제", "Excluir alarme", "Удалить будильник", "删除闹钟"],
-    "action.close": ["Close", "إغلاق", "Schließen", "Cerrar", "Fermer", "बंद करें", "Chiudi", "閉じる", "닫기", "Fechar", "Закрыть", "关闭"],
     "action.ok": ["OK", "حسناً", "OK", "OK", "OK", "ठीक है", "OK", "OK", "확인", "OK", "ОК", "好"],
     "action.openSettings": ["Open Settings", "فتح الإعدادات", "Einstellungen öffnen", "Abrir Ajustes", "Ouvrir Réglages", "सेटिंग खोलें", "Apri Impostazioni", "設定を開く", "설정 열기", "Abrir Ajustes", "Открыть настройки", "打开设置"],
 
@@ -104,6 +103,15 @@ SOUNDS = family("sound.", "", {
     "radar": ["Radar", "رادار", "Radar", "Radar", "Radar", "रडार", "Radar", "レーダー", "레이더", "Radar", "Радар", "雷达"],
     "klaxon": ["Klaxon", "بوق", "Hupe", "Claxon", "Klaxon", "हॉर्न", "Clacson", "クラクション", "경적", "Buzina", "Клаксон", "汽笛"],
     "siren": ["Siren", "صفارة", "Sirene", "Sirena", "Sirène", "सायरन", "Sirena", "サイレン", "사이렌", "Sirene", "Сирена", "警报"],
+    # The six added for people who sleep through the first eight. Names chosen to translate as
+    # ordinary nouns in all twelve languages and to carry no brand anywhere: everything in
+    # `make-sounds.swift` is synthesised, nothing is sampled or licensed.
+    "hammer": ["Hammer", "مطرقة", "Hammer", "Martillo", "Marteau", "हथौड़ा", "Martello", "ハンマー", "해머", "Martelo", "Молот", "锤击"],
+    "spiral": ["Spiral", "لولب", "Spirale", "Espiral", "Spirale", "सर्पिल", "Spirale", "スパイラル", "나선", "Espiral", "Спираль", "螺旋"],
+    "pulse": ["Pulse", "نبض", "Puls", "Pulso", "Pulsation", "स्पंदन", "Pulsazione", "パルス", "펄스", "Pulso", "Пульс", "脉冲"],
+    "hornet": ["Hornet", "زنبور", "Hornisse", "Avispón", "Frelon", "भिड़", "Vespone", "スズメバチ", "말벌", "Vespão", "Шершень", "马蜂"],
+    "buzzer": ["Buzzer", "جرس إنذار", "Summer", "Zumbador", "Buzzer", "बज़र", "Cicalino", "ブザー", "부저", "Cigarra", "Зуммер", "蜂鸣器"],
+    "cicada": ["Cicada", "زيز", "Zikade", "Cigarra", "Cigale", "झींगुर", "Cicala", "セミ", "매미", "Cigarra elétrica", "Цикада", "蝉鸣"],
 })
 
 APPEARANCE = family("appearance.", "", {

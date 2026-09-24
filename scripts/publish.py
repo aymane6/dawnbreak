@@ -37,6 +37,7 @@ from __future__ import annotations
 import hashlib
 import re
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -520,15 +521,29 @@ def upload_screenshots(client: Client, set_id: str, files: list[Path]) -> tuple[
     The order matters twice: the store shows them in the order of the set, and that order is the
     order they were created in, which is why this walks a sorted list rather than a directory.
 
-    A file already on record is left alone. Apple has no upsert here, so re-running would otherwise
-    give a language twelve screenshots, and Apple only takes ten.
+    Apple has no upsert here, so the set is compared to the files by MD5, which is the same digest
+    `sourceFileChecksum` carries, and is left untouched when every byte already matches. When
+    anything differs the whole set is deleted and re-uploaded rather than patched file by file:
+    matching on the name alone would keep the old image behind an identical name, which is how a
+    fresh capture session can silently leave last month's screenshots on the store, and uploading
+    the new ones beside the old would give a language twelve screenshots where Apple takes ten.
+    Replacing one file at a time would work but would push it to the end of the set, and the first
+    three screenshots are the ones search results show.
     """
-    existing = {entry["attributes"]["fileName"] for entry in client.collection(
+    existing = {entry["attributes"]["fileName"]: entry for entry in client.collection(
         f"/v1/appScreenshotSets/{set_id}/appScreenshots?limit=200")}
+    wanted = {path.name: hashlib.md5(path.read_bytes()).hexdigest() for path in files}
+    if set(existing) == set(wanted) and all(
+        existing[name]["attributes"].get("sourceFileChecksum") == digest
+        for name, digest in wanted.items()
+    ):
+        return len(existing), 0
+
+    for entry in existing.values():
+        client.expect("DELETE", f"/v1/appScreenshots/{entry['id']}")
+
     written = 0
     for path in files:
-        if path.name in existing:
-            continue
         blob = path.read_bytes()
         created = client.expect("POST", "/v1/appScreenshots", {"data": {
             "type": "appScreenshots",
@@ -543,7 +558,37 @@ def upload_screenshots(client: Client, set_id: str, files: list[Path]) -> tuple[
             # request, so a truncated upload is only ever visible here or on the store page.
             "attributes": {"uploaded": True, "sourceFileChecksum": hashlib.md5(blob).hexdigest()}}})
         written += 1
-    return len(existing) + written, written
+    return written, written
+
+
+def wait_for_assets(client: Client, set_ids: list[str], patience: int = 300) -> str:
+    """Block until Apple has finished processing every uploaded screenshot.
+
+    Apple accepts the bytes long before it has looked at them, and an asset it is still chewing on
+    makes the version unreviewable: `POST /v1/reviewSubmissionItems` is refused with "The screenshot
+    <id> is still in progress." Skipping this wait cost the 2026-09-03 run its submission and left
+    the listing *worse* than it found it. The sequence was: 72 images uploaded fine, staging refused
+    on two zh-Hans assets that were seconds old, and because the run had already removed the version
+    from the draft in order to edit it, the draft ended **empty** with the version DEVELOPER_REJECTED.
+    Nothing was lost, but there was nothing left for the account holder to press either. Both assets
+    were COMPLETE and byte-identical to the local files a few minutes later.
+
+    So this is not a nicety. Any path that removes the version from a draft in order to write to it
+    owes it the wait before putting it back.
+    """
+    deadline = time.time() + patience
+    while True:
+        pending = []
+        for set_id in set_ids:
+            for shot in client.collection(f"/v1/appScreenshotSets/{set_id}/appScreenshots?limit=200"):
+                delivery = shot["attributes"].get("assetDeliveryState") or {}
+                if delivery.get("state") != "COMPLETE":
+                    pending.append(f"{shot['attributes']['fileName']} {delivery.get('state')}")
+        if not pending:
+            return "all processed by Apple"
+        if time.time() > deadline:
+            return f"{len(pending)} still not COMPLETE after {patience} s: {', '.join(pending[:4])}"
+        time.sleep(10)
 
 
 # ---------------------------------------------------------------------------
@@ -594,17 +639,16 @@ def staged(client: Client, app_id: str) -> str | None:
 
 
 def submission(client: Client, app_id: str, version_id: str) -> str:
-    """Stage the review submission, and stop one click short of sending it.
+    """Stage the review submission, and stop one call short of sending it.
 
-    Worth doing even though nobody here will press the button, because adding the version to a
-    submission is the only complete pre-flight Apple offers. Every other check in this file knows one
-    field; this call knows the whole list, and it answers with it: a 409 whose associated errors name
-    the app privacy answers, the pricing, the content rights, each against the path it belongs to.
-    Nothing else in the API will tell you the version is short of something.
+    Adding the version to a submission is the only complete pre-flight Apple offers. Every other check
+    in this file knows one field; this call knows the whole list, and it answers with it: a 409 whose
+    associated errors name the app privacy answers, the pricing, the content rights, each against the
+    path it belongs to. Nothing else in the API will tell you the version is short of something.
 
-    What it deliberately does not do is `PATCH {"submitted": true}`. That hands the app to Apple's
-    reviewers under someone else's developer account and their legal declarations, which is a person's
-    act. A staged submission is also reversible from the browser, and a sent one is not.
+    What it deliberately does not do is `PATCH {"submitted": true}`. Writing the listing is reversible
+    and sending it is not, so they are two scripts: `scripts/submit.py` is the one that sends, it
+    re-reads the draft rather than trusting this run, and it needs `--send` before it does anything.
     """
     for draft in client.collection(f"/v1/apps/{app_id}/reviewSubmissions?limit=50"):
         if draft["attributes"]["submittedDate"]:
@@ -636,9 +680,10 @@ def submission(client: Client, app_id: str, version_id: str) -> str:
     if status >= 300:
         warn("Apple will not review this version yet:\n  " + problem(payload).replace("; ", "\n  "))
         return "not reviewable yet"
-    # The three products are not items of their own: `reviewSubmissionItems` has no relationship for
-    # a subscription or a purchase, and on a first version Apple reviews everything that is ready to
-    # submit alongside the app. `scripts/iap.py` is what makes them ready.
+    # One item, and one is all there is: the version itself. That `reviewSubmissionItems` has no
+    # relationship for a subscription or a purchase is why this app ships with nothing to buy. Both
+    # POSTs answered 409 on 2026-09-03, so a version carrying products cannot be submitted through
+    # the API at all, and the choice was between a listing sent by hand and an app that is free.
     return "version staged, ready to send"
 
 
@@ -682,13 +727,14 @@ def priced_in(client: Client, app_id: str) -> int:
 def free(client: Client, app_id: str) -> str:
     """Price zero, once, if nothing has priced the app yet.
 
-    An app with no price schedule cannot be submitted, and this app is free: the three products are
-    what it sells. Only ever set when absent, because changing what an app costs is a decision.
+    An app with no price schedule cannot be submitted, and this app is free in the only sense that
+    matters: zero to download and nothing to buy inside it. Only ever set when absent, because
+    changing what an app costs is a decision.
 
     The `territory` on the included price is what makes the schedule hold anything. Without it Apple
     answers 201 and builds a schedule with no prices in it, then refuses the submission from
     somewhere else entirely: "App is not eligible for submission until pricing has been set", about a
-    schedule that reads as present. Same trap as the purchase schedules in `scripts/iap.py`.
+    schedule that reads as present.
     """
     already = priced_in(client, app_id)
     if already:
@@ -777,7 +823,7 @@ def main() -> int:
         print("  Nothing to send: App Store Connect refuses metadata edits while a submission holds")
         print("  the version. To change the listing, take it out of the draft first:\n")
         print("    Distribution → Vérification de l'app → the draft → remove the item\n")
-        print("  and re-run this. To send it instead: the same draft, Envoyer pour vérification.")
+        print("  and re-run this. To send it instead: python3 scripts/submit.py --send")
         return 0
 
     print(f"\n{BOLD}App information{RESET}")
@@ -796,11 +842,19 @@ def main() -> int:
     good("build", attach_build(client, app["id"], version_id, number))
 
     print(f"\n{BOLD}Screenshots{RESET}")
+    sets = []
+    uploaded = 0
     for locale in LOCALES:
         set_id = screenshot_set(client, localizations[locale])
+        sets.append(set_id)
         held, written = upload_screenshots(client, set_id, shots[locale])
+        uploaded += written
         good(locale, f"{held} in the {DISPLAY_TYPE} set"
                      + (f", {written} uploaded" if written else ", nothing new"))
+    # Only when something arrived: a set Apple processed weeks ago needs no waiting, and the read
+    # costs twelve requests.
+    if uploaded:
+        good("asset processing", wait_for_assets(client, sets))
 
     print(f"\n{BOLD}Submission{RESET}")
     good("review submission", submission(client, app["id"], version_id))
@@ -808,9 +862,9 @@ def main() -> int:
     print()
     state = client.expect("GET", f"/v1/appStoreVersions/{version_id}")["data"]["attributes"]
     say(f"Version {number} is {state.get('appStoreState') or state.get('appVersionState', '?')}")
-    print("  What is left is a person, not a script:\n")
-    print("    App Store Connect → Dawnbreak → Distribution → read the page as a reviewer will")
-    print("    → Vérification de l'app / App Review → the draft → Envoyer pour vérification\n")
+    print("  Read the page as a reviewer will, then send it:\n")
+    print("    python3 scripts/submit.py            # what it would send")
+    print("    python3 scripts/submit.py --send     # and then, once\n")
     print("  App privacy is the one required answer no API can give: it is web-only, under")
     print("  Distribution → Confidentialité de l'app, and it has to be published, not just saved.")
     print("  Everything else the version needs, this script sends, and the submission step above")

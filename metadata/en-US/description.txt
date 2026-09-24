@@ -38,11 +38,10 @@ BUILT PROPERLY
 - No account. No sign-in. No adverts. No analytics
 - Nothing leaves the phone. There is no server to leave it to
 
-FREE AND PRO
+FREE, ALL OF IT
 
-Free: one alarm, one round, three missions, difficulty up to medium.
+Every mission, every difficulty, up to ten rounds, as many alarms as your week needs, and ninety days of history. There is nothing to buy: no subscription, no adverts, no account.
 
-Pro: twenty-five alarms, up to ten rounds, all twelve missions, all four difficulties, ninety days of history. Monthly, yearly, or a one-time purchase that never renews.
-
-Privacy policy: https://aymane6.github.io/dawnbreak/privacy.html
-Support: https://aymane6.github.io/dawnbreak/support.html
+Privacy policy: https://dawnbreak.app/privacy.html
+Terms of use: https://dawnbreak.app/terms.html
+Support: https://dawnbreak.app/support.html

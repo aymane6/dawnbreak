@@ -182,11 +182,11 @@ else
     fail "the signature is not for team $TEAM_ID"
   fi
 
-  # `get-task-allow` is what makes a build debuggable, and what `storekitd` reads to decide that an
-  # app is a development install: `scripts/shots.sh --review` puts it on one Debug build so the
-  # review screenshot can have prices on it. A true one must never reach the store, which refuses a
-  # debuggable binary. A distribution profile does not authorise it either, so the usual outcome is a
-  # signing failure long before here, and "the usual outcome" is not something to upload on.
+  # `get-task-allow` is what makes a build debuggable, and `Configuration/Dawnbreak-Debug.entitlements`
+  # puts it on the unit-test bundle so the tests can be attached to. A true one must never reach the
+  # store, which refuses a debuggable binary. A distribution profile does not authorise it either, so
+  # the usual outcome is a signing failure long before here, and "the usual outcome" is not something
+  # to upload on.
   #
   # The value is what matters, not the key. Xcode writes `get-task-allow` explicitly as false when it
   # signs Release with a distribution identity, so grepping for the name flags every correct archive

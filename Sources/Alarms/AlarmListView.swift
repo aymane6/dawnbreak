@@ -156,7 +156,6 @@ struct AlarmListView: View {
     // MARK: - Actions
 
     private func addAlarm() {
-        guard app.allow(.addAlarm) else { return }
         editing = .new
     }
 

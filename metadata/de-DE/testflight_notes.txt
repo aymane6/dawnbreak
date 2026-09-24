@@ -1,17 +1,19 @@
-Build 5 ist der, den du dir gewünscht hast. Drei neue Dinge.
+Build 10 behebt etwas, das du gefunden hast und ich nicht: du sagtest, die App habe vier Wecktöne. Sie hat vierzehn, seit Build 8. Nur vier waren zu sehen.
 
-EINE MISSION AUSPROBIEREN, BEVOR MAN IHR VERTRAUT
-Im Alarm-Editor, unter der Mission: „Diese Mission ausprobieren". Gleiche Aufgabe, gleiche Schwierigkeit, gleicher Timer — aber nichts ist scharf, und das X in der Ecke geht immer. Prüfe, ob brutal wirklich brutal ist, ohne einen 06:00-Termin zu buchen.
+WARUM DU VIER GESEHEN HAST
+Die Töne waren ein waagrechter Streifen kleiner Kacheln in der Klangkarte. Vier passen auf einen 6,9-Zoll-Bildschirm, drei auf einen 6,1-Zoll-, der Scrollbalken war ausgeblendet, und nichts sagte, dass es mehr gibt. Du hast den Bildschirm richtig gelesen; der Bildschirm hat gelogen.
 
-MISSIONEN VERKETTEN
-Ebenfalls im Editor: „Folgemissionen". Bis zu drei. Löse die erste Mission, und der Alarm klingelt Minuten später mit der nächsten — erst schütteln, zehn Minuten später kommt er zurück und verlangt eine Zeichnung, Schritte oder Kniebeugen. Erst die letzte beendet den Morgen. Warten zwischen Missionen ist gratis; sich drücken weiterhin nicht.
+WIE ES JETZT IST
+Die Klangkarte hat eine Zeile: der Name des aktuellen Tons, sein Lautstärke-Symbol und die Zahl 14. Ein Tipp öffnet einen Bildschirm mit allen vierzehn Kacheln, drei pro Reihe, sanft zuerst, schlimm zuletzt, alle gleichzeitig sichtbar, ohne Scrollen auf jedem iPhone. Ein Tipp auf eine Kachel wählt sie und spielt eine Vorschau. Symbol und Farbe nennen die Klasse.
 
-EIN KLARERER MISSIONSBILDSCHIRM
-Die Anweisung ist jetzt groß und weiß, die Sequenz-Pads leuchten voll mit echtem Blitz und spürbarem Tick, Memory-Kacheln markieren das Gewählte, und jeder Tastendruck antwortet dem Daumen. Die Haptik gehorcht dem Schalter in den Einstellungen.
+WAS DAS KÜNFTIG VERHINDERT
+Ein Test öffnet diesen Bildschirm und prüft, dass alle vierzehn Kacheln im Fenster liegen und antippbar sind, nach null Wischern, auf Englisch und auf Arabisch. Ich habe den alten Streifen zurückgesetzt, um sicher zu sein, dass er scheitert: er scheitert. Ein zweiter Test prüft, dass ein gewählter Ton Speichern und Wiederöffnen übersteht.
 
-PRÜFENSWERT
-1. Mission im Editor testen, mit X verlassen, nichts speichern: Es darf kein Alarm existieren.
-2. Zwei Missionen im Minutenabstand verketten, klingeln lassen, die erste lösen, warten: Der zweite Ring muss kommen, benannt nach seiner Mission.
-3. Die Sequenz-Mission nachts bei wenig Helligkeit: Alles muss offensichtlich bleiben.
+ZU AUFGENOMMENEN KLÄNGEN
+Du hast nach Open-Source-Quellen gefragt. Ich habe die Lizenzen an der Quelle geprüft, nicht in Zusammenfassungen, und das Ergebnis ist: alle vierzehn bleiben synthetisiert. Kurz gesagt: nur CC0-Audio darf ohne Einzelgenehmigung in eine bezahlte App-Store-Binärdatei, denn die FAQ von Creative Commons sagt selbst, dass die Veröffentlichung einer CC-BY-Datei über eine Plattform mit Kopierschutz die ausdrückliche Erlaubnis des Lizenzgebers braucht, und der App Store wendet ihn an. Die vollständige Liste steht in der Nachricht zu diesem Build.
 
-Wenn etwas nicht stimmt, sagt ein Screenshot mehr als ein Satz. TestFlight oder die Support-Seite in den Einstellungen.
+WORAUF ES ANKOMMT
+1. Editor, Klangzeile: sie soll den aktuellen Ton und 14 nennen. Antippen und Kacheln zählen.
+2. Hornisse, Summer und Zikade von dort anhören, dazu Sirene.
+3. Einen wählen, speichern, Wecker wieder öffnen: er muss gewählt bleiben.
+4. Auf Arabisch derselbe Bildschirm: gespiegelt, längere Namen, nichts darf abgeschnitten sein.

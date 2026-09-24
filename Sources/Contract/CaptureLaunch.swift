@@ -12,14 +12,6 @@ enum CaptureLaunch {
     static let argument = "-dawnbreak-capture"
     /// Followed by a `Screen` raw value.
     static let screenArgument = "-dawnbreak-capture-screen"
-    /// Seeds the free tier instead of Pro.
-    ///
-    /// The store screenshots are taken with Pro on, because a listing full of padlocks sells
-    /// nothing. The test that walks the path the review notes describe needs the opposite: an
-    /// account that already has Pro shows "Pro is active" in settings, with no upgrade row to tap
-    /// and no purchase screen behind it.
-    static let freeArgument = "-dawnbreak-capture-free"
-
     /// Followed by a number of seconds: a Debug launch arms one real alarm that far out, through
     /// the real bridge and the real AlarmKit daemon, for the end-to-end ring test. Not a capture
     /// flag: the run it starts is the ordinary app, and the whole point is that nothing is faked.
@@ -64,9 +56,7 @@ enum CaptureLaunch {
         var subcaptionKey: String { "shot.sub.\(rawValue)" }
     }
 
-    /// `free` is a Bool rather than an `Entitlement` so that this file keeps importing nothing but
-    /// Foundation: it is compiled into the widget and into the UI test target as well as the app.
-    static func arguments(for screen: Screen, free: Bool = false) -> [String] {
-        [argument, screenArgument, screen.rawValue] + (free ? [freeArgument] : [])
+    static func arguments(for screen: Screen) -> [String] {
+        [argument, screenArgument, screen.rawValue]
     }
 }

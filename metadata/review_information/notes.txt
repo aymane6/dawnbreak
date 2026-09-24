@@ -25,11 +25,10 @@ PERMISSIONS, AND WHY
 There is no location, contacts, microphone, health, or tracking access of any kind, and no
 analytics SDK.
 
-IN-APP PURCHASES
+NOTHING TO BUY
 
-Three, all unlocking the same "Pro" entitlement: monthly and yearly auto-renewable subscriptions
-and a non-consumable lifetime purchase. Free gives one alarm, one round, three missions and
-difficulty up to medium; Pro gives twenty-five alarms, ten rounds, twelve missions, four
-difficulties and ninety days of history. The paywall states this, and Restore Purchases is on it.
+There are no in-app purchases, no subscription, no advertising and no paywall of any kind. Every
+one of the twelve missions, all four difficulties, up to ten rounds, as many alarms as the user
+wants and ninety days of history are available on first launch. The app links no StoreKit.
 
 An emergency exit is available in Settings and is on by default, so no alarm can trap a user.

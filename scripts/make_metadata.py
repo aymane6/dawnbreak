@@ -90,12 +90,11 @@ PERMISSIONS, AND WHY
 There is no location, contacts, microphone, health, or tracking access of any kind, and no
 analytics SDK.
 
-IN-APP PURCHASES
+NOTHING TO BUY
 
-Three, all unlocking the same "Pro" entitlement: monthly and yearly auto-renewable subscriptions
-and a non-consumable lifetime purchase. Free gives one alarm, one round, three missions and
-difficulty up to medium; Pro gives twenty-five alarms, ten rounds, twelve missions, four
-difficulties and ninety days of history. The paywall states this, and Restore Purchases is on it.
+There are no in-app purchases, no subscription, no advertising and no paywall of any kind. Every
+one of the twelve missions, all four difficulties, up to ten rounds, as many alarms as the user
+wants and ninety days of history are available on first launch. The app links no StoreKit.
 
 An emergency exit is available in Settings and is on by default, so no alarm can trap a user.
 """
@@ -106,7 +105,9 @@ An emergency exit is available in Settings and is on by default, so no alarm can
 CONTACT = {
     "first_name": "Aymane",
     "last_name": "Bamhamed",
-    "phone_number": "+33671518425",
+    # Given by the account holder on 2026-08-27, in E.164 because that is the only form Apple
+    # accepts: a French mobile written 06 27 20 52 54 is +33 6 27 20 52 54 without the trunk zero.
+    "phone_number": "+33627205254",
     "email_address": "fastpapershot.supp@outlook.com",
     "demo_account_required": "false",
 }
@@ -219,9 +220,9 @@ def check_descriptions(locales: list[str]):
     for locale in locales:
         description = store.DESCRIPTION[locale]
 
-        # Guideline 3.1.2: a listing offering an auto-renewable subscription has to say what the
-        # free tier gives and link a privacy policy. Both are checked by the reviewer by eye, and
-        # the rejection costs a review cycle.
+        # Nothing is for sale, so 3.1.2 does not apply, but 5.1.1 still wants the privacy policy
+        # reachable and the support page is what Apple writes down as the contact of record. Both
+        # are read by the reviewer by eye, and a missing one costs a review cycle.
         if store.PRIVACY_URL not in description:
             problems.append(f"{locale}/description does not link the privacy policy")
         if store.SUPPORT_URL not in description:

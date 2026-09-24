@@ -26,26 +26,32 @@ enum AccessibilityID {
     /// "Try this mission" in the editor, and the row that adds a follow-on to the chain.
     static let editorTryMission = "ax.editor.try"
     static let editorChainAdd = "ax.editor.chainAdd"
+    /// The row that opens the tone list, and the grid it opens.
+    ///
+    /// Both exist because a horizontal strip of tiles hid ten of the fourteen tones: only three or
+    /// four fitted, the scroll indicator was hidden, and the app read as having four alarm sounds.
+    /// A UI test now counts the tiles and checks each one is inside the window and hittable without
+    /// a single swipe, which is the only form of the assertion that would have failed before.
+    static let editorSoundRow = "ax.editor.sound.row"
+    static let editorSoundGrid = "ax.editor.sound.grid"
+
+    /// One tile in the tone grid. The stem is deliberately not a prefix of `editorSoundRow`, so a
+    /// test that counts elements beginning with `ax.editor.tone.` cannot also match the opener.
+    static func editorTone(_ soundName: String) -> String { "ax.editor.tone.\(soundName)" }
 
     /// Proof that the mission screen is up. The header, not the escape hatch below it, which a
     /// user can switch off in settings and is therefore not always on screen.
     static let missionHeader = "ax.mission.header"
     /// The escape hatch, present only while `Preferences.emergencyExitEnabled` is on.
     static let missionExit = "ax.mission.exit"
+    /// The banner that says the phone is being held. The smoke test looks for it, because "the
+    /// mission refuses to count" is only a feature if the user is told so.
+    static let squatsPhoneWarning = "ax.mission.squats.phoneWarning"
 
     /// The 7/30/90-day picker in the stats toolbar.
     static let statsWindow = "ax.stats.window"
     /// The appearance picker, far enough down the settings list to prove the screen scrolled.
     static let settingsAppearance = "ax.settings.appearance"
-    /// The row that opens the paywall, and the button that buys on it.
-    ///
-    /// The two ends of the path the review notes send Apple's reviewer down, walked by
-    /// `SmokeTests.testTheFreeTierReachesThePaywallFromSettings` so the notes cannot come to
-    /// describe a route the app no longer has. The twelve store screenshot runs never see either:
-    /// they are seeded with Pro already on, so settings shows "Pro is active" where this row would
-    /// be.
-    static let settingsUpgrade = "ax.settings.upgrade"
-    static let paywallPurchase = "ax.paywall.purchase"
     /// The primary button on the onboarding pages.
     static let onboardingNext = "ax.onboarding.next"
 }

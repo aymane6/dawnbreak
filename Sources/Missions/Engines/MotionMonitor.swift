@@ -30,6 +30,10 @@ final class ShakeMonitor {
             return
         }
         manager.accelerometerUpdateInterval = 1.0 / 50.0
+        // `to: .main` is the difference between this and `StepMonitor`: the accelerometer
+        // lets us name the queue, so assuming main-actor isolation in the body is sound.
+        // The pedometer takes no queue and uses its own; see the note there before copying
+        // this shape onto another CoreMotion API.
         manager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
             guard let self, let data else { return }
             MainActor.assumeIsolated { self.handle(data.acceleration) }
@@ -98,22 +102,115 @@ final class StepMonitor {
         }
         guard !isRunning else { return }
         isRunning = true
-        pedometer.startUpdates(from: Date()) { [weak self] data, error in
-            guard let self else { return }
-            MainActor.assumeIsolated {
-                if error != nil {
-                    self.isDenied = CMPedometer.authorizationStatus() == .denied
-                    return
-                }
-                guard let data else { return }
-                self.steps = data.numberOfSteps.intValue
-            }
-        }
+        // Started from a nonisolated context on purpose, and this is the bug that killed the
+        // steps mission on device.
+        //
+        // CoreMotion's header says it plainly: "Starts a series of continuous pedometer updates
+        // to the handler on a serial queue." That queue is never the main one, and
+        // `CMPedometerHandler` carries no sendability annotation, so a closure written inline in
+        // a `@MainActor` method inherits main-actor isolation and the compiler wraps it in a
+        // thunk that asserts the main queue before the body runs. CoreMotion then calls it from
+        // its own queue and libdispatch aborts the process — "BUG IN CLIENT OF LIBDISPATCH:
+        // Assertion failed: Block was expected to execute on queue [com.apple.main-thread]" — on
+        // the user's very first step, which is precisely when a steps mission is supposed to
+        // start working. `MainActor.assumeIsolated` inside the body traps for the same reason,
+        // one frame lower.
+        //
+        // `begin` is nonisolated, so nothing written inside it can inherit this actor, and the
+        // hop onto the main actor is spelled out in `deliver`. Keeping the two apart is what
+        // makes the crash unreachable rather than merely absent.
+        Self.begin(pedometer, from: Date(), for: self)
     }
 
     func stop() {
         guard isRunning else { return }
         isRunning = false
         pedometer.stopUpdates()
+    }
+
+    /// Hands CoreMotion the handler. Nonisolated so that the closure it passes cannot pick up
+    /// main-actor isolation from the caller, whatever a future edit does to it.
+    ///
+    /// Called synchronously from the main actor, which is why a non-`Sendable` `CMPedometer` may
+    /// cross into it: a nonisolated synchronous function runs on its caller's thread, so nothing
+    /// is shared and nothing is sent.
+    nonisolated static func begin(_ pedometer: CMPedometer, from date: Date, for monitor: StepMonitor) {
+        pedometer.startUpdates(from: date, withHandler: handler(for: monitor))
+    }
+
+    /// The block CoreMotion calls, on CoreMotion's own queue.
+    ///
+    /// Nonisolated and static so that it cannot pick up main-actor isolation from its
+    /// surroundings, and so that a test can call the shipped closure from a background queue.
+    /// Nothing that is not `Sendable` may cross out of it: the count is read out of
+    /// `CMPedometerData` here, the error is classified here, and only two values travel.
+    nonisolated static func handler(for monitor: StepMonitor?) -> @Sendable (CMPedometerData?, (any Error)?) -> Void {
+        { [weak monitor] data, error in
+            deliver(
+                to: monitor,
+                steps: data?.numberOfSteps.intValue,
+                failure: error.map { isRefusal($0) ? .refused : .transient }
+            )
+        }
+    }
+
+    /// What a CoreMotion failure means for the screen.
+    enum Failure: Sendable {
+        /// The pedometer will never answer: permission was refused, or motion data is off.
+        case refused
+        /// Something momentary. The mission stays up, because the user may already be walking.
+        case transient
+    }
+
+    /// Whether an error means "you are not getting steps, ever" rather than "not this time".
+    ///
+    /// Asking `CMPedometer.authorizationStatus()` instead is not enough on its own: a refusal
+    /// answered mid-mission arrives here as an error while the cached status can still read
+    /// `notDetermined`, and the mission would then sit at zero steps with no way out but the
+    /// emergency exit — which the user may have switched off. Motion & Fitness turned off
+    /// device-wide answers `CMErrorNotAvailable` and is just as final.
+    nonisolated static func isRefusal(_ error: any Error) -> Bool {
+        let code = (error as NSError).code
+        return [
+            CMErrorMotionActivityNotAuthorized,
+            CMErrorMotionActivityNotAvailable,
+            CMErrorMotionActivityNotEntitled,
+            CMErrorNotAuthorized,
+            CMErrorNotAvailable,
+            CMErrorNotEntitled
+        ].contains { Int($0.rawValue) == code }
+    }
+
+    /// Carries one pedometer sample from whatever thread CoreMotion used onto the main actor.
+    ///
+    /// The single door into `StepMonitor` from outside the main actor, deliberately, so that
+    /// the hop exists in one place a test can drive: `StepMonitorTests` calls this from a
+    /// background queue, and any future `assumeIsolated` here crashes that test rather than a
+    /// tester's phone.
+    nonisolated static func deliver(to monitor: StepMonitor?, steps: Int?, failure: Failure?) {
+        guard let monitor else { return }
+        Task { @MainActor in monitor.apply(steps: steps, failure: failure) }
+    }
+
+    /// Applies one sample, already on the main actor.
+    func apply(steps newValue: Int?, failure: Failure?) {
+        switch failure {
+        case .refused:
+            // The screen with a way off it. Anything else would strand a user in front of a
+            // ring that cannot fill.
+            isDenied = true
+            return
+        case .transient:
+            // Deliberately nothing: the pedometer is busy or the start date slipped, and
+            // blanking the mission for that would interrupt someone who is already walking.
+            return
+        case nil:
+            break
+        }
+        guard let newValue else { return }
+        // Monotonic: CoreMotion revises a cumulative count downwards when it decides the last
+        // few steps were the phone being put down, and a progress ring that walks backwards
+        // reads as a broken app to someone standing in their bedroom at six in the morning.
+        steps = max(steps, newValue)
     }
 }

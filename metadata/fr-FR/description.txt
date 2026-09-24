@@ -38,11 +38,10 @@ FAIT SÉRIEUSEMENT
 - Sans compte. Sans connexion. Sans publicité. Sans analytique
 - Rien ne quitte le téléphone. Il n’y a aucun serveur où aller
 
-GRATUIT ET PRO
+GRATUIT, EN ENTIER
 
-Gratuit : une alarme, une manche, trois missions, difficulté jusqu’à moyenne.
+Toutes les missions, toutes les difficultés, jusqu’à dix manches, autant d’alarmes que votre semaine en demande, quatre-vingt-dix jours d’historique. Il n’y a rien à acheter : aucun abonnement, aucune publicité, aucun compte.
 
-Pro : vingt-cinq alarmes, jusqu’à dix manches, les douze missions, les quatre difficultés, quatre-vingt-dix jours d’historique. Mensuel, annuel, ou un achat unique qui ne se renouvelle jamais.
-
-Confidentialité : https://aymane6.github.io/dawnbreak/privacy.html
-Assistance : https://aymane6.github.io/dawnbreak/support.html
+Confidentialité : https://dawnbreak.app/privacy.html
+Conditions d’utilisation : https://dawnbreak.app/terms.html
+Assistance : https://dawnbreak.app/support.html

@@ -275,6 +275,53 @@ struct MissionConfigTests {
         #expect(MissionConfig(kind: .math, rounds: 999).rounds == MissionConfig.maxRounds)
     }
 
+    /// A new alarm opens on something a half-awake stranger can finish.
+    ///
+    /// The editor's defaults are the only mission most people will ever see, because the first alarm
+    /// is usually saved without touching them. So it has to be gentle: a mission that needs no
+    /// hardware and no enrollment, a middling difficulty, and few enough rounds that the first
+    /// morning is a success rather than a fight.
+    @Test("A new alarm's mission is gentle enough to be someone's first")
+    func theDefaultIsGentle() {
+        #expect(MissionConfig.default.rounds <= 3)
+        #expect(MissionConfig.default.difficulty <= .medium)
+        #expect(!MissionConfig.default.kind.needsEnrollment, "a first alarm cannot demand a setup step")
+        #expect(MissionConfig.default.kind.requiredCapability == nil,
+                "a first alarm cannot demand hardware the phone may refuse")
+    }
+
+    /// No mission may be given less time than it needs to present its own challenge.
+    ///
+    /// This is the shape of a bug that shipped: sequence at brutal plays eleven pads, replaying the
+    /// whole prefix each round, which is forty-six seconds of watching before a finger may move, and
+    /// it carried a thirty-second limit. Running out restarts the round, so the grid reset forever
+    /// and the alarm could only be escaped through the emergency exit, which is switchable off. An
+    /// alarm that cannot be cleared is the worst failure this app has, and App Review would have
+    /// found it by choosing the hardest setting.
+    @Test("Every timed mission has time to be presented, and then some", arguments: MissionKind.allCases)
+    func timeLimitsSurvivePresentation(kind: MissionKind) {
+        for difficulty in Difficulty.allCases {
+            let config = MissionConfig(kind: kind, difficulty: difficulty)
+            guard let limit = config.timeLimit else { continue }
+            let presentation = config.presentationSeconds
+            let message: Comment = """
+                \(kind.rawValue) at \(difficulty.rawValue) allows \(limit)s but spends \
+                \(presentation)s showing the challenge
+                """
+            #expect(limit > presentation + 5, message)
+        }
+    }
+
+    @Test("The sequence mission's own arithmetic is the arithmetic that broke it")
+    func sequencePresentationIsMeasured() {
+        // Eleven pads: eleven lead-ins plus 66 pad-times. The number is here so that a change to the
+        // cadence in the view, which reads these same constants, cannot silently pass the rule above.
+        let brutal = MissionConfig(kind: .sequence, difficulty: .brutal)
+        #expect(brutal.sequenceLength == 11)
+        #expect(abs(brutal.presentationSeconds - 46.42) < 0.01)
+        #expect(brutal.timeLimit == nil, "no limit can survive forty-six seconds of playback")
+    }
+
     @Test("Targets rise monotonically with difficulty")
     func monotonic() {
         let steps = Difficulty.allCases.map { MissionConfig(kind: .steps, difficulty: $0).stepTarget }
@@ -314,49 +361,15 @@ struct MissionConfigTests {
         #expect(MissionKind.allCases.map(\.rawValue).sorted() ==
                 ["barcode", "breathe", "draw", "flap", "math", "memory", "photo", "sequence", "shake", "squats", "steps", "typing"])
     }
-}
 
-@Suite("Free and paid tiers")
-struct EntitlementTests {
-
-    @Test("The free tier keeps three missions that need no hardware")
-    func freeMissions() {
-        let free = Entitlement.free.availableMissions
-        #expect(Set(free) == [.math, .shake, .breathe])
-        #expect(free.allSatisfy { !$0.isPremium })
-    }
-
-    @Test("Pro unlocks every mission and every difficulty")
-    func proUnlocksAll() {
-        #expect(Entitlement.pro.availableMissions.count == MissionKind.allCases.count)
-        #expect(Difficulty.allCases.allSatisfy(Entitlement.pro.allows))
-    }
-
-    @Test("The free tier is capped at one alarm and one round")
-    func freeCaps() {
-        #expect(Entitlement.free.maximumAlarms == 1)
-        #expect(Entitlement.free.maximumRounds == 1)
-        #expect(Entitlement.pro.maximumAlarms > Entitlement.free.maximumAlarms)
-    }
-
-    @Test("Ninety days of history is what Pro is sold on, so free cannot have it")
-    func historyGate() {
-        // Both numbers are printed in twelve store descriptions and on the paywall.
-        #expect(Entitlement.pro.maximumHistoryDays == 90)
-        #expect(Entitlement.free.maximumHistoryDays < Entitlement.pro.maximumHistoryDays)
-    }
-
-    @Test("Hard and brutal are paid")
-    func difficultyGate() {
-        #expect(Entitlement.free.allows(Difficulty.easy))
-        #expect(Entitlement.free.allows(Difficulty.medium))
-        #expect(!Entitlement.free.allows(Difficulty.hard))
-        #expect(!Entitlement.free.allows(Difficulty.brutal))
-    }
-
-    @Test("The mission picker is ordered gentlest first")
-    func ordering() {
-        let ranks = Entitlement.pro.availableMissions.map(\.effortRank)
-        #expect(ranks == ranks.sorted())
+    /// The picker is ordered gentlest first, so the grid opens on something a new user will pick
+    /// rather than on twenty-five squats.
+    @Test("Every mission has a distinct effort rank, and sorting by it is a total order")
+    func effortRanksAreATotalOrder() {
+        let ranks = MissionKind.allCases.map(\.effortRank)
+        #expect(Set(ranks).count == MissionKind.allCases.count, "two missions cannot tie")
+        let sorted = MissionKind.allCases.sorted { $0.effortRank < $1.effortRank }
+        #expect(sorted.map(\.effortRank) == ranks.sorted())
     }
 }
+

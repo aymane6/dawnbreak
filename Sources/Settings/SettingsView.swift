@@ -15,7 +15,6 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                subscriptionSection
                 wakeSection
                 bedtimeSection
                 appearanceSection
@@ -49,56 +48,6 @@ struct SettingsView: View {
     }
 
     // MARK: - Sections
-
-    @ViewBuilder private var subscriptionSection: some View {
-        Section {
-            if app.entitlement == .pro {
-                HStack {
-                    Label {
-                        Text("settings.pro.active", bundle: .main)
-                    } icon: {
-                        Image(systemName: "checkmark.seal.fill").foregroundStyle(Theme.success)
-                    }
-                    Spacer()
-                }
-                Link(destination: URL(string: "https://apps.apple.com/account/subscriptions")!) {
-                    Label {
-                        Text("settings.manageSubscription", bundle: .main)
-                    } icon: {
-                        Image(systemName: "creditcard").foregroundStyle(Theme.accent)
-                    }
-                }
-            } else {
-                Button {
-                    app.paywallReason = .manual
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: "sunrise.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(Theme.dawnGradient)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("settings.upgrade.title", bundle: .main)
-                                .font(Theme.headlineFont)
-                                .foregroundStyle(Theme.textPrimary)
-                            Text("settings.upgrade.body", bundle: .main)
-                                .font(Theme.captionFont)
-                                .foregroundStyle(Theme.textSecondary)
-                        }
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right").font(.caption).foregroundStyle(Theme.textTertiary)
-                    }
-                }
-                .accessibilityIdentifier(AccessibilityID.settingsUpgrade)
-                Button {
-                    Task { await app.subscription.restore() }
-                } label: {
-                    Text("paywall.restore", bundle: .main)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-            }
-        }
-        .listRowBackground(Theme.surface)
-    }
 
     private var wakeSection: some View {
         Section {
@@ -265,13 +214,13 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.textSecondary)
                     .monospacedDigit()
             }
-            Link(destination: URL(string: "https://aymbam.github.io/dawnbreak/privacy")!) {
+            Link(destination: URL(string: "https://dawnbreak.app/privacy.html")!) {
                 Text("legal.privacy", bundle: .main)
             }
-            Link(destination: URL(string: "https://aymbam.github.io/dawnbreak/terms")!) {
+            Link(destination: URL(string: "https://dawnbreak.app/terms.html")!) {
                 Text("legal.terms", bundle: .main)
             }
-            Link(destination: URL(string: "mailto:support@aymbam.com?subject=Dawnbreak")!) {
+            Link(destination: URL(string: "mailto:fastpapershot.supp@outlook.com?subject=Dawnbreak")!) {
                 Text("settings.support", bundle: .main)
             }
             Button {

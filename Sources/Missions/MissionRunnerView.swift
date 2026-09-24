@@ -134,7 +134,7 @@ struct MissionRunnerView: View {
                             .foregroundStyle(Theme.warning)
                     } else {
                         Text(ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
-                            .full(hour: hourNow, minute: minuteNow))
+                            .full(hour: rangAtHour, minute: rangAtMinute))
                             .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
                             .foregroundStyle(Theme.textSecondary)
                     }
@@ -198,7 +198,9 @@ struct MissionRunnerView: View {
     @ViewBuilder private var missionBody: some View {
         let callbacks = MissionCallbacks(
             cleared: { clearRound() },
-            mistake: { registerMistake() }
+            mistake: { registerMistake() },
+            progressed: { reportProgress() },
+            unavailable: { Task { await standDown() } }
         )
 
         switch pending.mission.kind {
@@ -310,13 +312,46 @@ struct MissionRunnerView: View {
         await app.bridge.missionAbandoned(pending)
     }
 
+    /// A mission reported progress inside a round. Buys the same time a cleared round buys.
+    private func reportProgress() {
+        guard !isRehearsal else { return }
+        Task { await app.bridge.missionInProgress() }
+    }
+
+    /// The mission cannot be done on this phone, and the wall it shows said so.
+    ///
+    /// Recorded as a bail-out, not as a completion. It used to clear the round instead, which
+    /// wrote "mission completed" into the streak for someone who had merely refused Motion
+    /// access, and did it one tap per round. It is deliberately not the confirmed corner exit
+    /// either: that one can be switched off in Settings, and a phone with no pedometer would
+    /// then hold its owner in front of a ring that can never fill.
+    private func standDown() async {
+        guard !isRehearsal else {
+            dismiss()
+            return
+        }
+        await abandon()
+    }
+
     private func snooze() async {
         audio.stop()
         await app.bridge.handleSnoozePressed(alarmID: pending.alarmID)
     }
 
-    private var hourNow: Int { Calendar.current.component(.hour, from: Date()) }
-    private var minuteNow: Int { Calendar.current.component(.minute, from: Date()) }
+    /// When the alarm went off, which is what the header under the label is answering.
+    ///
+    /// `pending.startedAt` rather than `Date()`. The two are the same instant in the moment that
+    /// matters — the alert has just appeared — and SwiftUI redraws this header whenever the round
+    /// changes, so reading the wall clock made the line drift away from the ring time while the
+    /// mission was being done. It also made it unphotographable: the store screenshots override the
+    /// status bar to 9:41, and a header reading the real clock put "Course du matin 14:19" under an
+    /// 09:41 status bar in all twelve languages of the 19 August set.
+    /// `CaptureMode.headerTime` is nil in every run that is not an App Store capture, so this is
+    /// `pending.startedAt` on a real device. See that property for why the pin cannot live in the
+    /// mission: the store measures a mission's age from `startedAt` and discards one dated 9:41.
+    private var rangAt: Date { CaptureMode.headerTime ?? pending.startedAt }
+    private var rangAtHour: Int { Calendar.current.component(.hour, from: rangAt) }
+    private var rangAtMinute: Int { Calendar.current.component(.minute, from: rangAt) }
 
     /// Named so `make_strings` skips it: these are SF Symbol names, not localization keys.
     private var systemImage: String {
@@ -324,11 +359,19 @@ struct MissionRunnerView: View {
     }
 }
 
-/// What a mission view can tell the runner. Two closures, because a mission has exactly two
-/// things to report.
+/// What a mission view can tell the runner.
 struct MissionCallbacks {
     var cleared: () -> Void
     var mistake: () -> Void
+    /// Progress inside a round that has no rounds to speak of. A mission whose single round
+    /// outlasts `missionEngagedDelay` would otherwise be rung over while it is being done
+    /// correctly: brutal breathing is ten cycles of twenty seconds, and the follow-up is three
+    /// minutes out. Only real progress may call this; a blind heartbeat would let someone leave
+    /// the screen open and go back to sleep, which is the one thing this app must not allow.
+    var progressed: () -> Void = {}
+    /// The mission cannot be done on this phone: no pedometer, or the permission it needs was
+    /// refused. Stands the alarm down honestly rather than pretending the user did it.
+    var unavailable: () -> Void = {}
 }
 
 // MARK: - Chrome pieces

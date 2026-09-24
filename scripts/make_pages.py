@@ -267,12 +267,13 @@ def check_urls():
     expected = {
         "index.html": store.MARKETING_URL,
         "privacy.html": store.PRIVACY_URL,
+        "terms.html": store.TERMS_URL,
         "support.html": store.SUPPORT_URL,
     }
     problems = []
     for filename, url in expected.items():
         tail = url.rstrip("/").rsplit("/", 1)[-1]
-        # The marketing URL is the folder itself, which GitHub Pages serves as index.html.
+        # The marketing URL is the folder itself, which the distribution serves as index.html.
         if filename == "index.html":
             if not url.endswith("/"):
                 problems.append(f"MARKETING_URL should end in a slash: {url}")

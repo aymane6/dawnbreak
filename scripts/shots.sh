@@ -5,11 +5,9 @@
 #     scripts/shots.sh                # all twelve languages
 #     scripts/shots.sh fr-FR ja       # only these listings, by App Store Connect code
 #     scripts/shots.sh --frame-only   # re-frame what is already in build/shots/raw
-#     scripts/shots.sh --review       # only the paywall, for App Store review
 #
 # Output: build/shots/raw/<store>/NN-screen.png   as the simulator saw it
 #         build/shots/framed/<store>/NN-screen.png  what gets uploaded
-#         build/shots/review/paywall.png         sent with each product, not published
 #
 # One build, twelve launches. The app is built for testing once and then relaunched per language
 # with `-AppleLanguages`, which is the only way to get a screenshot of a *release-configured*
@@ -27,9 +25,6 @@ BUILD="$ROOT/build"
 RAW="$BUILD/shots/raw"
 FRAMED="$BUILD/shots/framed"
 DERIVED="$BUILD/shots/derived"
-# One image, English, unframed: Apple asks for a picture of the purchase screen with every product
-# and never publishes it. `scripts/iap.py` uploads it to all three.
-REVIEW="$BUILD/shots/review"
 
 # The 6.9-inch device the store requires, created by name so a rerun reuses it rather than
 # accumulating simulators. iPhone 17 Pro Max renders 1320×2868, one of the two accepted sizes.
@@ -51,19 +46,14 @@ say() { printf '\033[1;36m==>\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31mshots:\033[0m %s\n' "$*" >&2; exit 1; }
 
 FRAME_ONLY=0
-REVIEW_ONLY=0
 WANTED=()
 for argument in "$@"; do
   case "$argument" in
     --frame-only) FRAME_ONLY=1 ;;
-    --review) REVIEW_ONLY=1 ;;
     -*) die "unknown option $argument" ;;
     *) WANTED+=("$argument") ;;
   esac
 done
-
-[[ $FRAME_ONLY -eq 1 && $REVIEW_ONLY -eq 1 ]] && die "--frame-only and --review do different jobs"
-[[ $REVIEW_ONLY -eq 1 && ${#WANTED[@]} -gt 0 ]] && die "--review takes no languages: the review screenshot is English"
 
 # ---------------------------------------------------------------------------
 # The compositor, which also answers "which languages?" so this script holds
@@ -98,9 +88,7 @@ if [[ ${#WANTED[@]} -gt 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
-# The simulator, and the one build every capture runs on. Shared by the
-# twelve-language run and by --review, which need the same device in the same
-# state and differ only in what they photograph on it.
+# The simulator, and the one build every capture runs on.
 # ---------------------------------------------------------------------------
 
 # Sets UDID and PREFERENCES, which everything below reads.
@@ -135,6 +123,15 @@ print(runtimes[-1]['identifier'] if runtimes else '')
     say "Created $SIMULATOR ($UDID)"
   fi
 
+  # A device caught in `Shutting Down` refuses to boot with CoreSimulator error 405, and the boot
+  # below is the one command in this script that is not allowed to fail, so wait for a settled state
+  # first. Costs nothing when the device is already down or already up.
+  for _ in $(seq 90); do
+    state=$(xcrun simctl list devices | grep "$UDID" | sed -E 's/.*\(([^()]*)\)[[:space:]]*$/\1/')
+    [[ "$state" == "Shutdown" || "$state" == "Booted" ]] && break
+    sleep 1
+  done
+
   say "Booting $UDID"
   xcrun simctl boot "$UDID" 2>/dev/null || true
   xcrun simctl bootstatus "$UDID" -b
@@ -165,6 +162,35 @@ build_runner() {
     CODE_SIGNING_ALLOWED=NO
 }
 
+# Waits until the device is really down, because `simctl shutdown` does not.
+#
+# It returns as soon as the request is accepted, and on a loaded machine the device stays in
+# `Shutting Down` for seconds afterwards. Booting inside that window looks like it works: `bootstatus`
+# printed `Finished` with `Elapsed=00:00` on 2026-09-03, and the next command died with CoreSimulator
+# error 405, "Unable to lookup in current state: Shutting Down", losing the run. So read the state
+# rather than trusting the exit code.
+wait_until_shutdown() {
+  for _ in $(seq 90); do
+    state=$(xcrun simctl list devices | grep "$UDID" | sed -E 's/.*\(([^()]*)\)[[:space:]]*$/\1/')
+    [[ "$state" == "Shutdown" ]] && return 0
+    sleep 1
+  done
+
+  # A device that will not go down has stopped answering, and on 2026-09-03 that cost a whole run:
+  # `simctl status_bar clear` hung eleven minutes on a device sitting in `Booted` at 0.29 s of CPU,
+  # while the test runner for the same device refused to launch. Killing that one device's
+  # `launchd_sim` takes it down without touching CoreSimulator, which every other simulator on this
+  # shared Mac depends on. Matched on the device directory so no other device can be hit.
+  printf '\033[1;33mshots:\033[0m the simulator is stuck in %s, forcing it down\n' "$state" >&2
+  pkill -f "Devices/$UDID/data/var/run/launchd_bootstrap.plist" || true
+  for _ in $(seq 30); do
+    state=$(xcrun simctl list devices | grep "$UDID" | sed -E 's/.*\(([^()]*)\)[[:space:]]*$/\1/')
+    [[ "$state" == "Shutdown" ]] && return 0
+    sleep 1
+  done
+  die "the simulator is still $state after being forced down"
+}
+
 # $1 an AppleLanguages value, $2 an AppleLocale value. Resprings the device into that language and
 # reapplies the status bar, because a shutdown clears the overrides.
 use_language() {
@@ -180,10 +206,14 @@ use_language() {
   # `simctl spawn defaults` is worse, because spawn needs a booted device and the device's own
   # `cfprefsd` then rewrites the file from its cache on the way down. Neither wrote Japanese.
   xcrun simctl shutdown "$UDID" 2>/dev/null || true
+  wait_until_shutdown
   plutil -replace AppleLanguages -json "[\"$1\"]" "$PREFERENCES/.GlobalPreferences.plist"
   plutil -replace AppleLocale -string "$2" "$PREFERENCES/.GlobalPreferences.plist"
-  xcrun simctl boot "$UDID"
-  xcrun simctl bootstatus "$UDID" -b
+  # Nothing in here is fatal to the run. `set -e` plus a device that has gone deaf used to abort all
+  # twelve languages over one of them; the watchdog kills a hung `simctl` and the locale's own
+  # `xcodebuild` then fails, which the capture loop tolerates and the retake pass fixes.
+  xcrun simctl boot "$UDID" 2>/dev/null || true
+  xcrun simctl bootstatus "$UDID" -b || true
 
   # 9:41 is the time in every iPhone screenshot Apple has ever published; full bars and a charged
   # battery because 43% and two bars read as someone's phone rather than as a product shot.
@@ -192,70 +222,20 @@ use_language() {
   xcrun simctl status_bar "$UDID" override \
     --time "$CLOCK" \
     --dataNetwork wifi --wifiMode active --wifiBars 3 \
-    --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+    --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100 || true
 }
 
 # Left in the language of whichever listing came last otherwise, which is a surprise the next
 # person to open this simulator by hand does not deserve.
 finish_simulator() {
-  xcrun simctl status_bar "$UDID" clear
+  # Every line tolerant of failure: this is tidying, and the seventy-two images are already on disk
+  # by the time it runs. `status_bar clear` is the specific command that hung eleven minutes on a deaf
+  # device on 2026-09-03, and with `set -e` that hang was between the capture and the framing.
+  xcrun simctl status_bar "$UDID" clear || true
   xcrun simctl shutdown "$UDID" 2>/dev/null || true
-  plutil -replace AppleLanguages -json '["en"]' "$PREFERENCES/.GlobalPreferences.plist"
-  plutil -replace AppleLocale -string en_US "$PREFERENCES/.GlobalPreferences.plist"
+  plutil -replace AppleLanguages -json '["en"]' "$PREFERENCES/.GlobalPreferences.plist" || true
+  plutil -replace AppleLocale -string en_US "$PREFERENCES/.GlobalPreferences.plist" || true
 }
-
-# ---------------------------------------------------------------------------
-# The review screenshot: one screen, one language, no frame
-# ---------------------------------------------------------------------------
-
-if [[ $REVIEW_ONLY -eq 1 ]]; then
-  prepare_simulator
-
-  say "Capturing the paywall for App Store review"
-  rm -rf "$REVIEW"
-  mkdir -p "$REVIEW"
-  use_language en en_US
-
-  # `DawnbreakTests` and not the UI tests, which is the whole reason this branch shares nothing with
-  # the twelve-language run but the simulator.
-  #
-  # The paywall needs prices, prices need a StoreKit test session, and a session installs its
-  # products for the bundle id of the process that creates one. A UI test runner is its own bundle
-  # id, so the app under test finds nothing there and photographs "Prices are not loading"; a unit
-  # test bundle is loaded into the app, so the session and the screen are the same process. See the
-  # comment on `ReviewShotTests`, which also explains what that costs.
-  #
-  # The `Dawnbreak` scheme, therefore Debug, therefore its own derived data: the twelve-language run
-  # builds the same targets in Release into `$DERIVED` and frames from whatever `Dawnbreak.app` it
-  # finds there.
-  #
-  # Signed, unlike every other build here, and with entitlements the app does not otherwise ask for.
-  # `storekitd` will not hold a StoreKit configuration for an app that is not a development install,
-  # and what it reads is `get-task-allow`: without it `saveConfigurationData` is answered with
-  # "com.aymbam.dawnbreak is not installed for development", the session is created without
-  # complaint, no products arrive, and the paywall photographs "Prices are not loading". The
-  # entitlement is in `Configuration/Dawnbreak-Debug.entitlements`, generated by xcodegen from the
-  # `DawnbreakTests` target, and passed here rather than wired into the project so that no other
-  # build can pick it up: a distribution profile does not authorise it, and an archive signed with it
-  # fails. It applies to the widget as well, which is harmless and unavoidable, a command-line
-  # setting reaching every target in the build. Debug signs itself ad hoc on a simulator, so none of
-  # this costs a certificate or an account.
-  env TEST_RUNNER_DAWNBREAK_REVIEW_SHOT="$REVIEW" \
-    xcodebuild test \
-      -project Dawnbreak.xcodeproj \
-      -scheme Dawnbreak \
-      -destination "platform=iOS Simulator,id=$UDID" \
-      -derivedDataPath "$BUILD/shots/derived-review" \
-      -only-testing:DawnbreakTests/ReviewShotTests \
-      -quiet \
-      ONLY_ACTIVE_ARCH=YES \
-      CODE_SIGN_ENTITLEMENTS=Configuration/Dawnbreak-Debug.entitlements
-
-  finish_simulator
-  [[ -f "$REVIEW/paywall.png" ]] || die "the test passed but wrote no $REVIEW/paywall.png"
-  say "Done. $REVIEW/paywall.png, uploaded to all three products by scripts/iap.py"
-  exit 0
-fi
 
 # ---------------------------------------------------------------------------
 # Capture
@@ -265,7 +245,15 @@ if [[ $FRAME_ONLY -eq 0 ]]; then
   prepare_simulator
   build_runner
 
-  rm -rf "$RAW"
+  # Only the languages this run is going to retake. `rm -rf "$RAW"` used to be unconditional, which
+  # made the retake this script itself recommends destroy the rest of the run: on 2026-09-03,
+  # `scripts/shots.sh en-US de-DE`, copied from this script's own "retake with:" line, deleted the ten
+  # languages the sweep had just spent forty-five minutes capturing.
+  if [[ ${#WANTED[@]} -gt 0 ]]; then
+    for store in "${WANTED[@]}"; do rm -rf "$RAW/$store"; done
+  else
+    rm -rf "$RAW"
+  fi
   mkdir -p "$RAW"
 
   # One xcodebuild invocation per language, rather than one run that loops inside the test. The

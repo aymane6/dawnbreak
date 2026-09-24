@@ -38,11 +38,10 @@ ORDENTLICH GEBAUT
 - Kein Konto. Kein Login. Keine Werbung. Keine Analytics
 - Nichts verlässt das Telefon. Es gibt keinen Server, zu dem es könnte
 
-GRATIS UND PRO
+GRATIS, ALLES DAVON
 
-Gratis: ein Alarm, eine Runde, drei Missionen, Schwierigkeit bis mittel.
+Jede Mission, jeder Schwierigkeitsgrad, bis zu zehn Runden, so viele Alarme wie deine Woche braucht, neunzig Tage Verlauf. Es gibt nichts zu kaufen: kein Abo, keine Werbung, kein Konto.
 
-Pro: 25 Alarme, bis zu zehn Runden, alle zwölf Missionen, alle vier Schwierigkeitsgrade, neunzig Tage Verlauf. Monatlich, jährlich, oder ein Einmalkauf, der sich nie verlängert.
-
-Datenschutz: https://aymane6.github.io/dawnbreak/privacy.html
-Support: https://aymane6.github.io/dawnbreak/support.html
+Datenschutz: https://dawnbreak.app/privacy.html
+Nutzungsbedingungen: https://dawnbreak.app/terms.html
+Support: https://dawnbreak.app/support.html

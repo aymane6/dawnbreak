@@ -104,7 +104,6 @@ struct AlarmEditorView: View {
                 SectionLabel(titleKey: "editor.mission")
 
                 MissionGrid(selected: draft.mission.kind) { kind in
-                    guard app.allow(.mission(kind)) else { return }
                     draft.mission.kind = kind
                     // The enrollment belongs to the mission that asked for it; carrying a
                     // barcode payload over to a photo mission would make the alarm
@@ -127,18 +126,14 @@ struct AlarmEditorView: View {
                 DifficultyPicker(selection: Binding(
                     get: { draft.mission.difficulty },
                     set: { level in
-                        guard app.allow(.difficulty(level)) else { return }
                         draft.mission.difficulty = level
                     }
                 ))
 
                 RoundsStepper(rounds: Binding(
                     get: { draft.mission.rounds },
-                    set: { count in
-                        guard app.allow(.rounds(count)) else { return }
-                        draft.mission.rounds = count
-                    }
-                ), maximum: app.entitlement.maximumRounds)
+                    set: { draft.mission.rounds = $0 }
+                ))
 
                 MissionPreviewRow(mission: draft.mission)
 
@@ -188,7 +183,6 @@ struct AlarmEditorView: View {
 
                 if draft.followOns.count < FollowOnMission.maximumCount {
                     Button {
-                        guard app.allow(.followOns(draft.followOns.count + 1)) else { return }
                         draft.followOns.append(FollowOnMission(
                             mission: MissionConfig(kind: .shake, difficulty: draft.mission.difficulty)
                         ))
@@ -196,11 +190,6 @@ struct AlarmEditorView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "plus.circle.fill")
                             Text("editor.chain.add", bundle: .main)
-                            if app.entitlement.maximumFollowOns == 0 {
-                                Image(systemName: "lock.fill")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(Theme.warning)
-                            }
                         }
                         .font(Theme.bodyFont.weight(.medium))
                         .foregroundStyle(Theme.accent)
@@ -209,12 +198,6 @@ struct AlarmEditorView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier(AccessibilityID.editorChainAdd)
-                }
-
-                if app.entitlement.maximumFollowOns == 0 {
-                    Text("editor.chain.freeLimit", bundle: .main)
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
                 }
             }
         }
@@ -249,7 +232,7 @@ struct AlarmEditorView: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 SectionLabel(titleKey: "editor.sound")
-                SoundPicker(selection: $draft.soundName)
+                SoundRow(selection: $draft.soundName)
 
                 LabeledSlider(
                     titleKey: "editor.volume",
@@ -504,7 +487,6 @@ struct WeekdayPicker: View {
 // MARK: - Mission grid
 
 private struct MissionGrid: View {
-    @Environment(\.app) private var app
     let selected: MissionKind
     let onSelect: (MissionKind) -> Void
 
@@ -512,20 +494,11 @@ private struct MissionGrid: View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
             ForEach(sorted) { kind in
                 let isSelected = kind == selected
-                let locked = !app.entitlement.allows(kind)
                 Button { onSelect(kind) } label: {
                     VStack(spacing: 5) {
-                        ZStack(alignment: .topTrailing) {
-                            Image(systemName: kind.systemImage)
-                                .font(.system(size: 20))
-                                .frame(width: 30, height: 24)
-                            if locked {
-                                Image(systemName: "lock.fill")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .offset(x: 6, y: -3)
-                                    .foregroundStyle(Theme.warning)
-                            }
-                        }
+                        Image(systemName: kind.systemImage)
+                            .font(.system(size: 20))
+                            .frame(width: 30, height: 24)
                         Text(key: kind.titleKey)
                             .font(.system(size: 10, weight: .medium, design: .rounded))
                             .lineLimit(2)
@@ -557,7 +530,6 @@ private struct MissionGrid: View {
 }
 
 private struct DifficultyPicker: View {
-    @Environment(\.app) private var app
     @Binding var selection: Difficulty
 
     var body: some View {
@@ -566,16 +538,10 @@ private struct DifficultyPicker: View {
             HStack(spacing: 6) {
                 ForEach(Difficulty.allCases, id: \.self) { level in
                     let isOn = level == selection
-                    let locked = !app.entitlement.allows(level)
                     Button { selection = level } label: {
-                        HStack(spacing: 4) {
-                            Text(key: level.titleKey)
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            if locked {
-                                Image(systemName: "lock.fill").font(.system(size: 8, weight: .bold))
-                            }
-                        }
-                        .lineLimit(1)
+                        Text(key: level.titleKey)
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .lineLimit(1)
                         .minimumScaleFactor(0.8)
                         .frame(maxWidth: .infinity, minHeight: 36)
                         .foregroundStyle(isOn ? .white : Theme.textSecondary)
@@ -591,19 +557,11 @@ private struct DifficultyPicker: View {
 
 private struct RoundsStepper: View {
     @Binding var rounds: Int
-    let maximum: Int
 
     var body: some View {
         Stepper(value: Binding(get: { rounds }, set: { rounds = $0 }), in: 1...MissionConfig.maxRounds) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("editor.rounds", bundle: .main).font(Theme.bodyFont)
-                    if maximum < MissionConfig.maxRounds {
-                        Text("editor.rounds.freeLimit", bundle: .main)
-                            .font(.caption2)
-                            .foregroundStyle(Theme.textTertiary)
-                    }
-                }
+                Text("editor.rounds", bundle: .main).font(Theme.bodyFont)
                 Spacer()
                 Text(rounds.formatted(.number.grouping(.never)))
                     .font(Theme.bodyFont.monospacedDigit())
@@ -697,15 +655,32 @@ private struct MissionPreviewRow: View {
     let mission: MissionConfig
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "eye")
-                .font(.caption)
-                .foregroundStyle(Theme.textTertiary)
-            Text(summary)
-                .font(Theme.captionFont)
-                .foregroundStyle(Theme.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-            Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "eye")
+                    .font(.caption)
+                    .foregroundStyle(Theme.textTertiary)
+                Text(summary)
+                    .font(Theme.captionFont)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            // Said where the mission is still a choice, not once it is ringing. An alarm that asks
+            // fifteen squats of somebody half asleep is the shape of app App Review's 1.4.5 is
+            // written for, and the answer to it is one honest sentence in front of the decision.
+            if mission.kind.isPhysical {
+                HStack(spacing: 8) {
+                    Image(systemName: "figure.walk.motion")
+                        .font(.caption)
+                        .foregroundStyle(Theme.warning)
+                    Text("mission.physicalCaution", bundle: .main)
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                }
+            }
         }
         .padding(10)
         .background(Theme.surfaceRaised.opacity(0.6), in: .rect(cornerRadius: 12))
@@ -769,43 +744,132 @@ private struct LabeledSlider: View {
     }
 }
 
-private struct SoundPicker: View {
+/// The tone, as one row that opens the list.
+///
+/// It replaced a horizontal strip of tiles, and the strip is worth describing because it hid ten of
+/// the fourteen tones from the person who wrote them. 74pt tiles inside a card leave 317 usable
+/// points on a 6.1-inch screen and 364 on a 6.9-inch one, so three or four tiles showed; the scroll
+/// indicator was hidden; and nothing else said there was more. The owner tested the shipped build
+/// and reported that the app had four alarm sounds. He was reading the screen correctly.
+///
+/// A row that pushes a screen is the fix rather than a wider strip, because fourteen tiles laid out
+/// in the card would add about 230 points to an editor that already scrolls, and because a pushed
+/// list is where iOS users look for a choice among many.
+private struct SoundRow: View {
+    @Binding var selection: String
+
+    var body: some View {
+        NavigationLink {
+            SoundPickerScreen(selection: $selection)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: sound.loudness.systemImage)
+                    .font(.system(size: 15))
+                    .foregroundStyle(sound.loudness.tint)
+                    .frame(width: 22)
+                Text(key: sound.titleKey)
+                    .font(Theme.bodyFont)
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer(minLength: 8)
+                // The count, so the row says out loud how many there are. `verbatim` because it is
+                // a number in the user's own digits, not a sentence: Arabic renders it in
+                // Arabic-Indic digits through the formatter, and no new string is needed in twelve
+                // languages to say "14".
+                Text(verbatim: AlarmSound.allCases.count.formatted(.number.grouping(.never)))
+                    .font(Theme.captionFont.monospacedDigit())
+                    .foregroundStyle(Theme.textTertiary)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .frame(minHeight: Theme.Metric.minimumTarget)
+            // The whole row, not just the glyphs: without it the tappable area is the text's own
+            // twenty points, which is under the minimum target and reports as a twenty-point element
+            // to a UI test asking whether it can be tapped.
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.editorSoundRow)
+    }
+
+    private var sound: AlarmSound { AlarmSound(rawValue: selection) ?? .default }
+}
+
+/// Every tone at once, three to a row, loudest last.
+///
+/// Fourteen tiles in five rows of 68 points is 372 points, which fits without scrolling on the
+/// smallest screen the app supports. That is the whole design goal: the number of tones has to be
+/// countable at a glance, because the last version of this screen made ten of them invisible.
+private struct SoundPickerScreen: View {
     @Binding var selection: String
     @State private var preview = SoundPreviewer()
 
     var body: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                ForEach(sorted) { sound in
-                    let isOn = sound.rawValue == selection
-                    Button {
-                        selection = sound.rawValue
-                        preview.play(sound.rawValue)
-                    } label: {
-                        VStack(spacing: 4) {
-                            Image(systemName: sound.isGentle ? "waveform" : "speaker.wave.3.fill")
-                                .font(.system(size: 15))
-                            Text(key: sound.titleKey)
-                                .font(.system(size: 11, weight: .medium, design: .rounded))
-                                .lineLimit(1)
-                        }
-                        .frame(width: 74, height: 58)
-                        .foregroundStyle(isOn ? .white : Theme.textSecondary)
-                        .background(isOn ? Theme.accent : Theme.surfaceRaised, in: .rect(cornerRadius: 12))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        ScrollView {
+            LazyVGrid(columns: Array(repeating: GridItem(spacing: 10), count: 3), spacing: 10) {
+                ForEach(AlarmSound.allCases) { sound in
+                    tile(sound)
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.horizontal, Theme.Metric.gutter)
+            .padding(.vertical, 16)
+            .accessibilityIdentifier(AccessibilityID.editorSoundGrid)
         }
+        .dawnCanvas()
         .scrollIndicators(.hidden)
+        .navigationTitle(Text("editor.sound", bundle: .main))
+        .navigationBarTitleDisplayMode(.inline)
         .onDisappear { preview.stop() }
     }
 
-    /// Gentle tones first: someone browsing the list is more likely to be looking for a way
-    /// to be woken kindly than for the klaxon.
-    private var sorted: [AlarmSound] {
-        AlarmSound.allCases.sorted { ($0.isGentle ? 0 : 1, $0.rawValue) < ($1.isGentle ? 0 : 1, $1.rawValue) }
+    private func tile(_ sound: AlarmSound) -> some View {
+        let isOn = sound.rawValue == selection
+        return Button {
+            selection = sound.rawValue
+            preview.play(sound.rawValue)
+        } label: {
+            VStack(spacing: 6) {
+                Image(systemName: sound.loudness.systemImage)
+                    .font(.system(size: 17))
+                    .foregroundStyle(isOn ? .white : sound.loudness.tint)
+                Text(key: sound.titleKey)
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    // Two lines, not one: "Sonnenaufgang" and "Canto de pássaros" do not fit a
+                    // third of a 6.1-inch screen on one line, and a truncated tone name is a tone
+                    // nobody picks.
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity, minHeight: 68)
+            .padding(.horizontal, 4)
+            .foregroundStyle(isOn ? .white : Theme.textSecondary)
+            .background(isOn ? Theme.accent : Theme.surfaceRaised, in: .rect(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(AccessibilityID.editorTone(sound.rawValue))
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+    }
+}
+
+private extension AlarmSound.Loudness {
+    /// Named `systemImage` so `make_strings` skips it: SF Symbol names, not localization keys.
+    var systemImage: String {
+        switch self {
+        case .gentle: "waveform"
+        case .standard: "speaker.wave.2.fill"
+        case .harsh: "speaker.wave.3.fill"
+        case .savage: "exclamationmark.triangle.fill"
+        }
+    }
+
+    /// A colour on the icon rather than a label under it: the picker's tiles are 74 points wide and
+    /// a second line of text in twelve languages does not fit in any of them.
+    var tint: Color {
+        switch self {
+        case .gentle, .standard: Theme.textSecondary
+        case .harsh: Theme.accent
+        case .savage: Theme.danger
+        }
     }
 }

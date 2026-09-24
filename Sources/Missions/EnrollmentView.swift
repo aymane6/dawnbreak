@@ -127,7 +127,12 @@ struct EnrollmentView: View {
                 )
                 Button {
                     capturedReference = best.label
-                    if displayName.isEmpty { displayName = best.label }
+                    // Deliberately not prefilling the name field with `best.label`. The
+                    // classifier's identifiers are English, always: a French user who tapped
+                    // "use this" was then asked, at six in the morning, to photograph "kettle".
+                    // Vision's label set is open, so there is no table that could translate it;
+                    // leaving the field empty shows its placeholder and its hint instead, and
+                    // `fallbackName` supplies a translated generic noun if it stays empty.
                     recogniser.stop()
                 } label: {
                     Text("enroll.photo.useThis", bundle: .main)
@@ -181,10 +186,14 @@ struct EnrollmentView: View {
         .frame(maxHeight: .infinity)
     }
 
-    /// A name for the object when the user does not type one. The classifier's English label
-    /// is a poor display name, so a barcode falls back to a generic noun rather than showing
-    /// a fourteen-digit number in the alarm row.
+    /// A name for the object when the user does not type one. The classifier's English label is
+    /// no name at all in eleven of the twelve languages this app speaks — Vision answers
+    /// "kettle" whatever the phone is set to, and its label set is open, so nothing can
+    /// translate it — so both kinds of enrollment fall back to a generic noun rather than
+    /// showing an English identifier or a fourteen-digit number in the alarm row.
     private func fallbackName(for reference: String) -> String {
-        mission == .barcode ? localized("enroll.barcode.defaultName") : reference
+        mission == .barcode
+            ? localized("enroll.barcode.defaultName")
+            : localized("enroll.photo.defaultName")
     }
 }

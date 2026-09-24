@@ -351,25 +351,47 @@ final class AlarmBridge {
         guard var pending = beginMission(alarmID: alarmID, countAsDodge: false) else { return }
         guard pending.canSnooze else { return }
         pending.snoozeCount += 1
+        let delay = TimeInterval(pending.snooze.minutes * 60)
+        // Snooze is the one path that owes nothing until the alarm comes back, so the record is
+        // marked not-due until then and the screen comes down. Without both, pressing snooze
+        // read as nothing happening: `activeMission` stayed set, the mission cover stayed up
+        // with the audio stopped, the display stayed awake for the whole snooze because the
+        // runner holds `isIdleTimerDisabled`, and any return to the foreground reopened it.
+        // `notBefore` is the same mechanism a chained stage uses to wait its turn.
+        pending.notBefore = Date().addingTimeInterval(delay - PendingMission.dueMargin)
         PendingMissionStore.save(pending)
-        activeMission = pending
+        activeMission = nil
         log.amendLatest(alarmID: alarmID) { $0.snoozeCount = pending.snoozeCount }
-        await armFollowUp(pending, after: TimeInterval(pending.snooze.minutes * 60))
+        await armFollowUp(pending, after: delay)
     }
 
     /// The mission screen was left with the mission still owed, or the app was killed while it
     /// was up. Brings the alarm straight back, which is the whole point of the screen being hard
     /// to leave: walking away from it is not a way out.
+    ///
+    /// Not for an alarm whose insistence the user switched off. The always-armed promise is
+    /// scoped to relentless alarms — `handleStopPressed` and `handleMissionRequested` both say
+    /// so — and without the same guard here a non-relentless alarm came back anyway: five
+    /// seconds after the screen was dismissed, and again on the next launch that found the
+    /// mission owed. The setting was honoured only for as long as the app never came forward.
     func missionLeftUnfinished() async {
         guard let pending = activeMission ?? PendingMissionStore.loadIfFresh() else { return }
+        guard pending.relentless else {
+            Self.journal.info("mission left unfinished for \(pending.alarmID.uuidString, privacy: .public), not relentless: standing down")
+            return
+        }
         await armFollowUp(pending, after: Self.immediateDelay)
     }
 
     /// The mission is on screen and being worked on: the round just cleared, or the screen just
     /// opened. Pushes the follow-up out rather than cancelling it, so the alarm does not ring
     /// over someone who is doing exactly what it asked.
+    ///
+    /// Same guard as above: pushing a follow-up out is still arming one, and an alarm the user
+    /// told not to be insistent has nothing to push.
     func missionInProgress() async {
         guard let pending = activeMission else { return }
+        guard pending.relentless else { return }
         await armFollowUp(pending, after: Self.missionEngagedDelay)
     }
 
@@ -467,6 +489,28 @@ final class AlarmBridge {
                 lastFailure = Failure(messageKey: "error.scheduleFailed", detail: "follow-up: \(error)")
             }
         }
+        await standDownIfNothingIsOwed(pending)
+    }
+
+    /// Undoes a follow-up that outlived the morning it belonged to.
+    ///
+    /// `armFollowUp` is not atomic: the cancel is synchronous, the schedule is a round trip to the
+    /// daemon, and the mission can be settled while that trip is in flight — the last sum is
+    /// answered in the same tens of milliseconds. The arm then lands *after* `missionCompleted`
+    /// has cleared the record and put the alarm back on its own schedule, and the phone rings a
+    /// minute later at a morning that is already over, with nothing owed and nothing on screen to
+    /// explain it. Which is the promise inverted: this app may not let an alarm be escaped, and it
+    /// equally may not ring at someone who did what it asked.
+    ///
+    /// Every legitimate caller has the mission on disk by the time the arm returns — a dodge, a
+    /// snooze and a chained stage all write it before arming, deliberately — so "nothing owed"
+    /// here means exactly one thing. The honest end state is the alarm's own schedule.
+    private func standDownIfNothingIsOwed(_ pending: PendingMission) async {
+        guard activeMission == nil, PendingMissionStore.loadUpcoming() == nil else { return }
+        Self.journal.notice("follow-up for \(pending.alarmID.uuidString, privacy: .public) outlived its mission: standing it down")
+        cancel(pending.alarmID)
+        guard let alarm = alarms.alarm(id: pending.alarmID), alarm.isEnabled, !alarm.isOneShot else { return }
+        await schedule(alarm)
     }
 
     // MARK: - Mission outcome

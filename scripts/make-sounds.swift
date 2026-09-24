@@ -308,24 +308,374 @@ func birdsong() -> [Double] {
     return out
 }
 
-// MARK: - Output
+// MARK: - Aggressive primitives
+//
+// Everything below this line exists because the eight original tones were too polite. The owner's
+// verdict, and he is right about his own product: "les gens quand ils veulent cette application
+// c'est parce qu'ils veulent se faire réveiller" — nobody installs an alarm that holds you hostage
+// because they want a pleasant chime. What follows is the psychoacoustics of that, made explicit:
+//
+//   * 2–4 kHz is where the ear is most sensitive; energy put there is heard as loud for free.
+//   * Amplitude modulation between 4 and 8 Hz is maximally "rough" and maximally hard to ignore.
+//   * A minor second (a ratio near 1.06) beats against itself and cannot be heard as music.
+//   * A rising sweep reads as something approaching, which no sleeping brain files under "later".
+//   * Dense harmonics fill the spectrum, so no matter where a pillow absorbs, something gets out.
 
-/// Normalises to `peak`, fades both ends, and writes 16-bit mono CAF.
+/// A sawtooth, summed harmonic by harmonic up to `partials`.
 ///
-/// The per-tone peak is a loudness decision, not a technical one: the gentle tones are
-/// deliberately quieter than the harsh ones at the same volume setting, because "gentle" that
-/// arrives at full scale is a contradiction.
-func write(_ samples: [Double], named name: String, peak: Double) {
-    let loudest = samples.map(abs).max() ?? 0
-    guard loudest > 0 else { fatalError("make-sounds: \(name) rendered silence") }
-    let scale = peak / loudest
-    let fade = frames(0.012)
+/// Additive rather than a ramp modulo one: a ramp aliases hard at 44.1 kHz, and aliasing at these
+/// frequencies is a whistle sitting on top of the tone rather than the buzz that is wanted.
+func sawValue(_ phase: Double, partials: Int = 24) -> Double {
+    var value = 0.0
+    for harmonic in 1...partials {
+        value += sin(Double(harmonic) * phase) / Double(harmonic)
+    }
+    return value * 2 / .pi
+}
 
-    var floats = [Float](repeating: 0, count: samples.count)
+/// A square, odd harmonics only. Hollow, and much harsher than a saw at the same level.
+func squareValue(_ phase: Double, partials: Int = 15) -> Double {
+    var value = 0.0
+    for harmonic in stride(from: 1, through: partials, by: 2) {
+        value += sin(Double(harmonic) * phase) / Double(harmonic)
+    }
+    return value * 4 / .pi
+}
+
+/// Deterministic white noise. Checked-in tones have to be reproducible, so no `Double.random`.
+struct Noise {
+    private var seed: UInt64 = 0xD1B5_4A32_D192_ED03
+
+    mutating func next() -> Double {
+        seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+        return Double(Int64(bitPattern: seed >> 11)) / Double(1 << 52) - 1
+    }
+}
+
+/// A one-pole band-emphasis around `centre`, used to shove energy into the band the ear cannot
+/// ignore. Two poles would be cleaner and are not needed: the point is a tilt, not a filter.
+struct Resonator {
+    private var low = 0.0
+    private var band = 0.0
+    let coefficient: Double
+    let damping: Double
+
+    init(centre: Double, q: Double = 6) {
+        coefficient = 2 * sin(.pi * min(centre, sampleRate / 2.2) / sampleRate)
+        damping = 1 / q
+    }
+
+    mutating func process(_ input: Double) -> Double {
+        low += coefficient * band
+        let high = input - low - damping * band
+        band += coefficient * high
+        return band
+    }
+}
+
+/// Soft saturation. Folds peaks over instead of squaring them off, which raises the average level
+/// without the digital crackle of hard clipping — and adds the odd harmonics that make a tone
+/// sound angry rather than merely loud.
+func saturate(_ value: Double, drive: Double) -> Double {
+    tanh(value * drive) / tanh(drive)
+}
+
+// MARK: - The six aggressive tones
+
+/// Savage. An insect at the ear: a low sawtooth pair a minor second apart, ring-modulated at 55 Hz
+/// so the tone is rough rather than sustained, with a resonance at 2.6 kHz to put the whole thing
+/// where hearing is sharpest.
+func hornet() -> [Double] {
+    let seconds = 3.0
+    var out = [Double](repeating: 0, count: frames(seconds))
+    var first = Phasor(), second = Phasor(), modulator = Phasor()
+    var resonator = Resonator(centre: 2600, q: 4)
+    for i in out.indices {
+        let t = Double(i) / sampleRate
+        let a = sawValue(first.advance(184))
+        let b = sawValue(second.advance(195))
+        let rough = 0.55 + 0.45 * sin(modulator.advance(55))
+        let body = (a + b) * 0.5 * rough
+        let edge = resonator.process(body)
+        let value = saturate(body + 1.6 * edge, drive: 2.4)
+        out[i] = value * smoothstep(t / 0.02) * smoothstep((seconds - t) / 0.05)
+    }
+    return out
+}
+
+/// Savage. A fault buzzer: two square waves a minor second apart, gated eight times a second with
+/// hard edges. The dissonance beats, the gate stops the ear adapting, and there is nothing musical
+/// anywhere in it.
+func buzzer() -> [Double] {
+    let seconds = 3.0
+    var out = [Double](repeating: 0, count: frames(seconds))
+    var first = Phasor(), second = Phasor()
+    for i in out.indices {
+        let t = Double(i) / sampleRate
+        let period = 0.125
+        let inGate = t.truncatingRemainder(dividingBy: period)
+        // 2 ms edges: enough not to click at the loop point, short enough to stay a hard gate.
+        let gate = min(1, min(inGate, period * 0.72 - inGate) / 0.002)
+        guard gate > 0 else { continue }
+        let value = squareValue(first.advance(932)) * 0.5 + squareValue(second.advance(988)) * 0.5
+        out[i] = saturate(value, drive: 1.8) * gate * smoothstep(t / 0.01) * smoothstep((seconds - t) / 0.04)
+    }
+    return out
+}
+
+/// Savage. A swarm: filtered noise pulsing forty times a second around 3.1 kHz. No pitch to latch
+/// onto, no rhythm to predict, and it sits exactly where the ear is most sensitive.
+func cicada() -> [Double] {
+    let seconds = 3.0
+    var out = [Double](repeating: 0, count: frames(seconds))
+    var noise = Noise()
+    var high = Resonator(centre: 3100, q: 9)
+    var low = Resonator(centre: 1450, q: 7)
+    var modulator = Phasor()
+    for i in out.indices {
+        let t = Double(i) / sampleRate
+        let white = noise.next()
+        let voice = high.process(white) * 1.0 + low.process(white) * 0.5
+        // Squared modulation: a sharper pulse than a sine, which is what makes it chatter.
+        let pulse = pow(max(0, sin(modulator.advance(40))), 0.6)
+        out[i] = saturate(voice * pulse * 3.0, drive: 2.0)
+            * smoothstep(t / 0.02) * smoothstep((seconds - t) / 0.05)
+    }
+    return out
+}
+
+/// Harsh. Metal being hit: four inharmonic strikes a second, bright and short, with a resonance
+/// that rings just long enough to overlap the next one.
+func hammer() -> [Double] {
+    let seconds = 3.0
+    var out = [Double](repeating: 0, count: frames(seconds))
+    let partials: [(ratio: Double, amplitude: Double, tau: Double)] = [
+        (1.0, 1.00, 0.10), (2.37, 0.72, 0.075), (3.61, 0.55, 0.055),
+        (5.13, 0.40, 0.040), (7.42, 0.26, 0.028), (10.9, 0.16, 0.018),
+    ]
+    for hit in 0..<12 {
+        strike(
+            into: &out,
+            at: 0.02 + Double(hit) * 0.25,
+            frequency: 620,
+            partials: partials,
+            attack: 0.001,
+            level: hit.isMultiple(of: 2) ? 1.0 : 0.78
+        )
+    }
+    var noise = Noise()
+    var resonator = Resonator(centre: 3400, q: 12)
+    for i in out.indices {
+        let t = Double(i) / sampleRate
+        // A click of noise on each hit: an impact has a transient that a partial stack does not.
+        let phase = t.truncatingRemainder(dividingBy: 0.25)
+        let transient = exp(-phase / 0.004)
+        out[i] = saturate(out[i] + 0.9 * resonator.process(noise.next()) * transient, drive: 1.6)
+            * smoothstep((seconds - t) / 0.03)
+    }
+    return out
+}
+
+/// Harsh. The two-tone attention signal: 853 and 960 Hz alternating without a gap, the pair used by
+/// emergency broadcast systems because it is unmistakable and impossible to mistake for music.
+/// Public frequencies, synthesised here, nothing sampled.
+func pulse() -> [Double] {
+    let seconds = 3.0
+    var out = [Double](repeating: 0, count: frames(seconds))
+    var first = Phasor(), second = Phasor()
+    for i in out.indices {
+        let t = Double(i) / sampleRate
+        let value = squareValue(first.advance(853), partials: 9) * 0.5
+            + squareValue(second.advance(960), partials: 9) * 0.5
+        // Continuous, deliberately: silence is where a sleeping brain gets its rest.
+        out[i] = saturate(value, drive: 1.5) * smoothstep(t / 0.01) * smoothstep((seconds - t) / 0.03)
+    }
+    return out
+}
+
+/// Harsh. A siren that never arrives: 420 Hz up to 2.6 kHz in eight tenths of a second, over and
+/// over, each sweep starting before the ear has finished the last one.
+func spiral() -> [Double] {
+    let seconds = 3.2
+    var out = [Double](repeating: 0, count: frames(seconds))
+    var lower = Phasor(), upper = Phasor()
+    for i in out.indices {
+        let t = Double(i) / sampleRate
+        let sweep = t.truncatingRemainder(dividingBy: 0.8) / 0.8
+        // Exponential in frequency, because pitch is heard logarithmically and a linear ramp
+        // spends most of its time sounding high.
+        let frequency = 420 * pow(2.6e3 / 420, sweep)
+        let value = sawValue(lower.advance(frequency), partials: 14) * 0.7
+            // A second voice an octave down and half a sweep behind, which is what stops the
+            // repetition being predictable.
+            + sawValue(upper.advance(frequency * 0.5), partials: 10) * 0.4
+        out[i] = saturate(value, drive: 1.7) * smoothstep(t / 0.01) * smoothstep((seconds - t) / 0.04)
+    }
+    return out
+}
+
+// MARK: - Loudness
+
+/// Integrated loudness in LUFS, to ITU-R BS.1770-4: K-weighting, 400 ms blocks at 75 % overlap, an
+/// absolute gate at -70 LUFS and a relative gate 10 LU below the ungated mean.
+///
+/// This is here because peak normalisation is the reason the old tones sounded quiet. `radar` is
+/// eight 110 ms beeps inside four seconds: peak-normalised to 0.95 it measures around -23 LUFS,
+/// which is quieter than a podcast, while a continuous tone at the same peak measures around -10.
+/// The ear hears the average, not the maximum, and an alarm is judged entirely by the average.
+///
+/// The filter coefficients in the standard are given for 48 kHz, so the signal is resampled to
+/// 48 kHz first. Linear interpolation is enough: the error it puts on an integrated loudness
+/// measurement is a few hundredths of a LU, and the gain decisions here are made to a tenth.
+func integratedLoudness(_ samples: [Double]) -> Double {
+    let target = 48_000.0
+    var resampled = [Double](repeating: 0, count: Int(Double(samples.count) * target / sampleRate))
+    for i in resampled.indices {
+        let position = Double(i) * sampleRate / target
+        let index = Int(position)
+        let fraction = position - Double(index)
+        let a = samples[min(index, samples.count - 1)]
+        let b = samples[min(index + 1, samples.count - 1)]
+        resampled[i] = a + (b - a) * fraction
+    }
+
+    // Stage 1, the shelving filter that stands in for a head; stage 2, the RLB high-pass.
+    func biquad(_ input: [Double], _ b: (Double, Double, Double), _ a: (Double, Double)) -> [Double] {
+        var out = [Double](repeating: 0, count: input.count)
+        var x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0
+        for i in input.indices {
+            let x0 = input[i]
+            let y0 = b.0 * x0 + b.1 * x1 + b.2 * x2 - a.0 * y1 - a.1 * y2
+            out[i] = y0
+            x2 = x1; x1 = x0; y2 = y1; y1 = y0
+        }
+        return out
+    }
+    let shelved = biquad(resampled,
+                         (1.53512485958697, -2.69169618940638, 1.19839281085285),
+                         (-1.69065929318241, 0.73248077421585))
+    let weighted = biquad(shelved,
+                          (1.0, -2.0, 1.0),
+                          (-1.99004745483398, 0.99007225036621))
+
+    let block = Int(0.4 * target)
+    let step = Int(0.1 * target)
+    guard weighted.count >= block else { return -.infinity }
+    var powers: [Double] = []
+    var start = 0
+    while start + block <= weighted.count {
+        var sum = 0.0
+        for i in start..<(start + block) { sum += weighted[i] * weighted[i] }
+        powers.append(sum / Double(block))
+        start += step
+    }
+
+    func loudness(_ power: Double) -> Double { power > 0 ? -0.691 + 10 * log10(power) : -.infinity }
+
+    let aboveAbsolute = powers.filter { loudness($0) > -70 }
+    guard !aboveAbsolute.isEmpty else { return -.infinity }
+    let ungatedMean = aboveAbsolute.reduce(0, +) / Double(aboveAbsolute.count)
+    let relativeGate = loudness(ungatedMean) - 10
+    let gated = aboveAbsolute.filter { loudness($0) > relativeGate }
+    guard !gated.isEmpty else { return -.infinity }
+    return loudness(gated.reduce(0, +) / Double(gated.count))
+}
+
+/// An estimate of the true peak: the sample peak of a 4× linearly interpolated copy.
+///
+/// Sample peak alone understates a signal that peaks between two samples, and a file mastered to
+/// exactly 0 dBFS sample peak can still clip a resampler on the way to the speaker.
+func truePeak(_ samples: [Double]) -> Double {
+    var peak = 0.0
     for i in samples.indices {
-        var value = samples[i] * scale
+        let a = samples[i]
+        let b = samples[min(i + 1, samples.count - 1)]
+        for step in 0..<4 {
+            let value = abs(a + (b - a) * Double(step) / 4)
+            if value > peak { peak = value }
+        }
+    }
+    return peak
+}
+
+func decibels(_ amplitude: Double) -> Double { 20 * log10(max(amplitude, 1e-12)) }
+
+/// How loud a tone is meant to be, as an integrated loudness target.
+///
+/// Four classes rather than one number, because "gentle" that arrives at full scale is a
+/// contradiction and "savage" that arrives politely is a broken promise. The spread from gentle to
+/// savage is ten decibels, which is heard as roughly twice as loud.
+///
+/// -4 LUFS is not a taste, it is the ceiling. With true peak held at -1 dBTP, a tone can only be
+/// louder than that by having a crest factor under 3 dB, and a crest factor under 3 dB is a
+/// waveform squashed flat: all distortion, no impact. Every savage tone here sits on that wall.
+enum Loudness: Double {
+    case gentle = -14.0
+    case standard = -10.0
+    case harsh = -6.0
+    case savage = -4.0
+}
+
+/// Brings a tone to its loudness class, keeps it under the true-peak ceiling, and writes 16-bit
+/// mono CAF.
+///
+/// The old version of this normalised to a per-tone peak, which is why the alarms were quiet: peak
+/// says nothing about how loud something is heard to be. This measures integrated loudness, applies
+/// the gain that would hit the target, saturates whatever then exceeds the ceiling instead of
+/// clipping it, and repeats until the measurement agrees with the target. Saturation rather than a
+/// clean limiter is a deliberate choice for the harsh classes: folding peaks over adds odd
+/// harmonics, and odd harmonics are what the ear files under "angry".
+///
+/// It fails the build rather than shipping a tone that missed. A silent or quiet alarm is the one
+/// bug in this app nobody can work around at six in the morning.
+func write(_ samples: [Double], named name: String, loudness class: Loudness) {
+    let ceiling = pow(10.0, -1.0 / 20)  // -1 dBTP, so nothing downstream clips.
+    var working = samples
+    let start = truePeak(working)
+    guard start > 0 else { fatalError("make-sounds: \(name) rendered silence") }
+
+    // Start from the ceiling, then walk the loudness in. Six passes is more than convergence
+    // needs; the loop exits as soon as it is within a tenth of a LU.
+    working = working.map { $0 * ceiling / start }
+    var measured = integratedLoudness(working)
+    for _ in 0..<6 {
+        let error = `class`.rawValue - measured
+        if abs(error) < 0.1 { break }
+        let gain = pow(10.0, error / 20)
+        working = working.map { $0 * gain }
+        let peak = truePeak(working)
+        if peak > ceiling {
+            // Everything above the ceiling is folded rather than cut. The drive is derived from
+            // how far over it went, so a tone that only just clips is barely coloured and one
+            // pushed hard is coloured hard.
+            let drive = min(4.0, 1.0 + (peak / ceiling - 1) * 2.5)
+            working = working.map { saturate($0 / peak, drive: drive) * ceiling }
+        }
+        measured = integratedLoudness(working)
+    }
+
+    let peak = truePeak(working)
+    let crest = decibels(peak) - measured
+    let missed = abs(measured - `class`.rawValue)
+    guard missed < 0.6 else {
+        fatalError("make-sounds: \(name) landed at \(String(format: "%.2f", measured)) LUFS, "
+            + "\(String(format: "%.2f", missed)) LU off its \(`class`) target")
+    }
+    guard peak <= ceiling * 1.001 else {
+        fatalError("make-sounds: \(name) peaks at \(String(format: "%.2f", decibels(peak))) dBTP")
+    }
+    guard crest > 1.5 else {
+        fatalError("make-sounds: \(name) has a crest factor of \(String(format: "%.2f", crest)) dB, "
+            + "which is a tone squashed flat rather than a loud one")
+    }
+
+    let fade = frames(0.012)
+    var floats = [Float](repeating: 0, count: working.count)
+    for i in working.indices {
+        var value = working[i]
+        // The loop in `AlarmAudio` is seamless only if both ends are silent.
         if i < fade { value *= Double(i) / Double(fade) }
-        if i >= samples.count - fade { value *= Double(samples.count - i) / Double(fade) }
+        if i >= working.count - fade { value *= Double(working.count - i) / Double(fade) }
         floats[i] = Float(min(1, max(-1, value)))
     }
 
@@ -360,17 +710,30 @@ func write(_ samples: [Double], named name: String, peak: Double) {
     let bytes = ((try? FileManager.default.attributesOfItem(atPath: url.path))?[.size] as? Int) ?? 0
     let duration = Double(floats.count) / sampleRate
     let padded = name.padding(toLength: 9, withPad: " ", startingAt: 0)
-    print(String(format: "%@ %.2fs  peak %.2f  %4d KB", padded, duration, peak, bytes / 1024))
+    let klass = "\(`class`)".padding(toLength: 9, withPad: " ", startingAt: 0)
+    print(padded + klass + String(format: "%.2fs  %6.2f LUFS  peak %6.2f dBTP  crest %4.1f dB  %4d KB",
+                                  duration, measured, decibels(peak), crest, bytes / 1024))
 }
 
 let folder = URL(fileURLWithPath: FileManager.default.currentDirectoryPath).appending(path: "Resources/Sounds")
 try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
-write(sunrise(), named: "sunrise", peak: 0.72)
-write(radar(), named: "radar", peak: 0.95)
-write(klaxon(), named: "klaxon", peak: 0.97)
-write(marimba(), named: "marimba", peak: 0.84)
-write(cascade(), named: "cascade", peak: 0.80)
-write(bellhop(), named: "bellhop", peak: 0.88)
-write(siren(), named: "siren", peak: 0.95)
-write(birdsong(), named: "birdsong", peak: 0.74)
+// The order the editor shows them in: gentle first for people who want to be woken, savage last for
+// people who have learned to sleep through everything else. `AlarmSound.allCases` is the same order.
+write(sunrise(), named: "sunrise", loudness: .gentle)
+write(birdsong(), named: "birdsong", loudness: .gentle)
+write(marimba(), named: "marimba", loudness: .standard)
+write(cascade(), named: "cascade", loudness: .standard)
+write(bellhop(), named: "bellhop", loudness: .standard)
+write(radar(), named: "radar", loudness: .harsh)
+write(klaxon(), named: "klaxon", loudness: .harsh)
+write(hammer(), named: "hammer", loudness: .harsh)
+write(spiral(), named: "spiral", loudness: .harsh)
+// The five that exist for someone who sleeps through everything. `siren` moves up rather than down:
+// peak-normalised it already measured -4.1 LUFS, and a rewrite that made the loudest tone in the app
+// quieter would be a strange answer to "add louder ones".
+write(siren(), named: "siren", loudness: .savage)
+write(pulse(), named: "pulse", loudness: .savage)
+write(hornet(), named: "hornet", loudness: .savage)
+write(buzzer(), named: "buzzer", loudness: .savage)
+write(cicada(), named: "cicada", loudness: .savage)

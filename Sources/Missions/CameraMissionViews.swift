@@ -26,7 +26,7 @@ struct PhotoMissionView: View {
                 MissionUnavailableView(
                     titleKey: "mission.camera.denied.title",
                     bodyKey: "mission.camera.denied.body",
-                    onOverride: { callbacks.cleared() }
+                    onOverride: { callbacks.unavailable() }
                 )
             }
         }
@@ -129,7 +129,7 @@ struct BarcodeMissionView: View {
                 MissionUnavailableView(
                     titleKey: "mission.camera.denied.title",
                     bodyKey: "mission.camera.denied.body",
-                    onOverride: { callbacks.cleared() }
+                    onOverride: { callbacks.unavailable() }
                 )
             }
         }
@@ -203,7 +203,7 @@ struct SquatsMissionView: View {
                 MissionUnavailableView(
                     titleKey: "mission.camera.denied.title",
                     bodyKey: "mission.squats.denied.body",
-                    onOverride: { callbacks.cleared() }
+                    onOverride: { callbacks.unavailable() }
                 )
             }
         }
@@ -220,14 +220,14 @@ struct SquatsMissionView: View {
     private var counting: some View {
         MissionScaffold(
             instructionKey: MissionKind.squats.instructionKey,
-            instruction: localized(counter.state.promptKey)
+            instruction: localized(counter.promptKey)
         ) {
             ZStack {
                 CameraPreview(session: counter.engine.session)
                     .clipShape(.rect(cornerRadius: 24))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24)
-                            .stroke(counter.state == .waitingForBody ? Theme.warning : Theme.hairline, lineWidth: 3)
+                            .stroke(counter.isPhonePlanted ? Theme.hairline : Theme.warning, lineWidth: 3)
                     )
                     // Mirrored, because a front-camera view of yourself that moves the wrong
                     // way when you lean is disorienting.
@@ -235,6 +235,24 @@ struct SquatsMissionView: View {
                     .padding(.horizontal, Theme.Metric.gutter)
 
                 VStack {
+                    // Said over the viewfinder rather than only in the instruction line, because
+                    // this is the one state where the app is deliberately not counting and a user
+                    // who is not told why will decide the app is broken.
+                    if !counter.isPhonePlanted {
+                        Text(key: counter.promptKey)
+                            .font(Theme.headlineFont)
+                            // Black on amber, not white: white on this yellow measures 1.46:1, which
+                            // is unreadable by any standard and was unreadable in the room this app
+                            // is used in. Black on the same amber measures 13:1.
+                            .foregroundStyle(.black)
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 18)
+                            .background(Theme.warning.opacity(0.92), in: .rect(cornerRadius: 18))
+                            .padding(.top, 18)
+                            .padding(.horizontal, Theme.Metric.gutter + 12)
+                            .accessibilityIdentifier(AccessibilityID.squatsPhoneWarning)
+                    }
                     Spacer()
                     CountReadout(
                         count: min(counter.count, config.squatTarget),

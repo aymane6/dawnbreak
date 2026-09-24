@@ -39,8 +39,78 @@ final class SmokeTests: UITestCase {
         XCTAssertTrue(element(AccessibilityID.addAlarm, in: app).exists)
     }
 
+    /// Every alarm tone has to be reachable, and reachable without knowing to swipe.
+    ///
+    /// This is the test that was missing when the owner reported that the app had four alarm sounds.
+    /// It had fourteen, and all fourteen were in the accessibility tree, so counting them would have
+    /// passed: they sat in a horizontal strip of 74pt tiles inside a card, with the scroll indicator
+    /// hidden, and only three or four were on screen. So the assertion is not that the tiles exist.
+    /// It is that each one is inside the window and hittable, after zero swipes.
+    ///
+    /// Run in Arabic as well, where the names are longer and the layout is mirrored, because a tile
+    /// pushed off the edge by a translation is the same bug with a different cause.
+    func testEveryAlarmToneIsReachableFromTheEditor() {
+        for locale in [CaptureLocale.english, .arabic] {
+            let app = launch(.alarms, in: locale)
+            waitFor(AccessibilityID.alarmRow, in: app).tap()
+            waitFor(AccessibilityID.editorSave, in: app)
+
+            // The row that opens the list lives in the sound card, below the fold on a small screen.
+            scrollTo(AccessibilityID.editorSoundRow, in: app).tap()
+            // The first tile rather than the grid: an identifier on a `LazyVGrid` is an identifier on
+            // a layout container, and SwiftUI does not publish those as accessibility elements.
+            waitFor(AccessibilityID.editorTone("sunrise"), in: app)
+
+            let window = app.windows.firstMatch.frame
+            for name in Self.everyToneRawValue {
+                let tile = element(AccessibilityID.editorTone(name), in: app)
+                XCTAssertTrue(tile.waitForExistence(timeout: 5), "\(locale.language): no tile for \(name)")
+                XCTAssertTrue(tile.isHittable, "\(locale.language): the tile for \(name) cannot be tapped")
+                XCTAssertTrue(
+                    window.contains(tile.frame),
+                    "\(locale.language): the tile for \(name) is outside the window at \(tile.frame)"
+                )
+            }
+            app.terminate()
+        }
+    }
+
+    /// Choosing one has to stick, through the push, the save, and a reopen.
+    func testChoosingAToneSticksThroughSaveAndReopen() {
+        let app = launch(.alarms)
+        waitFor(AccessibilityID.alarmRow, in: app).tap()
+        waitFor(AccessibilityID.editorSave, in: app)
+        scrollTo(AccessibilityID.editorSoundRow, in: app).tap()
+
+        // The last tone in the grid, which is also the one that no strip ever showed.
+        let cicada = waitFor(AccessibilityID.editorTone("cicada"), in: app)
+        cicada.tap()
+        XCTAssertTrue(cicada.isSelected, "tapping a tone did not select it")
+
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        element(AccessibilityID.editorSave, in: app).tap()
+
+        waitFor(AccessibilityID.alarmRow, in: app).tap()
+        scrollTo(AccessibilityID.editorSoundRow, in: app).tap()
+        XCTAssertTrue(
+            waitFor(AccessibilityID.editorTone("cicada"), in: app).isSelected,
+            "the chosen tone did not survive save and reopen"
+        )
+    }
+
+    /// The fourteen, spelled out here rather than read from `AlarmSound`: the UI test bundle sees
+    /// only the app target and `Sources/Contract`, so the model is invisible to it. Written twice on
+    /// purpose, and `AlarmToneTests` in the unit bundle pins the same list against the real enum, so
+    /// a tone added in one place and forgotten in the other fails there.
+    static let everyToneRawValue = [
+        "sunrise", "birdsong",
+        "marimba", "cascade", "bellhop",
+        "radar", "klaxon", "hammer", "spiral",
+        "siren", "pulse", "hornet", "buzzer", "cicada",
+    ]
+
     /// The editor's two newest promises: a mission can be tried before anything is armed, and
-    /// the rehearsal's exit is always there and always works — nobody does squats to leave a
+    /// the rehearsal's exit is always there and always works, because nobody does squats to leave a
     /// settings screen. The follow-on chain's add button is checked in the same pass.
     func testAMissionCanBeRehearsedFromTheEditorAndLeft() {
         let app = launch(.alarms)
@@ -111,24 +181,6 @@ final class SmokeTests: UITestCase {
         // screen came up and that its list scrolls.
         scrollTo(AccessibilityID.settingsAppearance, in: app)
         assertNothingIsCoveringTheScreen(app)
-    }
-
-    /// The path the reviewer's notes describe: Settings, then Dawnbreak Pro, on the free tier.
-    ///
-    /// `metadata/review_information/notes.txt` tells Apple to get to the purchase screen that way,
-    /// and a reviewer who cannot follow those notes files a rejection rather than a bug report. The
-    /// row exists only on the free tier: on Pro it is "Pro is active" with nothing to tap, so this
-    /// is also the assertion that the seeded tier is the one being tested.
-    ///
-    /// Prices are not part of it. They need a StoreKit test session inside the app's own process,
-    /// which a UI test runner cannot give it, and they are what `ReviewShotTests` exists for.
-    func testTheFreeTierReachesThePaywallFromSettings() {
-        let app = launch(.settings, free: true)
-        waitFor(AccessibilityID.settingsUpgrade, in: app).tap()
-        XCTAssertTrue(
-            element(AccessibilityID.paywallPurchase, in: app).waitForExistence(timeout: anchorTimeout),
-            "Settings no longer reaches the paywall, and the review notes say it does"
-        )
     }
 
     /// Every one of the twelve languages launches, and none of them shows a raw key.

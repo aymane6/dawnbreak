@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>Terms · Dawnbreak</title>
+    <meta name="description" content="The alarm you cannot switch off in your sleep.">
+    <link rel="canonical" href="https://dawnbreak.app/terms.html">
+    <style>
+:root {
+  color-scheme: dark;
+  --canvas: #0b0d14;
+  --canvas-top: #1a1526;
+  --ink: #f6f4f1;
+  --ink-dim: #9ba0b5;
+  --hairline: #2c3145;
+  --dawn-start: #ffa24b;
+  --dawn-end: #ff5e62;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: 0 1.25rem 5rem;
+  background:
+    radial-gradient(120% 60% at 50% 0%, var(--canvas-top) 0%, transparent 60%),
+    var(--canvas);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  text-wrap: pretty;
+}
+
+.sheet { max-width: 36rem; margin: 0 auto; }
+
+header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.75rem 0 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 2.5rem;
+}
+
+/* The wordmark, which is the app's name and is never translated. */
+.mark {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  color: var(--ink);
+  padding-bottom: 1.25rem;
+}
+
+.mark span {
+  background: linear-gradient(100deg, var(--dawn-start), var(--dawn-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A real select element, so it is reachable by keyboard and by VoiceOver without any work. */
+select {
+  appearance: none;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem 1.9rem 0.35rem 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 0.6rem;
+  background: transparent;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+  background-position: right 0.85rem center, right 0.6rem center;
+  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+
+select:focus-visible, a:focus-visible {
+  outline: 2px solid var(--dawn-start);
+  outline-offset: 3px;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2.25rem, 9vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  margin: 0 0 2.5rem;
+  font-size: 1.25rem;
+  line-height: 1.4;
+  color: var(--ink-dim);
+}
+
+h2 {
+  margin: 2.75rem 0 0.75rem;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dawn-start);
+}
+
+/* Uppercasing a Japanese or Arabic heading does nothing and letter-spacing it does harm. */
+html:lang(ar) h2, html:lang(hi) h2, html:lang(ja) h2, html:lang(ko) h2, html:lang(zh-Hans) h2 {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+p { margin: 0 0 1.1rem; }
+
+ul { margin: 0 0 1.1rem; padding-inline-start: 1.1rem; }
+
+li { margin-bottom: 0.55rem; }
+
+a { color: var(--dawn-start); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+
+footer {
+  margin-top: 3.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--hairline);
+  color: var(--ink-dim);
+  font-size: 0.9375rem;
+}
+
+footer a { color: var(--ink-dim); }
+
+footer nav { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 0.75rem; }
+
+/* One language at a time. Eleven of the twelve sheets carry `hidden` in the markup, so a reader
+   with no JavaScript gets English rather than twelve copies of everything; the script moves the
+   attribute rather than adding a class, and this is what makes it bite. */
+.sheet[hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="sheet" lang="en" dir="ltr" data-title="Terms · Dawnbreak">
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="English">
+          <option value="en" selected>English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Terms</h1>
+        <p>Dawnbreak is made and published by Aymane Bamhamed. Installing it means accepting what is written here. It is short on purpose: there is no account, no server and no data collection to describe.</p>
+        <h2>An alarm clock, not a safety device</h2>
+        <p>Dawnbreak rings through Focus modes and through Silent because iOS lets an alarm do that. It cannot ring if the phone is switched off, out of battery, or if the permission it asked for at first launch was refused. Do not make it the only thing standing between you and a flight, an exam or a shift. Keep a second alarm for anything that matters that much.</p>
+        <h2>The missions ask you to move</h2>
+        <p>Two missions count steps and squats using the phone's sensors and camera. Do only what your body allows, and stop if something hurts. Every alarm has an emergency exit, on by default, which abandons the mission and stands the alarm down; it is in Settings and it can be switched off once you no longer want it. If you have a medical condition that makes physical effort unwise, choose one of the missions that asks nothing of your body.</p>
+        <h2>Free</h2>
+        <p>Everything in the app is free: twelve missions, four difficulties, up to ten rounds, as many alarms as your week needs and ninety days of history. There is nothing to buy, no subscription, no advertising and no account.</p>
+        <h2>Your data</h2>
+        <p>Nothing leaves your phone. The alarms, the missions, the history and the reference photo a mission may need are files inside the app's own container. The privacy policy on this site says the same thing in more detail.</p>
+        <h2>What is not promised</h2>
+        <p>The app is provided as it is. It has been tested on current iPhones and current iOS, and it can still be wrong: an iOS release can change how alarms behave, and a sensor can misread a movement. The app is free, so there is no price to refund and no sum paid against which a claim could be measured. Nothing here removes the rights your own consumer law gives you.</p>
+        <h2>Changes</h2>
+        <p>These terms change when the app changes, in the same release. The version on this page is the one that applies.</p>
+        <h2>Contact</h2>
+        <p>Questions about these terms, or about anything the app did: fastpapershot.supp@outlook.com. French law applies, without prejudice to the consumer protections of the country you live in.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html">Support</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ar" dir="rtl" data-title="الشروط · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="العربية">
+          <option value="en">English</option>
+          <option value="ar" selected>العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>الشروط</h1>
+        <p>Dawnbreak من تطوير أيمن بامحمد ونشره. تثبيت التطبيق يعني قبول ما هو مكتوب هنا. النص قصير بقصد: لا حساب، ولا خادم، ولا جمع بيانات نصفه.</p>
+        <h2>منبّه، وليس جهاز سلامة</h2>
+        <p>يرن Dawnbreak عبر أنماط التركيز وعبر الصامت لأن iOS يسمح للمنبه بذلك. ولا يمكنه الرنين إذا كان الهاتف مطفأً أو نفدت بطاريته أو إذا رُفض الإذن الذي طلبه في أول تشغيل. لا تجعله الشيء الوحيد بينك وبين طائرة أو امتحان أو نوبة عمل. أبقِ منبهاً ثانياً لكل ما يهم بهذا القدر.</p>
+        <h2>المهام تطلب منك الحركة</h2>
+        <p>مهمتان تعتمدان على مستشعرات الهاتف والكاميرا لعدّ الخطوات والقرفصاء. افعل ما يسمح به جسدك فقط، وتوقّف إذا شعرت بألم. لكل منبه سبيل خروج طارئ، مُفعَّل افتراضياً، يتخلّى عن المهمة ويوقف المنبه؛ تجده في الإعدادات ويمكن إيقافه متى لم تعد تريده. إذا كانت لديك حالة صحية تجعل المجهود البدني غير حكيم، فاختر إحدى المهام التي لا تطلب شيئاً من جسدك.</p>
+        <h2>بالمجان</h2>
+        <p>كل ما في التطبيق مجاني: اثنتا عشرة مهمة، وأربع صعوبات، وحتى عشر جولات، وعدد المنبهات الذي يحتاجه أسبوعك، وتسعون يوماً من السجل. لا شيء للبيع، ولا اشتراك، ولا إعلانات، ولا حساب.</p>
+        <h2>بياناتك</h2>
+        <p>لا شيء يخرج من هاتفك. المنبهات والمهام والسجل وصورة المرجع التي قد تحتاجها مهمة، كلها ملفات داخل حاوية التطبيق. وسياسة الخصوصية على هذا الموقع تقول الأمر نفسه بتفصيل أكبر.</p>
+        <h2>ما لا يُوعَد به</h2>
+        <p>يُقدَّم التطبيق كما هو. جُرّب على أجهزة iPhone وأنظمة iOS الحالية، ويمكن أن يخطئ رغم ذلك: قد يغيّر إصدار من iOS سلوك المنبهات، وقد يخطئ مستشعر في قراءة حركة. التطبيق مجاني، فلا ثمن يُرد ولا مبلغ دُفع تُقاس عليه مطالبة. ولا شيء هنا يسقط الحقوق التي يمنحك قانون حماية المستهلك عندك.</p>
+        <h2>التغييرات</h2>
+        <p>تتغير هذه الشروط عندما يتغير التطبيق، في الإصدار نفسه. والنسخة المعروضة في هذه الصفحة هي السارية.</p>
+        <h2>التواصل</h2>
+        <p>أسئلة عن هذه الشروط أو عن أي شيء فعله التطبيق: fastpapershot.supp@outlook.com. يسري القانون الفرنسي، دون المساس بحقوق حماية المستهلك في بلد إقامتك.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">الخصوصية</a>
+          <a href="support.html">الدعم</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="de" dir="ltr" data-title="Nutzungsbedingungen · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Deutsch">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de" selected>Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Nutzungsbedingungen</h1>
+        <p>Dawnbreak wird von Aymane Bamhamed entwickelt und veröffentlicht. Wer es installiert, akzeptiert, was hier steht. Der Text ist absichtlich kurz: es gibt kein Konto, keinen Server und keine Datenerhebung zu beschreiben.</p>
+        <h2>Ein Wecker, kein Sicherheitsgerät</h2>
+        <p>Dawnbreak klingelt durch Fokus und durch den Lautlos-Schalter, weil iOS das einem Alarm erlaubt. Es kann nicht klingeln, wenn das iPhone aus ist, der Akku leer ist oder die Berechtigung beim ersten Start abgelehnt wurde. Mach es nicht zum einzigen, was zwischen dir und einem Flug, einer Prüfung oder einer Schicht steht. Halte für alles, was so wichtig ist, einen zweiten Wecker.</p>
+        <h2>Die Missionen verlangen Bewegung</h2>
+        <p>Zwei Missionen zählen Schritte und Kniebeugen über Sensoren und Kamera. Tu nur, was dein Körper zulässt, und höre auf, wenn etwas schmerzt. Jeder Alarm hat einen Notausgang, standardmäßig aktiv, der die Mission abbricht und den Alarm abstellt; er steht in den Einstellungen und kann abgeschaltet werden, sobald du ihn nicht mehr willst. Wenn eine Erkrankung körperliche Anstrengung unklug macht, nimm eine der Missionen, die vom Körper nichts verlangt.</p>
+        <h2>Gratis</h2>
+        <p>Alles in der App ist gratis: zwölf Missionen, vier Schwierigkeiten, bis zu zehn Runden, so viele Alarme wie deine Woche braucht und neunzig Tage Verlauf. Es gibt nichts zu kaufen, kein Abo, keine Werbung und kein Konto.</p>
+        <h2>Deine Daten</h2>
+        <p>Nichts verlässt dein iPhone. Alarme, Missionen, Verlauf und das Referenzfoto, das eine Mission braucht, sind Dateien im eigenen Container der App. Die Datenschutzseite auf dieser Website sagt dasselbe ausführlicher.</p>
+        <h2>Was nicht versprochen wird</h2>
+        <p>Die App wird so bereitgestellt, wie sie ist. Sie wurde auf aktuellen iPhones und aktuellem iOS getestet und kann sich trotzdem irren: ein iOS-Update kann das Verhalten von Alarmen ändern, und ein Sensor kann eine Bewegung falsch lesen. Die App ist gratis, es gibt also keinen Preis zurückzuzahlen und keinen bezahlten Betrag, an dem sich ein Anspruch messen ließe. Nichts hiervon nimmt dir Rechte aus deinem Verbraucherrecht.</p>
+        <h2>Änderungen</h2>
+        <p>Diese Bedingungen ändern sich mit der App, in derselben Version. Es gilt die Fassung, die auf dieser Seite steht.</p>
+        <h2>Kontakt</h2>
+        <p>Fragen zu diesen Bedingungen oder zu irgendetwas, das die App getan hat: fastpapershot.supp@outlook.com. Es gilt französisches Recht, unbeschadet des Verbraucherschutzes deines Wohnsitzlandes.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Datenschutz</a>
+          <a href="support.html">Hilfe</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="es" dir="ltr" data-title="Términos · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Español">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es" selected>Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Términos</h1>
+        <p>Dawnbreak lo hace y lo publica Aymane Bamhamed. Instalarlo significa aceptar lo que está escrito aquí. Es corto a propósito: no hay cuenta, ni servidor, ni recogida de datos que describir.</p>
+        <h2>Un despertador, no un dispositivo de seguridad</h2>
+        <p>Dawnbreak suena a través de los modos de concentración y del silencio porque iOS lo permite a una alarma. No puede sonar si el teléfono está apagado, sin batería, o si se denegó el permiso que pidió al primer arranque. No lo conviertas en lo único que hay entre ti y un vuelo, un examen o un turno. Deja un segundo despertador para todo lo que importe tanto.</p>
+        <h2>Las misiones te piden moverte</h2>
+        <p>Dos misiones cuentan pasos y sentadillas con los sensores y la cámara. Haz solo lo que tu cuerpo permita y para si algo duele. Cada alarma tiene una salida de emergencia, activada por defecto, que abandona la misión y desarma la alarma; está en Ajustes y se puede desactivar cuando ya no la quieras. Si tienes una condición médica que hace imprudente el esfuerzo físico, elige una de las misiones que no pide nada al cuerpo.</p>
+        <h2>Gratis</h2>
+        <p>Todo en la app es gratis: doce misiones, cuatro dificultades, hasta diez rondas, tantas alarmas como necesite tu semana y noventa días de historial. No hay nada que comprar, ni suscripción, ni anuncios, ni cuenta.</p>
+        <h2>Tus datos</h2>
+        <p>Nada sale de tu teléfono. Las alarmas, las misiones, el historial y la foto de referencia que una misión pueda necesitar son archivos dentro del contenedor de la app. La política de privacidad de este sitio lo dice con más detalle.</p>
+        <h2>Lo que no se promete</h2>
+        <p>La app se ofrece tal cual. Se ha probado en iPhones e iOS actuales y aun así puede equivocarse: una versión de iOS puede cambiar cómo se comportan las alarmas, y un sensor puede leer mal un movimiento. La app es gratis, así que no hay precio que devolver ni importe pagado con el que medir una reclamación. Nada de esto te quita los derechos que te da tu ley de consumo.</p>
+        <h2>Cambios</h2>
+        <p>Estos términos cambian cuando cambia la app, en la misma versión. La versión que aparece en esta página es la que se aplica.</p>
+        <h2>Contacto</h2>
+        <p>Dudas sobre estos términos o sobre cualquier cosa que haya hecho la app: fastpapershot.supp@outlook.com. Se aplica la ley francesa, sin perjuicio de las protecciones al consumidor del país donde vives.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacidad</a>
+          <a href="support.html">Soporte</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="fr" dir="ltr" data-title="Conditions · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Français">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr" selected>Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Conditions</h1>
+        <p>Dawnbreak est développé et publié par Aymane Bamhamed. L'installer vaut acceptation de ce qui est écrit ici. Le texte est court exprès : il n'y a ni compte, ni serveur, ni collecte de données à décrire.</p>
+        <h2>Un réveil, pas un dispositif de sécurité</h2>
+        <p>Dawnbreak sonne à travers les modes de concentration et à travers le mode silencieux, parce qu'iOS l'autorise pour une alarme. Il ne peut pas sonner si le téléphone est éteint, à plat, ou si l'autorisation demandée au premier lancement a été refusée. N'en faites pas la seule chose entre vous et un avion, un examen ou une prise de poste. Gardez un second réveil pour tout ce qui compte à ce point.</p>
+        <h2>Les missions demandent de bouger</h2>
+        <p>Deux missions comptent des pas et des squats avec les capteurs et la caméra. Ne faites que ce que votre corps permet, et arrêtez si quelque chose fait mal. Chaque alarme a une sortie de secours, activée par défaut, qui abandonne la mission et désarme l'alarme ; elle est dans les réglages et peut être désactivée quand vous n'en voulez plus. Si une condition médicale rend l'effort physique déconseillé, choisissez une des missions qui ne demandent rien au corps.</p>
+        <h2>Gratuit</h2>
+        <p>Tout dans l'app est gratuit : douze missions, quatre difficultés, jusqu'à dix manches, autant d'alarmes que votre semaine en demande et quatre-vingt-dix jours d'historique. Il n'y a rien à acheter, aucun abonnement, aucune publicité et aucun compte.</p>
+        <h2>Vos données</h2>
+        <p>Rien ne quitte votre téléphone. Les alarmes, les missions, l'historique et la photo de référence dont une mission peut avoir besoin sont des fichiers dans le conteneur de l'app. La politique de confidentialité de ce site le dit plus en détail.</p>
+        <h2>Ce qui n'est pas promis</h2>
+        <p>L'app est fournie telle quelle. Elle est testée sur des iPhone et des iOS actuels, et elle peut quand même se tromper : une version d'iOS peut changer le comportement des alarmes, et un capteur peut mal lire un mouvement. L'app est gratuite : il n'y a aucun prix à rembourser et aucune somme payée sur laquelle mesurer une réclamation. Rien ici ne vous retire les droits que votre droit de la consommation vous donne.</p>
+        <h2>Modifications</h2>
+        <p>Ces conditions changent quand l'app change, dans la même version. Celle qui figure sur cette page est celle qui s'applique.</p>
+        <h2>Contact</h2>
+        <p>Une question sur ces conditions, ou sur quelque chose que l'app a fait : fastpapershot.supp@outlook.com. Le droit français s'applique, sans préjudice des protections du consommateur du pays où vous vivez.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Confidentialité</a>
+          <a href="support.html">Assistance</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="hi" dir="ltr" data-title="शर्तें · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="हिन्दी">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi" selected>हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>शर्तें</h1>
+        <p>Dawnbreak को अयमान बामहामेद बनाते और प्रकाशित करते हैं। इसे इंस्टॉल करना यहाँ लिखी बातों को स्वीकारना है। यह जान-बूझकर छोटा है: कोई खाता, कोई सर्वर, और कोई डेटा संग्रह नहीं है जिसका वर्णन करना पड़े।</p>
+        <h2>एक अलार्म, कोई सुरक्षा उपकरण नहीं</h2>
+        <p>Dawnbreak फ़ोकस मोड और साइलेंट के आर-पार बजता है, क्योंकि iOS एक अलार्म को इसकी अनुमति देता है। यह नहीं बज सकता अगर फ़ोन बंद है, बैटरी ख़त्म है, या पहली बार माँगी गई अनुमति मना कर दी गई थी। इसे अपनी उड़ान, परीक्षा या शिफ़्ट के बीच खड़ी एकमात्र चीज़ न बनाएँ। इतनी अहम चीज़ों के लिए दूसरा अलार्म रखें।</p>
+        <h2>मिशन आपसे हिलने-डुलने को कहते हैं</h2>
+        <p>दो मिशन फ़ोन के सेंसर और कैमरे से कदम और स्क्वैट गिनते हैं। वही करें जो आपका शरीर सहे, और दर्द होने पर रुक जाएँ। हर अलार्म में एक आपातकालीन निकास है, जो डिफ़ॉल्ट रूप से चालू है, मिशन छोड़ देता है और अलार्म बंद कर देता है; यह सेटिंग्स में है और ज़रूरत न रहने पर बंद किया जा सकता है। अगर कोई चिकित्सीय स्थिति शारीरिक श्रम को असुरक्षित बनाती है, तो उन मिशनों में से चुनें जो शरीर से कुछ नहीं माँगते।</p>
+        <h2>मुफ़्त</h2>
+        <p>ऐप में सब कुछ मुफ़्त है: बारह मिशन, चार कठिनाइयाँ, दस राउंड तक, जितने अलार्म आपके हफ़्ते को चाहिए उतने, और नब्बे दिन का इतिहास। ख़रीदने के लिए कुछ नहीं है, कोई सदस्यता नहीं, कोई विज्ञापन नहीं, कोई खाता नहीं।</p>
+        <h2>आपका डेटा</h2>
+        <p>कुछ भी आपके फ़ोन से बाहर नहीं जाता। अलार्म, मिशन, इतिहास और किसी मिशन को चाहने वाली संदर्भ तस्वीर, सब ऐप के अपने कंटेनर में फ़ाइलें हैं। इस साइट की गोपनीयता नीति यही बात और विस्तार से कहती है।</p>
+        <h2>जो वादा नहीं है</h2>
+        <p>ऐप जैसा है वैसा दिया जाता है। इसे वर्तमान iPhone और वर्तमान iOS पर परखा गया है, और फिर भी यह ग़लत हो सकता है: iOS का कोई अपडेट अलार्म के व्यवहार को बदल सकता है, और सेंसर किसी हरकत को ग़लत पढ़ सकता है। ऐप मुफ़्त है, इसलिए लौटाने के लिए कोई क़ीमत नहीं है और कोई चुकाई गई राशि नहीं जिस पर दावा नापा जाए। यहाँ कुछ भी आपके उपभोक्ता क़ानून से मिले अधिकार नहीं छीनता।</p>
+        <h2>बदलाव</h2>
+        <p>ये शर्तें ऐप के बदलने पर उसी रिलीज़ में बदलती हैं। इस पृष्ठ पर मौजूद संस्करण ही लागू है।</p>
+        <h2>संपर्क</h2>
+        <p>इन शर्तों, या ऐप ने जो किया उसके बारे में सवाल: fastpapershot.supp@outlook.com. फ़्रांसीसी क़ानून लागू होता है, आपके निवास देश की उपभोक्ता सुरक्षा पर प्रभाव डाले बिना।</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">गोपनीयता</a>
+          <a href="support.html">सहायता</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="it" dir="ltr" data-title="Termini · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Italiano">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it" selected>Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Termini</h1>
+        <p>Dawnbreak è realizzato e pubblicato da Aymane Bamhamed. Installarlo significa accettare quanto scritto qui. È breve di proposito: non c'è un account, non c'è un server e non c'è raccolta di dati da descrivere.</p>
+        <h2>Una sveglia, non un dispositivo di sicurezza</h2>
+        <p>Dawnbreak suona attraverso le modalità di concentrazione e attraverso il silenzioso, perché iOS lo consente a una sveglia. Non può suonare se il telefono è spento, senza batteria, o se il permesso chiesto al primo avvio è stato negato. Non farne l'unica cosa fra te e un volo, un esame o un turno. Tieni una seconda sveglia per tutto ciò che conta così tanto.</p>
+        <h2>Le missioni chiedono di muoversi</h2>
+        <p>Due missioni contano passi e squat usando i sensori e la fotocamera. Fai solo quello che il tuo corpo permette, e fermati se qualcosa fa male. Ogni sveglia ha un'uscita di emergenza, attiva per impostazione predefinita, che abbandona la missione e disarma la sveglia; è nelle impostazioni e può essere disattivata quando non la vuoi più. Se una condizione medica rende imprudente lo sforzo fisico, scegli una delle missioni che non chiedono nulla al corpo.</p>
+        <h2>Gratis</h2>
+        <p>Tutto nell'app è gratis: dodici missioni, quattro difficoltà, fino a dieci turni, tutte le sveglie che la tua settimana richiede e novanta giorni di cronologia. Non c'è nulla da comprare, nessun abbonamento, nessuna pubblicità e nessun account.</p>
+        <h2>I tuoi dati</h2>
+        <p>Niente lascia il telefono. Sveglie, missioni, cronologia e la foto di riferimento che una missione può richiedere sono file nel contenitore dell'app. L'informativa privacy di questo sito lo dice più in dettaglio.</p>
+        <h2>Ciò che non viene promesso</h2>
+        <p>L'app è fornita così com'è. È stata provata su iPhone e iOS attuali e può comunque sbagliare: una versione di iOS può cambiare il comportamento delle sveglie, e un sensore può leggere male un movimento. L'app è gratis, quindi non c'è un prezzo da rimborsare né una somma pagata su cui misurare una richiesta. Niente di questo ti toglie i diritti che ti dà la tua legge sui consumatori.</p>
+        <h2>Modifiche</h2>
+        <p>Questi termini cambiano quando cambia l'app, nella stessa versione. Vale quella che appare in questa pagina.</p>
+        <h2>Contatti</h2>
+        <p>Domande su questi termini o su qualsiasi cosa abbia fatto l'app: fastpapershot.supp@outlook.com. Si applica la legge francese, senza pregiudizio delle tutele del consumatore del paese in cui vivi.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacy</a>
+          <a href="support.html">Assistenza</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ja" dir="ltr" data-title="利用規約 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="日本語">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja" selected>日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>利用規約</h1>
+        <p>Dawnbreak は Aymane Bamhamed が開発・公開しています。インストールは、ここに書かれている内容への同意を意味します。短いのは意図的です。アカウントもサーバーもデータ収集もないので、書くことがありません。</p>
+        <h2>目覚まし時計であり、安全装置ではありません</h2>
+        <p>Dawnbreak は集中モードや消音でも鳴ります。iOS がアラームにそれを許しているからです。ただし端末の電源が切れているとき、バッテリーが尽きたとき、初回起動時の許可を拒否したときは鳴りません。飛行機、試験、勤務のあいだに立つ唯一の手段にはしないでください。それほど大事なものには、別のアラームも用意してください。</p>
+        <h2>ミッションは体を動かします</h2>
+        <p>2 つのミッションはセンサーとカメラで歩数とスクワットを数えます。体が許す範囲だけにして、痛みが出たらやめてください。すべてのアラームには初期状態で有効な緊急脱出があり、ミッションを放棄してアラームを解除します。設定にあり、不要になれば無効にできます。運動が望ましくない健康状態であれば、体に何も求めないミッションを選んでください。</p>
+        <h2>無料です</h2>
+        <p>アプリのすべてが無料です。12 のミッション、4 段階の難易度、最大 10 ラウンド、一週間に必要なだけのアラーム、90 日ぶんの履歴。購入するものはなく、サブスクリプションも広告もアカウントもありません。</p>
+        <h2>あなたのデータ</h2>
+        <p>端末から出るものはありません。アラーム、ミッション、履歴、そしてミッションが必要とする参照写真は、すべてアプリ自身のコンテナ内のファイルです。このサイトのプライバシーポリシーが、より詳しく同じことを述べています。</p>
+        <h2>約束しないこと</h2>
+        <p>アプリは現状のまま提供されます。現行の iPhone と現行の iOS で試験していますが、それでも誤ることがあります。iOS の更新でアラームの挙動が変わることもあり、センサーが動きを読み違えることもあります。アプリは無料なので、返金する代金もなく、請求の基準になる支払いもありません。ここに書かれたどれも、あなたの消費者法上の権利を奪いません。</p>
+        <h2>変更</h2>
+        <p>この規約はアプリが変わるときに、同じリリースで変わります。適用されるのはこのページに載っている版です。</p>
+        <h2>連絡先</h2>
+        <p>この規約、またはアプリの挙動についてのご質問は fastpapershot.supp@outlook.com へ。フランス法が適用されますが、お住まいの国の消費者保護を損なうものではありません。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">プライバシー</a>
+          <a href="support.html">サポート</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ko" dir="ltr" data-title="이용약관 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="한국어">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko" selected>한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>이용약관</h1>
+        <p>Dawnbreak은 Aymane Bamhamed이 만들고 배포합니다. 설치하는 것은 여기에 적힌 내용에 동의하는 것입니다. 일부러 짧습니다. 계정도 서버도 데이터 수집도 없어서 설명할 것이 없습니다.</p>
+        <h2>알람 시계이고, 안전 장치가 아닙니다</h2>
+        <p>Dawnbreak은 집중 모드와 무음을 뚫고 울립니다. iOS가 알람에 그것을 허용하기 때문입니다. 다만 기기가 꺼져 있거나 배터리가 없거나 첫 실행에서 요청한 권한을 거부했다면 울릴 수 없습니다. 비행기, 시험, 근무와 당신 사이에 놓인 유일한 수단으로 삼지 마세요. 그만큼 중요한 일에는 두 번째 알람을 두세요.</p>
+        <h2>미션은 몸을 움직이게 합니다</h2>
+        <p>두 미션은 센서와 카메라로 걸음과 스쿼트를 셉니다. 몸이 허락하는 범위만 하고, 아프면 멈추세요. 모든 알람에는 기본으로 켜진 비상 탈출이 있어 미션을 포기하고 알람을 해제합니다. 설정에 있고, 더 필요하지 않으면 끌 수 있습니다. 신체 활동이 권장되지 않는 건강 상태라면 몸에 아무것도 요구하지 않는 미션을 고르세요.</p>
+        <h2>무료</h2>
+        <p>앱의 모든 것이 무료입니다. 열두 가지 미션, 네 단계 난이도, 최대 10라운드, 한 주에 필요한 만큼의 알람, 90일간의 기록. 살 것이 없고, 구독도 광고도 계정도 없습니다.</p>
+        <h2>당신의 데이터</h2>
+        <p>기기를 떠나는 것은 없습니다. 알람, 미션, 기록, 그리고 미션이 필요로 하는 참조 사진은 모두 앱 자체 컨테이너 안의 파일입니다. 이 사이트의 개인정보 처리방침이 같은 내용을 더 자세히 설명합니다.</p>
+        <h2>약속하지 않는 것</h2>
+        <p>앱은 있는 그대로 제공됩니다. 현행 iPhone과 현행 iOS에서 시험했지만 그래도 틀릴 수 있습니다. iOS 업데이트가 알람 동작을 바꿀 수 있고, 센서가 움직임을 잘못 읽을 수 있습니다. 앱은 무료이므로 환불할 금액도 없고, 청구의 기준이 될 지불액도 없습니다. 여기의 어떤 내용도 당신의 소비자법상 권리를 없애지 않습니다.</p>
+        <h2>변경</h2>
+        <p>이 약관은 앱이 바뀔 때 같은 릴리스에서 바뀝니다. 적용되는 것은 이 페이지에 실린 판본입니다.</p>
+        <h2>문의</h2>
+        <p>이 약관 또는 앱이 한 일에 대한 질문은 fastpapershot.supp@outlook.com 으로. 프랑스법이 적용되며, 거주 국가의 소비자 보호를 침해하지 않습니다.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">개인정보</a>
+          <a href="support.html">지원</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="pt-BR" dir="ltr" data-title="Termos · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Português (Brasil)">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR" selected>Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Termos</h1>
+        <p>Dawnbreak é feito e publicado por Aymane Bamhamed. Instalar significa aceitar o que está escrito aqui. É curto de propósito: não há conta, não há servidor e não há coleta de dados para descrever.</p>
+        <h2>Um despertador, não um equipamento de segurança</h2>
+        <p>Dawnbreak toca através dos modos de concentração e do silencioso, porque o iOS permite isso a um alarme. Ele não pode tocar se o telefone estiver desligado, sem bateria, ou se a permissão pedida no primeiro uso foi negada. Não faça dele a única coisa entre você e um voo, uma prova ou um turno. Mantenha um segundo despertador para tudo que importa tanto.</p>
+        <h2>As missões pedem que você se mova</h2>
+        <p>Duas missões contam passos e agachamentos usando os sensores e a câmera. Faça só o que seu corpo permitir e pare se algo doer. Todo alarme tem uma saída de emergência, ligada por padrão, que abandona a missão e desarma o alarme; ela está nos ajustes e pode ser desligada quando você não quiser mais. Se uma condição médica torna o esforço físico imprudente, escolha uma das missões que não pede nada do corpo.</p>
+        <h2>Grátis</h2>
+        <p>Tudo no app é grátis: doze missões, quatro dificuldades, até dez rodadas, quantos alarmes a sua semana precisar e noventa dias de histórico. Não há nada para comprar, nenhuma assinatura, nenhum anúncio e nenhuma conta.</p>
+        <h2>Seus dados</h2>
+        <p>Nada sai do seu telefone. Os alarmes, as missões, o histórico e a foto de referência que uma missão possa precisar são arquivos dentro do contêiner do app. A política de privacidade deste site diz o mesmo com mais detalhe.</p>
+        <h2>O que não é prometido</h2>
+        <p>O app é fornecido como está. Foi testado em iPhones e iOS atuais e ainda assim pode errar: uma versão do iOS pode mudar o comportamento dos alarmes, e um sensor pode ler um movimento errado. O app é grátis, então não há preço a devolver nem valor pago sobre o qual medir uma reclamação. Nada aqui retira os direitos que sua lei do consumidor lhe dá.</p>
+        <h2>Mudanças</h2>
+        <p>Estes termos mudam quando o app muda, na mesma versão. Vale a versão que aparece nesta página.</p>
+        <h2>Contato</h2>
+        <p>Dúvidas sobre estes termos, ou sobre algo que o app fez: fastpapershot.supp@outlook.com. Aplica-se a lei francesa, sem prejuízo das proteções ao consumidor do país onde você vive.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Privacidade</a>
+          <a href="support.html">Suporte</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="ru" dir="ltr" data-title="Условия · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="Русский">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru" selected>Русский</option>
+          <option value="zh-Hans">简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>Условия</h1>
+        <p>Dawnbreak делает и публикует Aymane Bamhamed. Установка означает согласие с тем, что здесь написано. Текст короткий намеренно: нет аккаунта, нет сервера и нет сбора данных, которые надо было бы описывать.</p>
+        <h2>Будильник, а не средство безопасности</h2>
+        <p>Dawnbreak звонит через режимы фокусирования и через беззвучный, потому что iOS разрешает это будильнику. Он не может позвонить, если телефон выключен, разряжен или если разрешение, запрошенное при первом запуске, было отклонено. Не делайте его единственным, что стоит между вами и самолётом, экзаменом или сменой. Для всего настолько важного держите второй будильник.</p>
+        <h2>Задания требуют движения</h2>
+        <p>Два задания считают шаги и приседания с помощью датчиков и камеры. Делайте только то, что позволяет тело, и остановитесь, если что-то болит. У каждого будильника есть аварийный выход, включённый по умолчанию: он бросает задание и снимает будильник. Он в настройках, и его можно отключить, когда он больше не нужен. Если состояние здоровья делает физическую нагрузку неразумной, выберите одно из заданий, которое ничего не требует от тела.</p>
+        <h2>Бесплатно</h2>
+        <p>В приложении бесплатно всё: двенадцать заданий, четыре уровня сложности, до десяти раундов, столько будильников, сколько нужно вашей неделе, и девяносто дней истории. Покупать нечего, подписки нет, рекламы нет, аккаунта нет.</p>
+        <h2>Ваши данные</h2>
+        <p>Ничего не покидает телефон. Будильники, задания, история и эталонное фото, которое может понадобиться заданию, это файлы внутри собственного контейнера приложения. Политика конфиденциальности на этом сайте говорит то же подробнее.</p>
+        <h2>Что не обещано</h2>
+        <p>Приложение предоставляется как есть. Оно проверено на актуальных iPhone и актуальной iOS и всё равно может ошибиться: обновление iOS может изменить поведение будильников, а датчик может неверно прочитать движение. Приложение бесплатное, поэтому нет цены, которую можно вернуть, и нет уплаченной суммы, по которой измерять требование. Ничто здесь не отменяет прав, которые даёт вам ваше потребительское право.</p>
+        <h2>Изменения</h2>
+        <p>Эти условия меняются вместе с приложением, в том же выпуске. Действует та редакция, которая опубликована на этой странице.</p>
+        <h2>Контакт</h2>
+        <p>Вопросы об этих условиях или о чём-то, что сделало приложение: fastpapershot.supp@outlook.com. Применяется французское право, без ущерба для потребительской защиты страны, где вы живёте.</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">Конфиденциальность</a>
+          <a href="support.html">Поддержка</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <div class="sheet" lang="zh-Hans" dir="ltr" data-title="使用条款 · Dawnbreak" hidden>
+      <header>
+        <a class="mark" href="./">Dawn<span>break</span></a>
+        <select data-picker aria-label="简体中文">
+          <option value="en">English</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="hi">हिन्दी</option>
+          <option value="it">Italiano</option>
+          <option value="ja">日本語</option>
+          <option value="ko">한국어</option>
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="ru">Русский</option>
+          <option value="zh-Hans" selected>简体中文</option>
+        </select>
+      </header>
+      <main>
+        <h1>使用条款</h1>
+        <p>Dawnbreak 由 Aymane Bamhamed 开发并发布。安装即表示接受这里写下的内容。它故意很短：没有账号，没有服务器，也没有数据收集需要描述。</p>
+        <h2>这是闹钟，不是安全设备</h2>
+        <p>Dawnbreak 能穿透专注模式和静音，因为 iOS 允许闹钟这样做。但如果手机关机、电量耗尽，或者首次启动时拒绝了它请求的权限，它就无法响。不要让它成为你与航班、考试或班次之间唯一的依靠。这类事情请再留一个闹钟。</p>
+        <h2>任务要求你动起来</h2>
+        <p>两个任务用传感器和相机来数步数与深蹲。只做身体允许的部分，感到疼痛就停下。每个闹钟都有一个默认开启的紧急退出，它会放弃任务并撤下闹钟；它在设置里，不再需要时可以关掉。如果健康状况让体力活动不合适，请选择那些对身体没有要求的任务。</p>
+        <h2>免费</h2>
+        <p>应用里的一切都是免费的：十二种任务、四档难度、最多十轮、你这一周需要的任意数量的闹钟，以及九十天的历史记录。没有任何东西可买，没有订阅，没有广告，也没有账号。</p>
+        <h2>你的数据</h2>
+        <p>没有任何东西离开你的手机。闹钟、任务、历史记录，以及某个任务可能需要的参照照片，都是应用自有容器内的文件。本站的隐私政策以更详细的方式说了同一件事。</p>
+        <h2>不作出的承诺</h2>
+        <p>应用按现状提供。它在当前的 iPhone 和当前的 iOS 上经过测试，但仍可能出错：iOS 的更新可能改变闹钟行为，传感器也可能误读动作。本应用免费，因此没有可退还的价款，也没有可用来衡量索赔的已付金额。这里的任何内容都不会剥夺你所在地消费者法律给你的权利。</p>
+        <h2>变更</h2>
+        <p>这些条款随应用变更，在同一个版本中更新。适用的是本页面上的版本。</p>
+        <h2>联系</h2>
+        <p>关于这些条款，或应用做过的任何事：fastpapershot.supp@outlook.com。适用法国法律，且不影响你居住国的消费者保护。</p>
+      </main>
+      <footer>
+        <nav>
+          <a href="./">Dawnbreak</a>
+          <a href="privacy.html">隐私</a>
+          <a href="support.html">支持</a>
+          <a href="https://github.com/aymane6/dawnbreak/issues">GitHub</a>
+        </nav>
+        <p><span dir="ltr">&copy; 2026 Aymane Bamhamed</span></p>
+      </footer>
+    </div>
+    <script>
+(function () {
+  var sheets = document.querySelectorAll('.sheet');
+  var available = {};
+  for (var i = 0; i < sheets.length; i++) available[sheets[i].lang] = sheets[i];
+
+  function pick() {
+    var asked = new URLSearchParams(location.search).get('lang');
+    var wanted = asked ? [asked] : (navigator.languages || [navigator.language || 'en']);
+    for (var i = 0; i < wanted.length; i++) {
+      var tag = wanted[i];
+      if (available[tag]) return tag;
+      // 'pt-PT' should land on 'pt-BR', and 'zh-CN' on 'zh-Hans': try the base language, then any
+      // sheet that starts with it, before falling through to English.
+      var base = tag.split('-')[0];
+      if (available[base]) return base;
+      for (var code in available) if (code.split('-')[0] === base) return code;
+    }
+    return 'en';
+  }
+
+  function show(code) {
+    for (var tag in available) available[tag].hidden = tag !== code;
+    document.documentElement.lang = code;
+    document.documentElement.dir = available[code].dir || 'ltr';
+    document.title = available[code].dataset.title;
+    var picker = available[code].querySelector('select');
+    if (picker) picker.value = code;
+  }
+
+  show(pick());
+
+  document.addEventListener('change', function (event) {
+    if (event.target.matches('select[data-picker]')) show(event.target.value);
+  });
+})();
+    </script>
+  </body>
+</html>

@@ -49,15 +49,6 @@ struct RootView: View {
                 OnboardingView()
             }
         }
-        .sheet(item: paywallBinding) { reason in
-            PaywallView(reason: reason)
-        }
-        // Cleared, not merely hidden. The gated binding above already dismisses the paywall
-        // when a mission takes the screen; without this, the stored reason would re-present
-        // it out of nowhere the moment the mission settles.
-        .onChange(of: app.bridge.activeMission != nil) { _, ringing in
-            if ringing { app.paywallReason = nil }
-        }
         .onChange(of: app.preferences.hapticsEnabled) { _, enabled in
             Haptics.isEnabled = enabled
         }
@@ -104,20 +95,9 @@ struct RootView: View {
         Binding(get: { app.selectedTab }, set: { app.selectedTab = $0 })
     }
 
-    private var paywallBinding: Binding<AppEnvironment.PaywallReason?> {
-        // Nil while a mission or onboarding owns the screen, which dismisses an open paywall
-        // the moment an alarm rings. UIKit gives a view one presentation at a time: a sheet
-        // left up would make the mission cover fail with "already presenting" — silently, in
-        // a log nobody reads — and a morning with no mission screen is the one bug this app
-        // exists not to have. The paywall can be reopened; the morning cannot.
-        Binding(
-            get: { takeover == nil ? app.paywallReason : nil },
-            set: { app.paywallReason = $0 }
-        )
-    }
 }
 
-/// `fullScreenCover(item:)` and `sheet(item:)` want an `Identifiable` optional. `PendingMission`
+/// `fullScreenCover(item:)` wants an `Identifiable` optional. `PendingMission`
 /// is a value type keyed by its alarm id, and the reason for the wrapper is that presenting
 /// on identity means a *different* alarm ringing replaces the screen rather than being
 /// silently ignored.
@@ -126,24 +106,13 @@ extension PendingMission: Identifiable {
 }
 
 private extension View {
-    /// A thin alias so the call sites above read as `item:` rather than the stock
-    /// `isPresented:`/`item:` mix. Kept private to this file.
+    /// A thin alias so the call site above reads as `item:` rather than the stock
+    /// `isPresented:`. Kept private to this file.
     func fullScreenCover<Item: Identifiable, Content: View>(
         item: Binding<Item?>,
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
         fullScreenCover(isPresented: Binding(get: { item.wrappedValue != nil }, set: { if !$0 { item.wrappedValue = nil } })) {
-            if let value = item.wrappedValue {
-                content(value)
-            }
-        }
-    }
-
-    func sheet<Item: Identifiable, Content: View>(
-        item: Binding<Item?>,
-        @ViewBuilder content: @escaping (Item) -> Content
-    ) -> some View {
-        sheet(isPresented: Binding(get: { item.wrappedValue != nil }, set: { if !$0 { item.wrappedValue = nil } })) {
             if let value = item.wrappedValue {
                 content(value)
             }

@@ -1,17 +1,19 @@
-A build 5 é a que você pediu. Três novidades.
+A build 10 corrige algo que você achou e eu não: você disse que o app tinha quatro toques. Tem quatorze, desde a build 8. Só quatro apareciam.
 
-TESTE UMA MISSÃO ANTES DE CONFIAR NELA
-No editor do alarme, abaixo da missão, toque em «Testar esta missão». Mesmo desafio, mesma dificuldade, mesmo cronômetro, mas nada armado, e o X no canto sempre sai. Confira que o brutal é brutal mesmo sem hora marcada às 06:00.
+POR QUE VOCÊ VIA QUATRO
+Os toques eram uma faixa horizontal de blocos pequenos dentro do cartão de som. Quatro cabem numa tela de 6,9 polegadas, três numa de 6,1, o indicador de rolagem estava escondido e nada dizia que havia mais. Você leu a tela certo; a tela mentia.
 
-ENCADEIE MISSÕES
-Também no editor: «Missões de acompanhamento». Até três. Conclua a primeira e o alarme toca de novo minutos depois com a próxima: primeiro sacudir, dez minutos depois ele volta pedindo um desenho, passos ou agachamentos. Só a última encerra a manhã. Esperar entre missões é de graça; se esquivar continua não sendo.
+COMO ESTÁ AGORA
+O cartão de som tem uma linha: o nome do toque atual, o ícone de intensidade e o número 14. Ao tocar, abre uma tela com os quatorze blocos, três por linha, do mais suave ao pior, todos visíveis de uma vez e sem rolagem em qualquer iPhone. Tocar um bloco seleciona e toca uma prévia.
 
-UMA TELA DE MISSÃO MAIS CLARA
-A instrução agora é grande e branca, os painéis da sequência são coloridos com clarão de verdade e um toque que se sente, as peças da memória marcam o que você já escolheu, e cada tecla responde ao polegar. A vibração obedece ao interruptor dos ajustes.
+O QUE IMPEDE QUE VOLTE
+Um teste abre essa tela e verifica que os quatorze blocos estão dentro da janela e podem ser tocados após zero deslizes, em inglês e em árabe. Recoloquei a faixa antiga para garantir que falha: falha. Um segundo teste verifica que o toque escolhido sobrevive a salvar e reabrir.
+
+SOBRE ADICIONAR SONS GRAVADOS
+Você pediu fontes open source. Conferi as licenças na fonte, não em resumos, e a conclusão é que os quatorze seguem sintetizados. Em resumo: só áudio CC0 pode entrar num binário pago da App Store sem pedir permissão a cada autor, porque o próprio FAQ da Creative Commons diz que publicar um arquivo CC BY por uma plataforma que aplica proteção de cópia exige permissão expressa do licenciante, e a App Store aplica. A lista completa está na mensagem que acompanha esta build.
 
 VALE CONFERIR
-1. Teste uma missão pelo editor, saia pelo X, não salve nada: nenhum alarme deve existir.
-2. Encadeie duas missões com um minuto de intervalo, deixe tocar, conclua a primeira, espere: o segundo toque tem que vir, com o nome da missão.
-3. A missão de sequência à noite, brilho baixo: tudo deve continuar óbvio.
-
-Se algo estiver errado, uma captura diz mais que uma frase. TestFlight ou a página de suporte nos ajustes.
+1. Editor, linha do som: deve dizer o toque atual e 14. Toque e conte os blocos.
+2. Ouça Vespão, Cigarra e Cigarra elétrica de lá, e Sirene.
+3. Escolha um, salve, reabra o alarme: precisa continuar selecionado.
+4. Em árabe, a mesma tela: blocos espelhados e nomes mais longos; nada pode ficar cortado.

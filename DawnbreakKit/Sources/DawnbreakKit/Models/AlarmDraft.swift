@@ -57,7 +57,7 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
         mission: MissionConfig = .default,
         followOns: [FollowOnMission] = [],
         soundName: String = AlarmSound.default.rawValue,
-        volume: Double = 0.9,
+        volume: Double = 1.0,
         vibrate: Bool = true,
         gentleWakeSeconds: Int = 0,
         snooze: SnoozePolicy = SnoozePolicy(),
@@ -95,7 +95,7 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
         mission = try c.decodeIfPresent(MissionConfig.self, forKey: .mission) ?? .default
         followOns = try c.decodeIfPresent([FollowOnMission].self, forKey: .followOns) ?? []
         soundName = try c.decodeIfPresent(String.self, forKey: .soundName) ?? AlarmSound.default.rawValue
-        volume = try c.decodeIfPresent(Double.self, forKey: .volume) ?? 0.9
+        volume = try c.decodeIfPresent(Double.self, forKey: .volume) ?? 1.0
         vibrate = try c.decodeIfPresent(Bool.self, forKey: .vibrate) ?? true
         gentleWakeSeconds = try c.decodeIfPresent(Int.self, forKey: .gentleWakeSeconds) ?? 0
         snooze = try c.decodeIfPresent(SnoozePolicy.self, forKey: .snooze) ?? SnoozePolicy()
@@ -141,12 +141,39 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
 /// The bundled alarm tones. Raw values are the filenames without extension, and are the
 /// same strings passed to AlarmKit's `AlertConfiguration.AlertSound.named(_:)`.
 public enum AlarmSound: String, Codable, CaseIterable, Sendable, Identifiable {
-    case sunrise, radar, klaxon, marimba, cascade, bellhop, siren, birdsong
+    /// Declared in the order the picker shows them: kind first, unbearable last. The five at the
+    /// end exist because the owner's verdict on the first eight was that people install an alarm
+    /// like this one to be dragged out of bed, not serenaded, and nothing in the list was doing the
+    /// dragging.
+    case sunrise, birdsong
+    case marimba, cascade, bellhop
+    case radar, klaxon, hammer, spiral
+    case siren, pulse, hornet, buzzer, cicada
 
     public var id: String { rawValue }
     public static let `default` = AlarmSound.sunrise
     public var titleKey: String { "sound.\(rawValue)" }
+
+    /// How loud the file actually is, which is a property of the file rather than an opinion:
+    /// `scripts/make-sounds.swift` normalises every tone to its class's integrated loudness target
+    /// (-14, -10, -6 and -4 LUFS) and fails the build if one misses by more than half a LU. So this
+    /// is the same ladder, named, and the editor can sort and mark by it honestly.
+    public enum Loudness: Int, Codable, Sendable, CaseIterable, Comparable {
+        case gentle, standard, harsh, savage
+
+        public static func < (lhs: Loudness, rhs: Loudness) -> Bool { lhs.rawValue < rhs.rawValue }
+    }
+
+    public var loudness: Loudness {
+        switch self {
+        case .sunrise, .birdsong: .gentle
+        case .marimba, .cascade, .bellhop: .standard
+        case .radar, .klaxon, .hammer, .spiral: .harsh
+        case .siren, .pulse, .hornet, .buzzer, .cicada: .savage
+        }
+    }
+
     /// Two are deliberately gentle; the editor sorts them first for people who want to be
     /// woken rather than startled.
-    public var isGentle: Bool { self == .sunrise || self == .birdsong || self == .marimba }
+    public var isGentle: Bool { loudness == .gentle }
 }

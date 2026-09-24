@@ -30,7 +30,7 @@ struct ShakeMissionView: View {
                 MissionUnavailableView(
                     titleKey: "mission.shake.unavailable.title",
                     bodyKey: "mission.shake.unavailable.body",
-                    onOverride: { callbacks.cleared() }
+                    onOverride: { callbacks.unavailable() }
                 )
             }
         }
@@ -80,7 +80,7 @@ struct StepsMissionView: View {
                 MissionUnavailableView(
                     titleKey: monitor.isDenied ? "mission.steps.denied.title" : "mission.steps.unavailable.title",
                     bodyKey: monitor.isDenied ? "mission.steps.denied.body" : "mission.steps.unavailable.body",
-                    onOverride: { callbacks.cleared() }
+                    onOverride: { callbacks.unavailable() }
                 )
             }
         }
@@ -160,6 +160,10 @@ struct BreatheMissionView: View {
             await animate(to: 0.55, over: pattern.exhale, stage: .exhale)
             guard !Task.isCancelled else { return }
             cyclesDone += 1
+            // A cycle done is progress, and this mission needs to say so out loud: brutal is
+            // ten cycles of twenty seconds, which outlasts the three minutes the runner buys
+            // on appearing, and the alarm would ring over someone breathing on cue.
+            callbacks.progressed()
         }
         callbacks.cleared()
     }

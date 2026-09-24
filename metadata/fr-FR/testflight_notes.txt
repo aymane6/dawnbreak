@@ -1,17 +1,19 @@
-La version 5 est celle que tu as demandée. Trois nouveautés.
+La version 10 corrige quelque chose que tu as trouvé et moi pas : tu as dit que l'app avait quatre sonneries. Elle en a quatorze, depuis le build 8. Quatre seulement étaient à l'écran.
 
-ESSAYER UNE MISSION AVANT DE S'Y FIER
-Dans l'éditeur d'alarme, sous la mission : « Essayer cette mission ». Même défi, même difficulté, même minuteur, mais rien n'est armé, et le X dans le coin sort toujours. Vérifie que brutal est vraiment brutal sans prendre rendez-vous à 6 h.
+POURQUOI TU EN VOYAIS QUATRE
+Les sonneries étaient une bande horizontale de petites tuiles dans la carte du son. Quatre tiennent sur un écran de 6,9 pouces, trois sur un 6,1, l'indicateur de défilement était masqué, et rien ne disait qu'il y en avait plus. Tu as lu l'écran correctement ; c'est l'écran qui mentait.
 
-ENCHAÎNER LES MISSIONS
-Dans l'éditeur aussi : « Missions de suivi ». Jusqu'à trois. Réussis la première mission et l'alarme resonne quelques minutes plus tard avec la suivante : secouer d'abord, puis dix minutes après elle revient demander un dessin, des pas ou des squats. Seule la dernière met fin à la matinée. Attendre entre deux missions est gratuit ; esquiver ne l'est toujours pas.
+CE QUE C'EST MAINTENANT
+La carte du son a une seule ligne : le nom de la sonnerie actuelle, son icône d'intensité, et le nombre 14. En la touchant, un écran s'ouvre avec les quatorze tuiles, trois par ligne, de la plus douce à la pire, toutes visibles d'un coup et sans défilement sur n'importe quel iPhone. Toucher une tuile la choisit et joue un extrait. L'icône et sa couleur disent la classe : une onde pour douce, deux pour standard, trois pour dure, un triangle rouge pour brutale.
 
-UN ÉCRAN DE MISSION PLUS LISIBLE
-La consigne est maintenant grande et blanche, les pavés de séquence sont en pleine couleur avec un vrai flash et une pulsation qu'on sent, les tuiles de mémoire marquent ce qui est déjà choisi, et chaque touche du clavier répond au pouce. Les vibrations obéissent à l'interrupteur des réglages.
+CE QUI EMPÊCHE QUE ÇA REVIENNE
+Un test ouvre cet écran et vérifie que les quatorze tuiles sont dans la fenêtre et touchables après zéro balayage, en anglais et en arabe. J'ai remis l'ancienne bande pour être sûr qu'il échoue : il échoue. Un second test vérifie qu'une sonnerie choisie survit à l'enregistrement et à la réouverture de l'alarme.
+
+SUR L'AJOUT DE SONS ENREGISTRÉS
+Tu as demandé des sources open source. J'ai vérifié les licences à la source, pas dans des résumés, et la conclusion est que les quatorze restent synthétisées. En bref : seul un son en CC0 peut entrer dans un binaire payant de l'App Store sans demander l'accord de chaque auteur, parce que la FAQ de Creative Commons dit elle-même que publier un fichier CC BY via une plateforme qui applique une protection anticopie exige la permission expresse du titulaire, et l'App Store en applique une. La liste complète de ce qui est utilisable et de ce qui a l'air libre sans l'être est dans le message qui accompagne ce build.
 
 À VÉRIFIER
-1. Essayer une mission depuis l'éditeur, sortir par le X, ne rien enregistrer : aucune alarme ne doit exister.
-2. Enchaîner deux missions à une minute d'écart, laisser sonner, réussir la première, attendre : la deuxième sonnerie doit venir, nommée d'après sa mission.
-3. La mission séquence de nuit, luminosité basse : tout doit rester évident.
-
-Si quelque chose ne va pas, une capture d'écran en dit plus qu'une phrase. TestFlight ou la page d'assistance dans les réglages.
+1. Éditeur, la ligne du son : elle doit afficher la sonnerie actuelle et 14. Touche-la et compte les tuiles.
+2. Écoute Frelon, Buzzer et Cigale depuis cet écran, et Sirène.
+3. Choisis-en une, enregistre, réouvre l'alarme : elle doit rester sélectionnée.
+4. En arabe, le même écran : tuiles en miroir et noms plus longs ; rien ne doit être coupé.

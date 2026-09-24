@@ -14,38 +14,14 @@ final class AppEnvironment {
     let alarms: AlarmStore
     let log: WakeLogStore
     let preferences: Preferences
-    let subscription: SubscriptionStore
     let bridge: AlarmBridge
 
-    /// Which tab is showing. Held here rather than in the view so a deep link, or the
-    /// paywall dismissing, can move the user without passing bindings down.
+    /// Which tab is showing. Held here rather than in the view so a deep link can move the
+    /// user without passing bindings down.
     var selectedTab: Tab = .alarms
-    /// Set when a screen wants the paywall. Nil-ing it out dismisses.
-    var paywallReason: PaywallReason?
 
     enum Tab: Hashable { case alarms, stats, settings }
 
-    enum PaywallReason: String, Identifiable, Hashable, CaseIterable {
-        case alarmLimit, premiumMission, difficultyLocked, roundsLocked, historyLocked, chainLocked, manual
-        var id: String { rawValue }
-
-        var headlineKey: String {
-            switch self {
-            case .alarmLimit: "paywall.reason.alarmLimit"
-            case .premiumMission: "paywall.reason.premiumMission"
-            case .difficultyLocked: "paywall.reason.difficulty"
-            case .roundsLocked: "paywall.reason.rounds"
-            case .historyLocked: "paywall.reason.history"
-            case .chainLocked: "paywall.reason.chain"
-            case .manual: "paywall.reason.manual"
-            }
-        }
-    }
-
-    /// - Parameter entitlement: pins what the user is treated as having paid for, bypassing
-    ///   StoreKit. Only the screenshot run passes it, so that a premium mission can be
-    ///   photographed unlocked without a sandbox purchase; `nil` everywhere else, and then the
-    ///   receipt is the only answer.
     /// - Parameter bridge: the bridge this environment attaches its stores to. Defaults to
     ///   the process-wide one, because the App Intents fired from the lock screen reach
     ///   `AlarmBridge.shared` and must read the same stores the screens write. Anything that
@@ -58,13 +34,11 @@ final class AppEnvironment {
     init(
         directory: URL = StoreLocation.supportDirectory(),
         defaults: UserDefaults = .standard,
-        entitlement: Entitlement? = nil,
         bridge: AlarmBridge = .shared
     ) {
         alarms = AlarmStore(directory: directory)
         log = WakeLogStore(directory: directory)
         preferences = Preferences(defaults: defaults)
-        subscription = SubscriptionStore(pinnedEntitlement: entitlement)
         self.bridge = bridge
         bridge.attach(alarms: alarms, log: log)
         // The settings toggle for this predates anything that obeyed it; `Haptics` is the
@@ -72,44 +46,6 @@ final class AppEnvironment {
         Haptics.isEnabled = preferences.hapticsEnabled
     }
 
-    var entitlement: Entitlement { subscription.entitlement }
-
-    /// The single gate every "can I do this" question goes through, so the free tier's
-    /// limits are defined in one place instead of being re-derived in each view.
-    func check(_ request: Request) -> PaywallReason? {
-        switch request {
-        case .addAlarm:
-            alarms.alarms.count >= entitlement.maximumAlarms ? .alarmLimit : nil
-        case .mission(let kind):
-            entitlement.allows(kind) ? nil : .premiumMission
-        case .difficulty(let level):
-            entitlement.allows(level) ? nil : .difficultyLocked
-        case .rounds(let count):
-            count > entitlement.maximumRounds ? .roundsLocked : nil
-        case .history(let days):
-            days > entitlement.maximumHistoryDays ? .historyLocked : nil
-        case .followOns(let count):
-            count > entitlement.maximumFollowOns ? .chainLocked : nil
-        }
-    }
-
-    enum Request {
-        case addAlarm
-        case mission(MissionKind)
-        case difficulty(Difficulty)
-        case rounds(Int)
-        case history(Int)
-        case followOns(Int)
-    }
-
-    /// Returns true when the action is allowed; otherwise raises the paywall and returns
-    /// false, so a call site reads `guard env.allow(.addAlarm) else { return }`.
-    @discardableResult
-    func allow(_ request: Request) -> Bool {
-        guard let reason = check(request) else { return true }
-        paywallReason = reason
-        return false
-    }
 }
 
 /// Read by every screen. The default value exists so SwiftUI previews compile; the real

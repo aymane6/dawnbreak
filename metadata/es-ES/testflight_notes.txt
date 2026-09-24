@@ -1,17 +1,19 @@
-La versión 5 es la que pediste. Tres novedades.
+La versión 10 corrige algo que encontraste tú y yo no: dijiste que la app tenía cuatro tonos. Tiene catorce, desde la versión 8. Solo cuatro estaban en pantalla.
 
-PRUEBA UNA MISIÓN ANTES DE FIARTE
-En el editor de la alarma, bajo la misión, toca «Probar esta misión». Mismo reto, misma dificultad, mismo temporizador, pero sin nada armado, y la X de la esquina siempre sale. Comprueba que brutal es brutal sin cita a las 06:00.
+POR QUÉ VEÍAS CUATRO
+Los tonos eran una tira horizontal de fichas pequeñas dentro de la tarjeta de sonido. Cuatro caben en una pantalla de 6,9 pulgadas, tres en una de 6,1, el indicador de scroll estaba oculto y nada decía que hubiera más. Leíste bien la pantalla; la pantalla mentía.
 
-ENCADENA MISIONES
-También en el editor: «Misiones de seguimiento». Añade hasta tres. Supera la primera y la alarma vuelve a sonar minutos después con la siguiente: primero agitar, y diez minutos más tarde vuelve pidiendo un dibujo, pasos o sentadillas. Solo la última termina la mañana. Esperar entre misiones es gratis; escaquearse sigue sin serlo.
+CÓMO ES AHORA
+La tarjeta de sonido tiene una fila: el nombre del tono actual, su icono de intensidad y el número 14. Al tocarla se abre una pantalla con las catorce fichas, tres por fila, de la más suave a la peor, todas visibles a la vez y sin scroll en cualquier iPhone. Tocar una la selecciona y suena una vista previa. El icono y su color dicen la clase.
 
-UNA PANTALLA DE MISIÓN MÁS CLARA
-La instrucción ahora es grande y blanca, los paneles de secuencia van a todo color con destello real y un tic que se siente, las casillas de memoria marcan lo ya elegido, y cada tecla responde al pulgar. La háptica obedece al interruptor de Ajustes.
+QUÉ IMPIDE QUE VUELVA
+Una prueba abre esa pantalla y comprueba que las catorce fichas están dentro de la ventana y se pueden tocar tras cero deslizamientos, en inglés y en árabe. Volví a poner la tira antigua para asegurarme de que falla: falla. Otra prueba comprueba que el tono elegido sobrevive al guardar y reabrir.
 
-MERECE COMPROBARSE
-1. Prueba una misión desde el editor, sal con la X, no guardes nada: no debe existir ninguna alarma.
-2. Encadena dos misiones con un minuto de separación, deja sonar, supera la primera, espera: el segundo toque debe llegar, con el nombre de su misión.
-3. La misión de secuencia de noche, con poco brillo: todo debe seguir siendo obvio.
+SOBRE AÑADIR SONIDOS GRABADOS
+Pediste fuentes open source. Comprobé las licencias en su fuente, no en resúmenes, y la conclusión es que los catorce siguen sintetizados. En corto: solo el audio CC0 puede entrar en un binario de pago de la App Store sin pedir permiso a cada autor, porque las propias FAQ de Creative Commons dicen que publicar un archivo CC BY a través de una plataforma que aplica protección de copia requiere permiso expreso del licenciante, y la App Store la aplica. La lista completa va en el mensaje que acompaña a esta versión.
 
-Si algo va mal, una captura dice más que una frase. TestFlight o la página de soporte en Ajustes.
+VALE LA PENA COMPROBAR
+1. Editor, fila de sonido: debe decir el tono actual y 14. Tócala y cuenta las fichas.
+2. Escucha Avispón, Zumbador y Cigarra desde ahí, y Sirena.
+3. Elige uno, guarda, reabre la alarma: debe seguir seleccionado.
+4. En árabe, la misma pantalla: fichas espejadas y nombres más largos; nada debe cortarse.

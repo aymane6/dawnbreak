@@ -40,19 +40,24 @@ public enum MissionKind: String, Codable, CaseIterable, Hashable, Sendable, Iden
     /// A mission that has to be set up before the alarm rings, because it needs a
     /// reference the app cannot invent at 6am (the object to photograph, the barcode
     /// on the cereal box in the kitchen).
+    /// Whether clearing this mission means moving your body.
+    ///
+    /// Used to put a line of caution in front of the choice, at the moment it is still a choice.
+    /// App Review's 1.4.5 is about apps that urge people to move in ways that can hurt them, and an
+    /// alarm that demands fifteen squats from somebody half asleep is exactly the shape of app that
+    /// rule is written for. Saying so where the mission is picked costs one sentence and removes the
+    /// argument entirely.
+    public var isPhysical: Bool {
+        switch self {
+        case .steps, .squats, .shake: true
+        case .math, .memory, .sequence, .typing, .photo, .barcode, .draw, .flap, .breathe: false
+        }
+    }
+
     public var needsEnrollment: Bool {
         switch self {
         case .photo, .barcode: true
         default: false
-        }
-    }
-
-    /// Free tier gets the three that need no hardware and no enrollment. Everything else
-    /// is behind the subscription, which is also how the reference app is priced.
-    public var isPremium: Bool {
-        switch self {
-        case .math, .shake, .breathe: false
-        default: true
         }
     }
 

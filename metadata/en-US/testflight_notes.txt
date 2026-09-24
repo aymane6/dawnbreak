@@ -1,17 +1,19 @@
-Build 5 is the one you asked for. Three new things.
+Build 10 fixes something you found and I had not: you said the app had four alarm tones. It has fourteen, and it has had since build 8. Only four were on screen.
 
-TRY A MISSION BEFORE TRUSTING IT
-In the alarm editor, under the mission, tap "Try this mission". Same challenge, same difficulty, same timer — but nothing armed, and the X in the corner always leaves. Check that brutal really is brutal without booking a 06:00 appointment.
+WHY YOU SAW FOUR
+The tones were a horizontal strip of small tiles inside the sound card. Four fit on a 6.9-inch screen, three on a 6.1-inch one, the scroll indicator was hidden, and nothing said there was more. You read the screen correctly; the screen was lying.
 
-CHAIN MISSIONS
-Also in the editor: "Follow-up missions". Add up to three. Clear the first mission and the alarm rings again a few minutes later with the next one — shake first, then ten minutes later it comes back asking for a drawing, steps or squats. Only clearing the last one ends the morning. Waiting between missions is free; dodging one still is not.
+WHAT IT IS NOW
+The sound card has one row: the name of the current tone, its loudness icon, and the number 14. Tapping it opens a screen with all fourteen tiles laid out three to a row, gentlest first, worst last, every one visible at once with no scrolling on any iPhone. Tapping a tile selects it and plays a preview. The icon and its colour say which class it is: waveform for gentle, two waves for standard, three for harsh, a red triangle for savage.
 
-A CLEANER MISSION SCREEN
-The instruction is now big and white, the sequence pads are full-colour with a real flash and a tick you can feel, memory tiles mark what you already picked, and every keypad press answers your thumb. The haptics obey the switch in Settings.
+WHAT NOW STOPS IT COMING BACK
+A test opens that screen and checks all fourteen tiles are inside the window and tappable after zero swipes, in English and in Arabic. I put the old strip back to be sure it fails: it does. A second test checks a chosen tone survives saving and reopening the alarm.
+
+ON ADDING RECORDED SOUNDS
+You asked for open-source sources. I checked the licences at the source rather than trusting a summary, and the answer is that all fourteen stay synthesised. The short reason: only CC0 audio can go into a paid App Store binary without asking each author for permission, because Creative Commons' own FAQ says that publishing a CC BY file through a platform that applies copy protection needs the licensor's express permission, and the App Store does apply it. The full list of what is usable and what looks free but is not is in the message that came with this build.
 
 WORTH CHECKING
-1. Try a mission from the editor, leave it with the X, save nothing: no alarm should exist.
-2. Chain two missions one minute apart, let it ring, clear the first, wait: the second ring must come, named after its mission.
-3. The sequence mission at night, screen brightness low: everything should still be obvious.
-
-If something is wrong, a screenshot says more than a sentence. TestFlight or the support page in Settings.
+1. Editor, the sound row: it should say the current tone and 14. Tap it and count the tiles.
+2. Listen to Hornet, Buzzer and Cicada from that screen, and Siren.
+3. Pick one, save, reopen the alarm: it must still be selected.
+4. In Arabic, the same screen: the tiles are mirrored and the names are longer; nothing should be cut off.

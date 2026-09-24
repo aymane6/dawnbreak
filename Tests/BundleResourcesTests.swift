@@ -1,3 +1,4 @@
+import AVFoundation
 import DawnbreakKit
 import Foundation
 import Testing
@@ -27,6 +28,56 @@ struct BundleResourcesTests {
                 .map { $0.deletingPathExtension().lastPathComponent }
         )
         #expect(bundled == Set(AlarmSound.allCases.map(\.rawValue)), "bundled: \(bundled.sorted())")
+    }
+
+    /// The loudness the picker promises has to be the loudness in the file.
+    ///
+    /// `scripts/make-sounds.swift` normalises each tone to its class's integrated loudness target
+    /// and fails its own build if one misses, but that generator is run by hand: nothing else would
+    /// notice a regeneration that quietened the alarm, and a quiet alarm is not a bug anybody can
+    /// work around at six in the morning. Measured here as RMS rather than LUFS — a cruder number,
+    /// but one that needs no filter bank and moves in the same direction, so the windows are set
+    /// wide and only the ladder is asserted.
+    @Test("Every tone is as loud as its class claims", arguments: AlarmSound.allCases)
+    func loudnessMatchesTheClass(sound: AlarmSound) throws {
+        let url = try #require(Bundle.main.url(forResource: sound.rawValue, withExtension: "caf"))
+        let level = try Self.decibelsRMS(of: url)
+        let window: ClosedRange<Double> = switch sound.loudness {
+        case .gentle: Double(-20)...Double(-12)
+        case .standard: Double(-13)...Double(-8)
+        case .harsh: Double(-9)...Double(-5)
+        case .savage: Double(-7.5)...Double(-3)
+        }
+        #expect(window.contains(level), "\(sound.rawValue) measures \(String(format: "%.2f", level)) dBFS RMS")
+    }
+
+    @Test("The savage tones are audibly louder than the gentle ones, not merely labelled so")
+    func theLadderIsReal() throws {
+        func level(_ sound: AlarmSound) throws -> Double {
+            try Self.decibelsRMS(of: try #require(Bundle.main.url(forResource: sound.rawValue, withExtension: "caf")))
+        }
+        // Ten decibels is heard as about twice as loud, which is the whole point of the ladder.
+        #expect(try level(.hornet) - level(.birdsong) > 10)
+        #expect(try level(.siren) - level(.sunrise) > 8)
+        #expect(try level(.buzzer) > level(.marimba))
+    }
+
+    private static func decibelsRMS(of url: URL) throws -> Double {
+        let file = try AVAudioFile(forReading: url)
+        let buffer = try #require(AVAudioPCMBuffer(
+            pcmFormat: file.processingFormat,
+            frameCapacity: AVAudioFrameCount(file.length)
+        ))
+        try file.read(into: buffer)
+        let samples = try #require(buffer.floatChannelData)
+        let count = Int(buffer.frameLength)
+        try #require(count > 0)
+        var sum = 0.0
+        for i in 0..<count {
+            let value = Double(samples[0][i])
+            sum += value * value
+        }
+        return 20 * log10(max((sum / Double(count)).squareRoot(), 1e-12))
     }
 
     @Test("The app icon compiled into the bundle")

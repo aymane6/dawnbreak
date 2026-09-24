@@ -38,11 +38,10 @@ FEITO DIREITO
 - Sem conta. Sem login. Sem anúncios. Sem analytics
 - Nada sai do telefone. Não existe servidor para onde ir
 
-GRÁTIS E PRO
+GRÁTIS, TUDO
 
-Grátis: um alarme, uma rodada, três missões, dificuldade até média.
+Todas as missões, todas as dificuldades, até dez rodadas, quantos alarmes a sua semana precisar e noventa dias de histórico. Não há nada para comprar: nenhuma assinatura, nenhum anúncio, nenhuma conta.
 
-Pro: vinte e cinco alarmes, até dez rodadas, todas as doze missões, todas as quatro dificuldades, noventa dias de histórico. Mensal, anual, ou uma compra única que nunca renova.
-
-Privacidade: https://aymane6.github.io/dawnbreak/privacy.html
-Suporte: https://aymane6.github.io/dawnbreak/support.html
+Privacidade: https://dawnbreak.app/privacy.html
+Termos de uso: https://dawnbreak.app/terms.html
+Suporte: https://dawnbreak.app/support.html

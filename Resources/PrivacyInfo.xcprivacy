@@ -1,18 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!--
-  The privacy manifest. Required since iOS 17 for any bundle that calls a required-reason API,
-  and its absence is not a build error: the upload is accepted and an ITMS-91053 email arrives
-  afterwards saying the next one will not be.
-
-  This file is in both bundles. project.yml lists it in the widget's sources as well, because the
-  extension has its own Info.plist, its own bundle id and its own copy of UserDefaults, and a
-  manifest in the host app does not speak for it.
-
-  Nothing is collected, so NSPrivacyCollectedDataTypes is empty rather than absent: an empty array
-  is the declaration that answers "Data Not Collected" in App Store Connect, and it is the same
-  claim the privacy policy and all twelve store descriptions make.
--->
 <plist version="1.0">
 <dict>
 	<key>NSPrivacyTracking</key>
@@ -24,15 +11,24 @@
 	<key>NSPrivacyAccessedAPITypes</key>
 	<array>
 		<dict>
-			<!-- Preferences (the app) and the Live Activity's read of them (the widget) both go
-			     through UserDefaults, in the app's own suite and in the shared app group. CA92.1
-			     is the reason for exactly that: information the app itself wrote, and nothing
-			     that could identify the device. -->
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<!-- The squat mission timestamps its readings with `ProcessInfo.systemUptime`, which is
+			     on Apple's required-reason list. The reason is the one that fits exactly: the
+			     judge measures how long a hip stayed down and how long the phone has been still,
+			     both of which are intervals between events inside the app, and a wall clock cannot
+			     be used for them because it can jump. Nothing here leaves the device. -->
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>35F9.1</string>
 			</array>
 		</dict>
 	</array>

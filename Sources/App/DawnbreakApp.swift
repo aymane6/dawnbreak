@@ -24,8 +24,7 @@ struct DawnbreakApp: App {
                     let resumed = env.bridge.restorePendingMission()
                     // A screenshot run stops here. `reconcile` arms the seeded alarms, and
                     // arming the first one asks for permission to interrupt Focus, which puts a
-                    // system alert over whatever was being photographed; StoreKit is skipped for
-                    // the same reason, its entitlement having been pinned at launch.
+                    // system alert over whatever was being photographed.
                     guard !CaptureMode.isActive else { return }
                     // A mission was already owed when the app launched, which means the app was
                     // killed with the mission screen up — the one escape the screen cannot see
@@ -33,7 +32,6 @@ struct DawnbreakApp: App {
                     // straight back rather than in a minute.
                     if resumed { await env.bridge.missionLeftUnfinished() }
                     await env.bridge.reconcile()
-                    await env.subscription.start()
                 }
         }
         .onChange(of: scenePhase) { _, phase in

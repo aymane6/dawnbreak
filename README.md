@@ -11,7 +11,7 @@ own container on the phone.
 Dawnbreak/
 ├── Sources/            the app (SwiftUI, iOS 26)
 ├── Widget/             the Live Activity and the home screen widget
-├── DawnbreakKit/       the logic: missions, store, stats, entitlements (a Swift package)
+├── DawnbreakKit/       the logic: missions, store, stats (a Swift package)
 ├── Tests/              unit tests that need the app bundle
 ├── UITests/            the smoke test and the screenshot run
 ├── Resources/          the string catalogues, the icon, the sounds, the privacy manifest
@@ -23,44 +23,46 @@ Dawnbreak/
 
 ## The missions
 
-Twelve, and the free tier keeps the three that need no hardware and no setup.
+Twelve, all of them available on first launch.
 
-| Mission | What it asks | Needs | Free |
-| --- | --- | --- | --- |
-| Math | Arithmetic, one to four digits | | yes |
-| Shake | Shake the phone N times | accelerometer | yes |
-| Breathe | Guided breathing cycles | | yes |
-| Memory | Reproduce a tile pattern | | |
-| Sequence | Repeat a growing colour sequence | | |
-| Typing | Retype a sentence, in your language | | |
-| Steps | Walk N steps | pedometer | |
-| Squats | Squats counted by the front camera | camera | |
-| Photo | Photograph an object you registered | camera, setup | |
-| Barcode | Scan a barcode you registered | camera, setup | |
-| Draw | Draw a named object, recognised on device | | |
-| Flap | Clear a lap of the side-scroller | | |
+| Mission | What it asks | Needs |
+| --- | --- | --- |
+| Math | Arithmetic, one to four digits | |
+| Shake | Shake the phone N times | accelerometer |
+| Breathe | Guided breathing cycles | |
+| Memory | Reproduce a tile pattern | |
+| Sequence | Repeat a growing colour sequence | |
+| Typing | Retype a sentence, in your language | |
+| Steps | Walk N steps | pedometer |
+| Squats | Squats counted by the front camera | camera |
+| Photo | Photograph an object you registered | camera, setup |
+| Barcode | Scan a barcode you registered | camera, setup |
+| Draw | Draw a named object, recognised on device | |
+| Flap | Clear a lap of the side-scroller | |
 
 Four difficulties, up to ten rounds per alarm, and an emergency exit in Settings that is on by
 default: no alarm can trap anybody.
 
-## Free and Pro
+## Free
 
-| | Free | Pro |
-| --- | --- | --- |
-| Alarms | 1 | 25 |
-| Rounds per alarm | 1 | 10 |
-| Missions | 3 | 12 |
-| Difficulty | up to medium | all four |
-| History | 7 days | 90 days |
+All of it, for everybody. Twelve missions, four difficulties, up to ten rounds an alarm, as many
+alarms as a week needs, ninety days of history. No subscription, no in-app purchase, no advertising,
+no account, and the app links no StoreKit at all.
 
-Pro is three products against one entitlement: monthly, yearly and a lifetime purchase
-(`com.aymbam.dawnbreak.pro.{monthly,yearly,lifetime}`). `Transaction.currentEntitlements` is the
-only source of truth; nothing is cached, because a cached flag survives a refund and a cached
-absence locks a paying user out on a fresh install.
+1.0.0 was built the other way, with three products against one `Entitlement` and a paywall, and they
+came out on 2026-09-03 for a reason worth writing down: **App Store Connect's API cannot attach an
+in-app purchase to a review submission.** `POST /v1/reviewSubmissionItems` has a relationship for an
+`appStoreVersion` and for an app event, and none for a `subscription` or an `inAppPurchaseV2`; both
+were tried and both answered 409. So a version carrying products can only be sent to Apple by hand,
+through the web UI, ticking three boxes. Everything else in this repository is a script that can be
+re-run and read in a diff, and the choice was between one step that is neither and an app that does
+not sell anything. The app does not sell anything.
 
-These numbers are not written twice. `Entitlement` in the kit decides them, and
-`scripts/asc-preflight.py` checks the store listing and the reviewer's notes against it. A listing
-that promises more than the binary gives is a 2.3.1 rejection.
+The four numbers above are not written twice. `MissionKind`, `MissionConfig.maxRounds` and
+`StatsView.Window` decide them, and `scripts/asc-preflight.py` checks the store listing and the
+reviewer's notes against the Swift. A listing that promises more than the binary gives is a 2.3.1
+rejection, and the same check now also refuses a StoreKit import, a `.storekit` file, a product id
+and a price quoted in any of the twelve descriptions.
 
 ## Languages
 
@@ -88,12 +90,10 @@ open Dawnbreak.xcodeproj
 ```
 
 `Dawnbreak.xcodeproj` is generated and gitignored, along with the two Info.plists and the three
-entitlements files in `Configuration/`. Never edit them: edit `project.yml` and regenerate. The Run
-scheme is wired to `Configuration/Dawnbreak.storekit`, which is how the paywall shows prices in the
-simulator with no sandbox account.
+entitlements files in `Configuration/`. Never edit them: edit `project.yml` and regenerate.
 
-AlarmKit will not ring in the simulator the way it does on a device. The missions, the paywall, the
-stats and every screen work; to see an alarm actually break through a Focus mode, run on hardware.
+AlarmKit will not ring in the simulator the way it does on a device. The missions, the stats and
+every screen work; to see an alarm actually break through a Focus mode, run on hardware.
 
 ## Everything generated
 
@@ -103,7 +103,7 @@ Four generators, each with its own checks. All of them are idempotent and safe t
 ```sh
 python3 scripts/make_strings.py      # Resources/{Localizable,InfoPlist}.xcstrings
 python3 scripts/make_metadata.py     # metadata/  (the App Store listing)
-python3 scripts/make_pages.py        # docs/      (the pages GitHub Pages serves)
+python3 scripts/make_pages.py        # docs/      (the pages the website serves, see below)
 scripts/shots.sh                     # build/shots/framed/  (the screenshots)
 ```
 
@@ -119,7 +119,6 @@ is not that locale's CLDR set, and when an Arabic value types a Latin digit.
 scripts/shots.sh                 # all twelve languages, about twenty minutes
 scripts/shots.sh fr-FR ja        # only these, by App Store Connect locale code
 scripts/shots.sh --frame-only    # re-frame what is already in build/shots/raw
-scripts/shots.sh --review        # only the paywall, for App Store review
 ```
 
 Six screens in each of the twelve languages, at 1320x2868 on an iPhone 17 Pro Max, which is the one
@@ -132,31 +131,15 @@ minutes. Without it the status bar stays English, and the Arabic shots come out 
 The captions are burnt in per language by `scripts/frame-shots.swift`, from the same string tables
 the app uses.
 
-`--review` takes a thirteenth image that is not marketing: Apple submits every subscription and every
-in-app purchase with a picture of the screen that sells it. That one is English, unframed, and goes
-to `build/shots/review/paywall.png`, where `scripts/iap.py` finds it.
+There used to be a thirteenth image here, and a `--review` flag to take it: Apple submits every
+in-app purchase with a picture of the screen that sells it, and rendering that screen with real
+prices on a simulator took a unit test, a `SKTestSession`, a `.storekit` file and a Debug-only
+`get-task-allow` entitlement. All of it went with the products. What is left is
+`Configuration/Dawnbreak-Debug.entitlements`, which the unit-test bundle still signs with so the
+tests can be attached to, and which `verify-archive.sh` refuses to see in a shipped bundle.
 
-It is the only one that is rendered rather than photographed, and the reason is where the prices come
-from. A simulator has no App Store account, so the paywall can only draw "Prices are not loading"
-unless something puts the app in a StoreKit test environment, and a `SKTestSession` configuration is
-filed under the bundle id of the process that creates it. A UI test runner is a different bundle id
-from the app it drives, so the app finds nothing. `ReviewShotTests` is therefore a unit test, loaded
-into the app itself, and it draws the shipped `PaywallView` into a window of the app's own scene at
-device scale, with the prices read from `Configuration/Dawnbreak.storekit`, the same file the
-products are submitted from. What it loses is the status bar and the sheet the paywall normally sits
-in. What it keeps is the real view and the real prices.
-
-The other half of it is one entitlement. `storekitd` will not hold a configuration for an app that is
-not a development install, and answers with `com.aymbam.dawnbreak is not installed for development`;
-what it reads is `get-task-allow`, which a Debug build signed against a real development profile gets
-for free and an ad-hoc simulator build does not. So `--review` passes
-`Configuration/Dawnbreak-Debug.entitlements`, generated by xcodegen from the `DawnbreakTests` target,
-to that one build. It is deliberately not wired into the project: a distribution profile does not
-authorise `get-task-allow` and the store rejects a debuggable binary, so `verify-archive.sh` fails an
-archive that carries it.
-
-The path the review notes send a reviewer down, Settings then Dawnbreak Pro on the free tier, is
-checked by `SmokeTests` instead, which runs in every test run rather than only before a submission.
+The path the review notes send a reviewer down is checked by `SmokeTests`, which runs in every test
+run rather than only before a submission.
 
 ## Tests
 
@@ -167,8 +150,8 @@ xcodebuild test -scheme Dawnbreak -destination 'platform=iOS Simulator,name=iPho
 
 The kit's tests are property-based where it matters: "easy maths never asks for a negative answer"
 is proved over 200 seeded draws, not hoped about one. The app's tests check what only the bundle can
-answer: that every key the app builds at runtime resolves in all twelve languages, that the paywall
-copy names its own price, and that the sounds are in the bundle.
+answer: that every key the app builds at runtime resolves in all twelve languages, that the twelve
+compiled `.lproj` folders are really there, and that the eight sounds are in the bundle.
 
 ## Release: TestFlight
 
@@ -229,10 +212,9 @@ build number it has already seen.
 ### What the two checks cover
 
 `asc-preflight.py` reads the repository: stale catalogues, a listing over a character limit, an app
-group spelled two ways, product ids that differ between the Swift and the StoreKit configuration, a
-missing privacy manifest, an icon with an alpha channel, a purpose string for an API the app never
-calls, a paywall gate with no headline, screenshots at the wrong size, and every number in the
-reviewer's notes against the Swift that decides it.
+group spelled two ways, a missing privacy manifest, an icon with an alpha channel, a purpose string
+for an API the app never calls, screenshots at the wrong size, anything that would make the app sell
+something again, and every number in the reviewer's notes against the Swift that decides it.
 
 `verify-archive.sh` reads the built bundles, which is the only place some of it exists: twelve
 compiled `.lproj` folders in both the app and the extension, the privacy manifest copied into both,
@@ -245,13 +227,14 @@ Run either on its own at any time.
 ## Release: App Store
 
 ```sh
-python3 scripts/iap.py        # the subscription group, both subscriptions, the lifetime purchase
-python3 scripts/publish.py    # the listing: copy, screenshots, categories, review details
+python3 scripts/publish.py           # the listing: copy, screenshots, categories, review details
+python3 scripts/submit.py            # what would go to Apple
+python3 scripts/submit.py --send     # and then, once
 ```
 
-The same three credentials as TestFlight and nothing else; both share `scripts/asc.py` with
-`release.sh`. Both look everything up before writing it, so a second run edits what the first one
-made instead of making another one, and both stop with the same sentence if the app record does not
+The same three credentials as TestFlight and nothing else; all of them share `scripts/asc.py` with
+`release.sh`. They look everything up before writing it, so a second run edits what the first one
+made instead of making another one, and they stop with the same sentence if the app record does not
 exist yet.
 
 Everything they send is in the repo:
@@ -262,28 +245,26 @@ Everything they send is in the repo:
 | `metadata/review_information/` | the reviewer's notes and the contact |
 | `metadata/{copyright,primary_category,secondary_category}.txt` | set once |
 | `build/shots/framed/<locale>/` | six screenshots each, 1320x2868 |
-| `build/shots/review/paywall.png` | the purchase screen, sent with all three products, published nowhere |
-| `Configuration/Dawnbreak.storekit` | the ids, prices and durations of the three products |
 | `docs/privacy.html` | the privacy policy the listing links, in twelve languages |
 
 One file per field, which is a legible diff in a way a JSON payload is not, and the same layout
 fastlane's `deliver` reads for metadata. Nothing here runs fastlane. `publish.py` uploads the files
 themselves rather than asking the generators again, so what Apple receives is what `git diff` showed.
 
-`iap.py` creates the group, the two subscriptions and the non-consumable, twelve localizations each,
-the price in all 175 territories, the free introductory week on the yearly plan in each of them, and
-the review screenshot on all three. Then it asks Apple for each product's state and prints it:
-`MISSING_METADATA` against `READY_TO_SUBMIT` is the only honest answer to whether a product is
-finished, and it is Apple's answer rather than the script's. A price is one row per territory, and a
-product available in 175 countries and priced in one is exactly what `MISSING_METADATA` means.
-
 `publish.py` writes the app info (name, subtitle and privacy URL in twelve languages, plus the two
 categories), the age rating questionnaire, version 1.0.0, the twelve version localizations, the
 review details, the content rights declaration, a free price schedule in every territory, and the
 seventy-two screenshots into the 6.9-inch set; attaches the newest processed build; and stages the
-review submission. It stops there. Sending the submission is a person's act, and staging is what
-makes the rest of this readable: adding the version to a submission is the only call in the API that
-answers with everything the version is still missing, each reason against the resource it belongs to.
+review submission. It stops there, and staging is what makes the rest of this readable: adding the
+version to a submission is the only call in the API that answers with everything the version is still
+missing, each reason against the resource it belongs to.
+
+`submit.py` is the one that sends, and it is a second script rather than a flag because writing the
+listing is reversible and this is not: a submitted review submission can only be cancelled, and
+cancelling one is documented to strand whatever else was in it. It re-reads the draft rather than
+trusting the run before it, refuses an empty draft, refuses a version in a state Apple will not take,
+refuses a version with no build or a build that is not `VALID`, and prints all of that before it will
+accept `--send`. Without `--send` it sends nothing.
 
 Three things stay with a signed-in human, because Apple exposes them nowhere else: the API answers
 `POST /v1/apps` with `The resource 'apps' does not allow 'CREATE'`, has no app-group resource at all,
@@ -302,26 +283,53 @@ and has no resource of any name for the app privacy answers.
    `NSPrivacyCollectedDataTypes` and the privacy policy makes in twelve languages. Nothing here has
    an analytics SDK, a network call, or a tracking permission.
 
-Then, in App Store Connect: read the version page the way a reviewer will, then Distribution →
-Vérification de l'app → the draft `publish.py` staged → Envoyer pour vérification. Re-running
-`publish.py` while that draft exists changes nothing and says so: a staged version takes no metadata
-edits, and the way back to editing is to remove the item from the draft.
+Read the version page in App Store Connect the way a reviewer will, then `scripts/submit.py --send`.
+Re-running `publish.py` while a draft exists changes nothing and says so: a staged version takes no
+metadata edits, and the way back to editing is to remove the item from the draft, which flips the
+version to `DEVELOPER_REJECTED` and makes it editable again.
 
 ## The pages
 
-`docs/` is served by GitHub Pages and holds three pages in twelve languages each: the marketing
-page, the privacy policy and the support page. The listing links to all three, and a reviewer opens
-the privacy policy, so a 404 there is an immediate rejection.
+`docs/` holds four pages in twelve languages each: the marketing page, the privacy policy, the terms
+of use and the support page. The listing links three of them and Settings links two, and Apple reads
+the privacy policy before a human opens the app, so a 404 on any of them is a rejection rather than a
+papercut. The terms page is not required of an app that sells nothing; it is there because Settings
+links it, and because somebody installing an alarm clock is owed a plain statement of what it will
+and will not do.
 
-Live at [aymane6.github.io/dawnbreak](https://aymane6.github.io/dawnbreak/), served from `main` and
-the `/docs` folder. The repository has to keep the name `dawnbreak` and stay public: those URLs are
-baked into the listing, so a rename means editing `scripts/strings/store.py` and re-running
-`make_metadata.py` and `make_pages.py`. On a fork, set it under Settings, Pages, Source: deploy from
-a branch, `main`, `/docs`.
+Live at [dawnbreak.app](https://dawnbreak.app/), on the app's own domain. The domain is registered at
+OVH and its DNS is delegated to a Route 53 hosted zone; the pages themselves are in S3 behind
+CloudFront. All of that is `infra/`, a CDK app:
+
+```sh
+cd infra
+npx cdk deploy DawnbreakDns      # the hosted zone, and the four name servers to set at OVH
+npx cdk deploy DawnbreakSite     # certificate, bucket, distribution, records, and docs/ itself
+npx projen test                  # 11 tests, no account needed
+```
+
+In that order, and with a human step between them: `DawnbreakSite` cannot finish until the registrar
+points at the zone, because the certificate is validated over public DNS. `DawnbreakDns` prints the
+four name servers; they go into OVH's "use my own DNS" form with the Associated IP field left empty.
+
+**Regenerating `docs/` publishes nothing.** The pages are a CDK asset, uploaded by the bucket
+deployment inside `DawnbreakSite`, so a fresh `docs/` reaches nobody until that stack is deployed and
+the edge invalidated. There is no push-to-deploy: `git push` moves the source and not the site. On
+2026-09-03 that gap ran for a week. The app had been stripped of every purchase and `docs/` said so,
+but the live pages still described a Dawnbreak Pro subscription, a restore button and a refund policy,
+in twelve languages, on the exact URLs the App Store description links, and a reviewer would have
+opened a subscription EULA for an app with nothing to buy. So after `make_pages.py`, deploy.
+
+The URLs live in `scripts/strings/store.py` and nowhere else. `asc-preflight.py` compares them
+against `docs/`, against every `https://` URL compiled into the app, and against the support address
+filed with Apple; in review mode it also fetches all four and compares them with `docs/` byte for
+byte, so a stale deploy fails the same way a 404 does. That check exists because the app once shipped
+four legal links pointing at a username that did not exist, and every other check in the repository
+passed; the byte comparison was added the day a 200 from last week's deploy counted as proof.
 
 Language follows the browser, with a picker on the page, `?lang=ja` to force one, and English as the
 fallback. Every language is in the file, so it works with JavaScript off. There is no build step and
-no Jekyll: `docs/.nojekyll` keeps GitHub from running one.
+no Jekyll: the pages are static HTML written by `make_pages.py`.
 
 ## A note on what this is
 

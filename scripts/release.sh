@@ -155,6 +155,22 @@ rm -rf "$ARCHIVE" "$EXPORT"
 SIGNING=()
 [[ "$SIGNED" -eq 0 ]] && SIGNING=(CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="")
 
+# One escape hatch, for a keychain holding two certificates with the same name.
+#
+# `project.yml` names the identity ("Apple Distribution: Aymane BAMHAMED"), which is the readable
+# thing to do and is ambiguous the moment a second certificate with that name exists. xcodebuild then
+# picks one, not always the same one, and if it picks a certificate whose private key is unusable the
+# only symptom is `errSecInternalComponent` against one bundle, with no mention of which certificate
+# it tried. That cost an archive here. Setting DAWNBREAK_SIGN_IDENTITY to a SHA-1 fingerprint from
+# `security find-identity -v -p codesigning` names exactly one of them.
+#
+# Deliberately an environment variable and not a value in `project.yml`: a fingerprint is true of one
+# keychain on one machine, and hard-coding it would break the build everywhere else.
+if [[ "$SIGNED" -eq 1 && -n "${DAWNBREAK_SIGN_IDENTITY:-}" ]]; then
+  say "Signing with the identity named by DAWNBREAK_SIGN_IDENTITY"
+  SIGNING+=("CODE_SIGN_IDENTITY=$DAWNBREAK_SIGN_IDENTITY")
+fi
+
 say "Archiving (Release$([[ "$SIGNED" -eq 0 ]] && printf ', unsigned'))"
 xcodebuild archive \
   -project Dawnbreak.xcodeproj \
@@ -185,9 +201,20 @@ scripts/verify-archive.sh "$ARCHIVE" || die "the archive is not uploadable"
 # ---------------------------------------------------------------------------
 
 say "Exporting the .ipa"
+# The export re-signs, so it needs the same disambiguation the archive did. `signingCertificate` in
+# the plist is the generic "Apple Distribution", which matches every such certificate in the
+# keychain; a fingerprint matches one. The repository's plist stays generic and a patched copy is
+# written under build/, because a fingerprint is a fact about one machine's keychain.
+EXPORT_OPTIONS="Configuration/ExportOptions.plist"
+if [[ -n "${DAWNBREAK_SIGN_IDENTITY:-}" ]]; then
+  EXPORT_OPTIONS="$BUILD/ExportOptions.plist"
+  cp Configuration/ExportOptions.plist "$EXPORT_OPTIONS"
+  /usr/libexec/PlistBuddy -c "Set :signingCertificate $DAWNBREAK_SIGN_IDENTITY" "$EXPORT_OPTIONS" >/dev/null
+fi
+
 xcodebuild -exportArchive \
   -archivePath "$ARCHIVE" \
-  -exportOptionsPlist Configuration/ExportOptions.plist \
+  -exportOptionsPlist "$EXPORT_OPTIONS" \
   -exportPath "$EXPORT" \
   -quiet > "$LOGS/export.log" 2>&1 || {
     tail -40 "$LOGS/export.log" >&2

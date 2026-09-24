@@ -35,16 +35,16 @@ struct CaptureDataTests {
         }
     }
 
-    @Test("Nothing in the screenshots is padlocked")
-    func everythingSeededIsUnlocked() {
-        // The capture run pins `.pro`, and these are the alarms it photographs. Four alarms is
-        // already past the free limit of one, so a run that lost its pinned entitlement would
-        // photograph a paywall instead of an alarm list.
-        #expect(data.alarms.count > Entitlement.free.maximumAlarms)
+    /// The listing's first screenshot is the alarm list, and one alarm on it sells nothing: the
+    /// point of the shot is that a morning can be built out of several different demands.
+    @Test("The photographed alarm list shows several alarms, and no two the same mission")
+    func theSeededListLooksLived() {
+        #expect(data.alarms.count >= 4)
+        let kinds = data.alarms.map(\.mission.kind)
+        #expect(Set(kinds).count == kinds.count, "a repeated mission wastes a row of the screenshot")
         for alarm in data.alarms {
-            #expect(Entitlement.pro.allows(alarm.mission.kind))
-            #expect(Entitlement.pro.allows(alarm.mission.difficulty))
-            #expect(alarm.mission.rounds <= Entitlement.pro.maximumRounds)
+            #expect(alarm.mission.rounds >= 1)
+            #expect(alarm.mission.rounds <= MissionConfig.maxRounds)
         }
     }
 

@@ -63,7 +63,7 @@ enum E2EAlarmSeed {
             _ = await env.bridge.requestAuthorization()
             // The state a lock-screen press leaves behind, written the way the intent writes
             // it: the alarm in the store, the handoff in the shared container. The launch that
-            // follows has to put the mission on the glass — over an editor, a paywall, or a
+            // follows has to put the mission on the glass, over an editor, a settings sheet or a
             // failure dialog, which is exactly the collision this exists to catch.
             let alarm = AlarmDraft(
                 hour: Calendar.current.component(.hour, from: Date()),

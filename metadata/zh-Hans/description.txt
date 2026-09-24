@@ -38,11 +38,10 @@ Dawnbreak 把那个拇指从等式里拿掉。要让闹钟安静下来，你得�
 - 无需账号。无需登录。没有广告。没有埋点
 - 数据不离开手机。压根就没有可以发去的服务器
 
-【免费版与 Pro】
+【全部免费】
 
-免费版：一个闹钟、一轮、三种任务、难度最高到中等。
+全部十二种任务、全部四档难度、最多十轮、你这一周需要的任意数量的闹钟，以及九十天历史记录。没有任何东西可买：没有订阅，没有广告，也没有账号。
 
-Pro：二十五个闹钟、最多十轮、全部十二种任务、全部四档难度、九十天历史。按月、按年，或一次性买断，永不续费。
-
-隐私政策：https://aymane6.github.io/dawnbreak/privacy.html
-支持：https://aymane6.github.io/dawnbreak/support.html
+隐私政策：https://dawnbreak.app/privacy.html
+使用条款：https://dawnbreak.app/terms.html
+支持：https://dawnbreak.app/support.html

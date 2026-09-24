@@ -39,7 +39,14 @@ public struct MissionConfig: Codable, Hashable, Sendable {
     }
 
     public static let maxRounds = 10
-    public static let `default` = MissionConfig(kind: .math, difficulty: .medium, rounds: 3)
+    /// The mission a new alarm starts with.
+    ///
+    /// One round, not three, although three is the number that makes an alarm actually work. A
+    /// person setting their first alarm has not yet agreed to solve three sums before the noise
+    /// stops, and an app that decides that for them is one they delete rather than adjust. The
+    /// stepper goes to ten and is one tap away; the default is the smallest promise the app can
+    /// keep.
+    public static let `default` = MissionConfig(kind: .math, difficulty: .medium, rounds: 1)
 
     /// True when the alarm cannot be armed yet because the mission still needs setup.
     public var isIncomplete: Bool { kind.needsEnrollment && enrollment == nil }
@@ -145,13 +152,35 @@ public struct MissionConfig: Codable, Hashable, Sendable {
         }
     }
 
+    /// How long the pads take to be shown, before the user may touch anything.
+    ///
+    /// In the kit rather than in the view because it is half of a rule: a time limit shorter than
+    /// this is a mission that can never be cleared, and `MissionTests` holds that down. The sequence
+    /// mission is Simon: round one plays one pad, round two replays both, and so on to the end, so
+    /// the cost grows with the square of the length. Eleven pads is forty-six seconds of watching.
+    public var presentationSeconds: Double {
+        switch kind {
+        case .sequence:
+            let steps = Double(sequenceLength)
+            return steps * Self.sequenceLeadIn + Self.sequencePadSeconds * steps * (steps + 1) / 2
+        case .memory:
+            return memory.previewSeconds
+        default:
+            return 0
+        }
+    }
+
+    /// A beat before each round's playback, so the first flash is not missed.
+    public static let sequenceLeadIn = 0.5
+    /// One pad lit, plus the gap after it.
+    public static let sequencePadSeconds = 0.62
+
     /// Seconds allowed per round before the round resets. `nil` means untimed.
     public var timeLimit: TimeInterval? {
         switch (kind, difficulty) {
         case (.math, .brutal): 25
         case (.math, .hard): 40
         case (.memory, .brutal): 20
-        case (.sequence, .brutal): 30
         case (.typing, .brutal): 60
         default: nil
         }

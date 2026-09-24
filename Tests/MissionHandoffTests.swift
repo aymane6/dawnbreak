@@ -121,8 +121,96 @@ struct MissionHandoffTests {
         #expect(system.calls.isEmpty)
     }
 
+    /// The other half of that setting, and it was missing.
+    ///
+    /// `handleStopPressed` honoured `relentless`, and then the mission screen undid it: opening
+    /// the screen pushes the follow-up out and leaving it brings the alarm straight back, and
+    /// neither asked whether this alarm was allowed to come back at all. A user who switched
+    /// insistence off got a ring three minutes later anyway, and another five seconds after the
+    /// screen was dismissed. The setting held only while the app never came forward.
+    @Test("A non-insistent alarm is not re-armed by the mission screen either")
+    func theMissionScreenHonoursTheRelentlessSetting() async {
+        let alarm = Self.draft(relentless: false)
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+
+        await bridge.missionInProgress()
+        await bridge.missionLeftUnfinished()
+
+        #expect(system.followUpDates.isEmpty, "an alarm told not to insist came back anyway")
+        #expect(system.calls.isEmpty)
+        // And the mission is still owed: not coming back is not the same as never having asked.
+        #expect(PendingMissionStore.loadIfFresh()?.alarmID == alarm.id)
+    }
+
+    /// Snooze from the mission screen. The screen has to come down, and it has to stay down for
+    /// the length of the snooze: `activeMission` stayed set, so the cover stayed up with the
+    /// audio stopped — nothing appeared to happen — and the runner holds `isIdleTimerDisabled`,
+    /// so the display stayed lit the whole time.
+    @Test("Snoozing puts the mission away until the alarm comes back")
+    func snoozeClosesTheMissionUntilItRings() async {
+        var alarm = Self.draft()
+        alarm.snooze = AlarmDraft.SnoozePolicy(isAllowed: true, minutes: 9, maxCount: nil)
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+
+        await bridge.handleSnoozePressed(alarmID: alarm.id)
+
+        #expect(bridge.activeMission == nil, "the mission cover would have stayed on screen")
+        // Within a second: the fire date is built from `Date()` inside the bridge and read back
+        // here, so the interval drifts by however long the test took to get to this line.
+        let armedIn = system.lastFollowUpDelay ?? 0
+        #expect(abs(armedIn - TimeInterval(9 * 60)) <= 1, "the snooze armed \(armedIn)s out")
+        // Still owed, and still armed: the morning is postponed, not over.
+        #expect(PendingMissionStore.load()?.snoozeCount == 1)
+        #expect(PendingMissionStore.loadIfFresh() == nil, "it must not reopen during the snooze")
+        #expect(PendingMissionStore.loadUpcoming()?.alarmID == alarm.id, "reconcile must not touch it")
+        #expect(bridge.armedIDs == [alarm.id])
+    }
+
     // MARK: - Walking away
 
+    /// The race both reviewers of this fix landed on, and the only one of them that inverts the
+    /// product's promise rather than weakening it: the alarm ringing at somebody who is finished.
+    ///
+    /// `armFollowUp` suspends across the daemon round trip. If the mission is settled during that
+    /// suspension, the arm lands on a morning that is over: the record is gone, the alarm has been
+    /// put back on its own schedule, and a one-off follow-up is now sitting on top of it.
+    @Test("A follow-up that lands after the mission was settled does not stay armed")
+    func aStaleFollowUpStandsItselfDown() async {
+        let alarm = Self.draft(repeatDays: [.monday, .wednesday])
+        // Settled from underneath, in the middle of the arm.
+        let system = FakeAlarmSystem(duringFollowUp: { PendingMissionStore.clear() })
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+        // A mission owed on disk with nothing active in this process: the shape of a relaunch
+        // that found the screen gone, which is the caller that arms the shortest follow-up.
+        PendingMissionStore.save(PendingMission(alarm: alarm, scheduledFor: Date()))
+
+        await bridge.missionLeftUnfinished()
+
+        // Armed, but on its own schedule rather than five seconds out.
+        #expect(bridge.armedIDs == [alarm.id])
+        #expect(system.calls.last == .schedule(alarm.id), "the alarm was left on the stale follow-up")
+        #expect(system.calls.contains(.followUp(alarm.id)), "the follow-up was never armed at all")
+    }
+
+    /// The other side of that guard, and the reason it is written as narrowly as it is: an ordinary
+    /// dodge must keep its follow-up. The mission is on disk when the arm returns, so nothing is
+    /// stood down.
+    @Test("An ordinary follow-up is left alone")
+    func aLiveFollowUpSurvives() async {
+        let alarm = Self.draft()
+        let system = FakeAlarmSystem()
+        let (bridge, _) = Self.bridge(with: alarm, system: system)
+
+        await bridge.handleStopPressed(alarmID: alarm.id)
+
+        #expect(system.calls.last == .followUp(alarm.id))
+        #expect(system.lastFollowUpDelay == AlarmBridge.relentlessDelay)
+        #expect(bridge.armedIDs == [alarm.id])
+    }
     @Test("Leaving the mission screen with the mission owed brings the alarm back at once")
     func leavingTheMissionRearmsImmediately() async {
         let alarm = Self.draft()
@@ -524,6 +612,19 @@ struct MissionHandoffTests {
 
     // MARK: - The shared bridge's stores
 
+    /// The one test in this file that talks to the real AlarmKit daemon, because the object under
+    /// test *is* the singleton the lock-screen intents hold, and a double would be testing
+    /// something else.
+    ///
+    /// What that costs, written down because it cost an hour on 2026-09-03: on a simulator that has
+    /// never answered "Allow Dawnbreak to schedule alarms and timers?", `handleMissionRequested`
+    /// arms a follow-up, `AlarmBridge.schedule` asks for authorization first, and the await never
+    /// returns. The whole unit bundle then sits at zero output forever with no failure and no
+    /// timeout, which reads as a hung machine rather than an unanswered prompt. There is no
+    /// `simctl privacy` service for alarms, so the alert cannot be pre-granted; what answers it is
+    /// `AlarmRingTests.allowAlarmsIfAsked`, so run the UI bundle once on a fresh device before this
+    /// one. `build/ship-screenshots.sh` erases the device on every run, which is what makes a
+    /// device that used to be authorized stop being it.
     @Test("Building a throwaway environment does not steal the shared bridge's stores")
     func aThrowawayEnvironmentLeavesTheSharedBridgeAlone() async {
         // The worst bug this app has had, as a regression test. SwiftUI's environment default

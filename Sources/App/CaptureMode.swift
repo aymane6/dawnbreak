@@ -28,11 +28,6 @@ enum CaptureMode {
         return screen
     }
 
-    /// Whether this run wants the free tier. Only the paywall is worth seeing behind one.
-    static var isFree: Bool {
-        ProcessInfo.processInfo.arguments.contains(CaptureLaunch.freeArgument)
-    }
-
     // MARK: - Environment
 
     /// The environment the app root runs on: the real one, or a seeded throwaway.
@@ -70,13 +65,7 @@ enum CaptureMode {
         UserDefaults.standard.removePersistentDomain(forName: CaptureLaunch.defaultsSuite)
         let defaults = UserDefaults(suiteName: CaptureLaunch.defaultsSuite) ?? .standard
 
-        // Pinned either way, so no run of this depends on a StoreKit transaction being present:
-        // `.pro` unlocks every screen the listing shows, `.free` is what the paywall needs behind
-        // it. Prices are not pinned and cannot be: `PaywallView` asks StoreKit for them when it
-        // opens, which is why the one screenshot that needs them is taken from inside the app by
-        // `ReviewShotTests` rather than from out here.
-        let entitlement: Entitlement = isFree ? .free : .pro
-        let environment = AppEnvironment(directory: directory, defaults: defaults, entitlement: entitlement)
+        let environment = AppEnvironment(directory: directory, defaults: defaults)
         seed(environment)
         return environment
     }
@@ -92,8 +81,6 @@ enum CaptureMode {
         }
 
         environment.preferences.hasCompletedOnboarding = screen != .onboarding
-        // Otherwise the paywall could open itself over a screenshot of something else.
-        environment.preferences.hasSeenPaywall = true
         environment.selectedTab = tab
 
         // The pending mission lives in the shared container, outside the scratch directory,
@@ -114,18 +101,49 @@ enum CaptureMode {
         }
     }
 
-    /// The alarm that is ringing on the mission screenshot, silenced.
+    /// The alarm that is ringing on the mission screenshot, silenced and standing down.
     ///
     /// `MissionRunnerView` starts the tone and the haptics on appear, and it is right to: the
     /// alarm is ringing. A capture run has no user to wake, so the copy it photographs is muted
     /// rather than the audio being made conditional on a launch argument.
+    ///
+    /// `relentless` off for the same reason, and it is not cosmetic. The mission screen tells the
+    /// bridge the mission is being worked on as it appears, and for a relentless alarm that arms a
+    /// follow-up three minutes out — through the real AlarmKit daemon, which asks for permission to
+    /// interrupt Focus the first time it is used. On 2026-09-03 that put "Allow Dawnbreak to
+    /// schedule alarms and timers?" over the English mission screenshot and failed the run. Nothing
+    /// on this screen draws from the flag: it is read by the widget's subtitle and by the editor's
+    /// toggle, and the editor screenshot photographs the seeded alarm, not this copy. So the pixels
+    /// are unchanged and the capture run asks the system for nothing, which is what `CaptureMode`
+    /// promises at the top of this file. The one pixel a capture run does change on this screen is
+    /// the header's time, through `headerTime` below.
     private static func ringingMission(for alarm: AlarmDraft) -> PendingMission {
         var silent = alarm
         silent.volume = 0
         silent.vibrate = false
+        silent.relentless = false
         let calendar = Calendar.autoupdatingCurrent
         let scheduled = calendar.date(bySettingHour: silent.hour, minute: silent.minute, second: 0, of: Date()) ?? Date()
+        // `startedAt` left at its default, which is now. It is tempting to date it 9:41 to match the
+        // status bar, and that is exactly what broke the run at 15:55 on 2026-09-03: the mission
+        // reaches the screen through `PendingMissionStore`, which refuses anything more than two
+        // hours old, so past 11:41 the mission was discarded, `restorePendingMission` answered nil
+        // and the mission screenshot came out as the alarm list. The header reads `headerTime`
+        // instead, which changes what is drawn without lying to the store about when it was written.
         return PendingMission(alarm: silent, scheduledFor: scheduled)
+    }
+
+    /// The time the mission header draws on a capture run, and nil in every normal run.
+    ///
+    /// 9:41 is what `scripts/shots.sh` overrides the status bar to, and the two are read together:
+    /// on the wall clock the header photographed "Course du matin 14:19" under an 09:41 clock in the
+    /// 19 August set, with a different time in each of the twelve languages. Pinned here rather than
+    /// in the mission itself for the reason in `ringingMission` above: `PendingMission.startedAt` is
+    /// the instant the alarm went off, the store treats it as the mission's age, and a mission dated
+    /// six hours ago is a mission it is right to throw away.
+    static var headerTime: Date? {
+        guard isActive else { return nil }
+        return Calendar.autoupdatingCurrent.date(bySettingHour: 9, minute: 41, second: 0, of: Date())
     }
 
     // MARK: - Demo data
@@ -171,7 +189,10 @@ enum CaptureMode {
     /// The labels are localized, which is the whole point of a localized screenshot. A French
     /// listing whose alarm still says "Morning run" tells the reader the app was translated by
     /// a script, and they are not wrong to think so.
-    private static func demoAlarms() -> [AlarmDraft] {
+    /// Internal rather than private so `AlarmToneTests` can check that the alarms seeded for the
+    /// screenshots name tones that exist: a demo alarm pointing at a deleted tone would photograph
+    /// the fallback sound in twelve languages.
+    static func demoAlarms() -> [AlarmDraft] {
         [
             AlarmDraft(
                 id: ID.run,

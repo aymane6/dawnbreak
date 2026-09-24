@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """The App Store Connect API, and the token it wants, for the scripts that talk to it.
 
-Imported by `provision.py` (signing assets), `iap.py` (the three products) and `publish.py` (the
-listing and the screenshots). Not runnable on its own, and deliberately dependency-free: the JWT is
+Imported by `provision.py` (signing assets) and `publish.py` (the listing, the screenshots and the
+submission). Not runnable on its own, and deliberately dependency-free: the JWT is
 signed by `openssl`, so nothing here needs a Python package that Xcode does not already bring.
 
 Credentials come from the environment and are never in the repository:
