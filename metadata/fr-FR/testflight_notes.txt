@@ -1,6 +1,7 @@
-Le build 12 est celui qui repart en revue chez Apple : l’essentiel touche la première minute et les écrans de mission.
+Le build 13 est celui qui repart en revue chez Apple : c’est le build 12 avec une nouvelle icône, donc l’essentiel touche toujours la première minute et les écrans de mission.
 
 CE QUI CHANGE
+- Une nouvelle icône : le soleil qui se lève sur la courbe de l’horizon, avec ses propres versions sombre et teintée pour l’écran d’accueil.
 - L’écran qui précède l’autorisation des alarmes n’a plus qu’un bouton, Continuer. Le choix se fait dans l’alerte d’iOS, et l’app fonctionne quelle que soit la réponse.
 - « Créer ma première alarme », le dernier bouton de la présentation, ouvre maintenant l’éditeur d’alarme.
 - Les réglages ne gardent que ce qui sert. L’app est toujours en mode sombre.

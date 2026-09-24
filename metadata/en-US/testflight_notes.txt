@@ -1,6 +1,7 @@
-Build 12 is the one going back to App Review, so most of it is about the first minute and the mission screens.
+Build 13 is the one going back to App Review: build 12 with a new icon, so most of it is still about the first minute and the mission screens.
 
 WHAT CHANGED
+- A new icon: the sun breaking over the curve of the horizon, with its own dark and tinted versions for the Home Screen.
 - The screen before the alarm permission has a single button, Continue. The choice is made in the iOS alert, and the app works with either answer.
 - “Set my first alarm”, the last onboarding button, now opens the alarm editor.
 - Settings keeps only what does something. The app is always dark.

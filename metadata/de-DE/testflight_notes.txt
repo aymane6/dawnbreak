@@ -1,6 +1,7 @@
-Build 12 geht zurück in die App-Prüfung, deshalb geht es vor allem um die erste Minute und um die Missionsbildschirme.
+Build 13 geht zurück in die App-Prüfung: Es ist Build 12 mit einem neuen Symbol, deshalb geht es weiterhin vor allem um die erste Minute und um die Missionsbildschirme.
 
 WAS SICH GEÄNDERT HAT
+- Ein neues App-Symbol: die Sonne, die über dem gekrümmten Horizont aufgeht, mit eigenen Varianten in Dunkel und Getönt für den Home-Bildschirm.
 - Der Bildschirm vor der Alarm-Berechtigung hat nur noch eine Taste: Weiter. Die Entscheidung fällt in der iOS-Abfrage, und die App funktioniert mit beiden Antworten.
 - „Ersten Alarm stellen“, die letzte Taste der Einführung, öffnet jetzt den Alarm-Editor.
 - In den Einstellungen bleibt nur, was etwas bewirkt. Die App ist immer dunkel.

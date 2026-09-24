@@ -1,6 +1,7 @@
-O build 12 é o que volta para a revisão da Apple, então quase tudo tem a ver com o primeiro minuto e com as telas de missão.
+O build 13 é o que volta para a revisão da Apple: é o build 12 com um ícone novo, então quase tudo ainda tem a ver com o primeiro minuto e com as telas de missão.
 
 O QUE MUDOU
+- Um ícone novo: o sol nascendo sobre a curva do horizonte, com versões próprias escura e colorida para a Tela de Início.
 - A tela antes da permissão de alarmes tem um único botão, Continuar. A escolha é feita no alerta do iOS, e o app funciona com qualquer resposta.
 - “Criar meu primeiro alarme”, o último botão da apresentação, agora abre o editor de alarme.
 - Os ajustes guardam só o que faz alguma coisa. O app é sempre escuro.

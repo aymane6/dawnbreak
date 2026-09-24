@@ -10,65 +10,98 @@
 // three palettes, and `Theme.swift` is where the palette comes from. The one that helps: the
 // icon is checked in as a PNG, so a fresh clone builds without running this at all.
 //
-// The mark is a sun sitting exactly on the horizon, with a halo arc above it. Three shapes, no
-// text, no small detail: at 40pt on a home screen the silhouette is all that survives, and a
-// half-disc on a line is legible at that size. It is also nothing like Apple's Clock icon,
-// which a wake-up app has to be careful about.
+// The mark is the moment the app is named after: the sun breaking over the curve of the horizon,
+// in a sky that is still night at the top and already morning at the bottom. It replaced a flat
+// half-disc under a halo arc, which read clearly and said nothing. What survives at 40pt on a
+// home screen is a bright curve with a warm light on it, over a dark ground, and that is still
+// nothing like Apple's Clock icon, which a wake-up app has to be careful about.
+//
+// Light is drawn as light: every glow is a blurred copy of a shape screened onto the picture,
+// which is why this needs CoreImage and float layers. An 8-bit bitmap bands visibly in a sky
+// this dark, so the picture is drawn in float and dithered once, at the very end.
 
 import CoreGraphics
+import CoreImage
 import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 
 let side = 1024
+let size = CGFloat(side)
 
 // MARK: - Palettes
 
-/// One appearance of the icon. The `any` values are `Theme.canvas`, `Theme.dawnStart` and
-/// `Theme.dawnEnd`, so the icon and the app's primary button are the same two oranges.
+/// One appearance of the icon. In the `any` palette the band just above the horizon is
+/// `Theme.accent` and the sun's edge is `Theme.dawnStart`, so the icon's oranges are the app's.
 struct Palette {
     var filename: String
-    var skyTop: UInt32
-    var skyBottom: UInt32
-    var ground: UInt32
-    var sunTop: UInt32
-    var sunBottom: UInt32
-    var halo: UInt32
-    var glow: UInt32
-    var glowOpacity: CGFloat
-    var horizonLine: UInt32
+    /// Top edge to horizon.
+    var sky: [(CGFloat, UInt32)]
+    var starOpacity: CGFloat
+    /// The sky lit up around the sun: a hot inner colour fading into a wider, redder one.
+    var skyGlow: (inner: UInt32, innerOpacity: CGFloat, outer: UInt32, outerOpacity: CGFloat)
+    var bloom: UInt32
+    /// Centre to edge.
+    var sun: [UInt32]
+    /// Horizon to bottom edge.
+    var ground: [UInt32]
+    var groundWarmth: UInt32
+    var groundWarmthOpacity: CGFloat
+    /// Where the sun touches the horizon, out to the far ends of the curve.
+    var rim: [UInt32]
+    var flare: UInt32
 
     static let any = Palette(
         filename: "AppIcon.png",
-        skyTop: 0x0B0D14, skyBottom: 0x241A2E, ground: 0x090A10,
-        sunTop: 0xFFD08A, sunBottom: 0xFF5E62,
-        halo: 0xFFA24B, glow: 0xFF7F52, glowOpacity: 0.42,
-        horizonLine: 0xFFB877
+        sky: [(0, 0x0C0F2E), (0.30, 0x221A50), (0.55, 0x562869), (0.73, 0xAE4169), (0.87, 0xFF7F52), (1, 0xFFBC7A)],
+        starOpacity: 1,
+        skyGlow: (0xFFB070, 0.80, 0xFF8A5C, 0.30),
+        bloom: 0xFFCC88,
+        sun: [0xFFFAEC, 0xFFE6AE, 0xFFBE6A, 0xFFA24B],
+        ground: [0x241533, 0x150F29, 0x090816],
+        groundWarmth: 0x7A3350, groundWarmthOpacity: 0.75,
+        rim: [0xFFF4DC, 0xFFC47E, 0xFF8A66, 0xC0608A],
+        flare: 0xFFEAD0
     )
 
-    /// Deeper sky and a hotter glow. The system draws this one against a dark home screen, and
-    /// the `any` palette looks washed out there: the same orange needs more contrast under it.
+    /// An hour earlier: the night reaches further down and the warm band is narrower. The system
+    /// draws this one against a dark home screen, where the `any` sky would be the brightest
+    /// thing on it, and a lit square in a dark room reads as a hole rather than a sunrise.
     static let dark = Palette(
         filename: "AppIcon-Dark.png",
-        skyTop: 0x04050A, skyBottom: 0x1A1226, ground: 0x020306,
-        sunTop: 0xFFC272, sunBottom: 0xF0424F,
-        halo: 0xFF8F33, glow: 0xFF6A3C, glowOpacity: 0.52,
-        horizonLine: 0xFFA65C
+        sky: [(0, 0x04051A), (0.34, 0x0E0E2E), (0.60, 0x261642), (0.78, 0x5E2352), (0.91, 0xC2484C), (1, 0xFF8A52)],
+        starOpacity: 1.4,
+        skyGlow: (0xFF9A5A, 0.70, 0xE0584E, 0.26),
+        bloom: 0xFFB070,
+        sun: [0xFFF6E0, 0xFFD890, 0xFFA850, 0xFF8C40],
+        ground: [0x140C1E, 0x0A0714, 0x04030A],
+        groundWarmth: 0x5A2238, groundWarmthOpacity: 0.7,
+        rim: [0xFFEBC8, 0xFFB064, 0xFF7050, 0xA04070],
+        flare: 0xFFDDB8
     )
 
     /// Greyscale, because the system tints this one itself and colour in it would fight the
-    /// user's chosen tint. Kept opaque like the other two so App Store validation, which
-    /// rejects an alpha channel in the marketing icon, has nothing to complain about.
+    /// user's chosen tint. The system reads it as a light map, so the sun and the horizon carry
+    /// the white and the ground stays black. Kept opaque like the other two so App Store
+    /// validation, which rejects an alpha channel in the marketing icon, has nothing to
+    /// complain about.
     static let tinted = Palette(
         filename: "AppIcon-Tinted.png",
-        skyTop: 0x0A0A0A, skyBottom: 0x1E1E1E, ground: 0x060606,
-        sunTop: 0xF2F2F2, sunBottom: 0x9C9C9C,
-        halo: 0xC8C8C8, glow: 0xB4B4B4, glowOpacity: 0.34,
-        horizonLine: 0xDCDCDC
+        sky: [(0, 0x000000), (0.34, 0x0C0C0C), (0.60, 0x262626), (0.78, 0x4A4A4A), (0.91, 0x7A7A7A), (1, 0x9E9E9E)],
+        starOpacity: 1.2,
+        skyGlow: (0xB0B0B0, 0.55, 0x808080, 0.22),
+        bloom: 0xDDDDDD,
+        sun: [0xFFFFFF, 0xF4F4F4, 0xE2E2E2, 0xD2D2D2],
+        ground: [0x141414, 0x0A0A0A, 0x000000],
+        groundWarmth: 0x303030, groundWarmthOpacity: 0.6,
+        rim: [0xFFFFFF, 0xE0E0E0, 0xA0A0A0, 0x606060],
+        flare: 0xFFFFFF
     )
 }
 
 // MARK: - Drawing helpers
+
+let colourSpace = CGColorSpace(name: CGColorSpace.sRGB)!
 
 func colour(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
     CGColor(
@@ -80,150 +113,275 @@ func colour(_ hex: UInt32, _ alpha: CGFloat = 1) -> CGColor {
 }
 
 func gradient(_ stops: [(CGFloat, CGColor)]) -> CGGradient {
-    CGGradient(
-        colorsSpace: CGColorSpace(name: CGColorSpace.sRGB)!,
-        colors: stops.map(\.1) as CFArray,
-        locations: stops.map(\.0)
-    )!
+    CGGradient(colorsSpace: colourSpace, colors: stops.map(\.1) as CFArray, locations: stops.map(\.0))!
 }
 
-/// A bitmap with no alpha channel at all, rather than an opaque one: `noneSkipLast` makes
-/// ImageIO write a three-channel PNG, which is what the App Store's icon check wants.
-func makeContext() -> CGContext {
+func disc(_ centre: CGPoint, _ radius: CGFloat) -> CGRect {
+    CGRect(x: centre.x - radius, y: centre.y - radius, width: radius * 2, height: radius * 2)
+}
+
+/// A float layer with y pointing down, so the coordinates below read top to bottom like the
+/// picture does.
+func makeLayer() -> CGContext {
+    let info = CGImageAlphaInfo.premultipliedLast.rawValue
+        | CGBitmapInfo.floatComponents.rawValue
+        | CGBitmapInfo.byteOrder32Little.rawValue
     guard let context = CGContext(
         data: nil,
         width: side,
         height: side,
-        bitsPerComponent: 8,
+        bitsPerComponent: 32,
         bytesPerRow: 0,
-        space: CGColorSpace(name: CGColorSpace.sRGB)!,
-        bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        space: colourSpace,
+        bitmapInfo: info
     ) else {
-        fatalError("could not allocate a \(side)×\(side) bitmap")
+        fatalError("could not allocate a \(side)×\(side) float layer")
     }
+    context.translateBy(x: 0, y: size)
+    context.scaleBy(x: 1, y: -1)
+    context.interpolationQuality = .high
     return context
 }
 
-func draw(_ palette: Palette) -> CGImage {
-    let context = makeContext()
-    let full = CGSize(width: side, height: side)
-    let horizon: CGFloat = 380
-    let sun = CGPoint(x: 512, y: horizon)
-    let sunRadius: CGFloat = 232
-    let haloRadius: CGFloat = 352
-
-    // Sky.
+/// Draws `image` over the whole of `context`. The layer is flipped, so the image is flipped
+/// back first or it would land upside down.
+func composite(_ image: CGImage, onto context: CGContext, alpha: CGFloat) {
     context.saveGState()
-    context.clip(to: CGRect(origin: .zero, size: full))
-    context.drawLinearGradient(
-        gradient([(0, colour(palette.skyBottom)), (0.55, colour(palette.skyTop)), (1, colour(palette.skyTop))]),
-        start: CGPoint(x: 0, y: 240),
-        end: CGPoint(x: 0, y: 1024),
-        options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
-    )
+    context.translateBy(x: 0, y: size)
+    context.scaleBy(x: 1, y: -1)
+    context.setBlendMode(.screen)
+    context.setAlpha(alpha)
+    context.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
     context.restoreGState()
+}
 
-    // Ground: flat and slightly darker than the sky, so the horizon reads as an edge even
-    // when the sun is too small to see.
-    context.setFillColor(colour(palette.ground))
-    context.fill(CGRect(x: 0, y: 0, width: CGFloat(side), height: horizon))
+let renderer = CIContext(options: [.outputColorSpace: colourSpace, .workingFormat: CIFormat.RGBAf])
 
-    // Light spilling onto the ground, as a radial fade rather than a mirrored disc: a mirrored
-    // disc has an edge, and an edge below the horizon reads as a second object instead of as
-    // the sun's own light.
-    // The fade has to reach zero exactly at the bottom edge, not be cut off by the clip: a
-    // radial gradient truncated mid-slope leaves a visible horizontal band.
-    context.saveGState()
-    context.clip(to: CGRect(x: 0, y: 0, width: CGFloat(side), height: horizon))
-    context.drawRadialGradient(
-        gradient([
-            (0, colour(palette.sunBottom, 0.20)),
-            (0.45, colour(palette.sunBottom, 0.07)),
-            (1, colour(palette.sunBottom, 0)),
-        ]),
-        startCenter: CGPoint(x: sun.x, y: horizon),
-        startRadius: 0,
-        endCenter: CGPoint(x: sun.x, y: horizon),
-        endRadius: horizon,
-        options: []
-    )
-    context.restoreGState()
+func blurred(_ image: CGImage, sigma: CGFloat) -> CGImage {
+    let input = CIImage(cgImage: image)
+    let output = input.clampedToExtent().applyingGaussianBlur(sigma: sigma).cropped(to: input.extent)
+    guard let result = renderer.createCGImage(output, from: input.extent, format: .RGBAf, colorSpace: colourSpace) else {
+        fatalError("could not blur a layer")
+    }
+    return result
+}
 
-    // Glow, above the horizon only. A glow that spills onto the ground looks like fog.
-    context.saveGState()
-    context.clip(to: CGRect(x: 0, y: horizon, width: CGFloat(side), height: CGFloat(side) - horizon))
-    context.drawRadialGradient(
-        gradient([
-            (0, colour(palette.glow, palette.glowOpacity)),
-            (0.45, colour(palette.glow, palette.glowOpacity * 0.45)),
-            (1, colour(palette.glow, 0)),
-        ]),
-        startCenter: sun,
-        startRadius: sunRadius * 0.6,
-        endCenter: sun,
-        endRadius: 520,
-        options: []
-    )
-    context.restoreGState()
+/// Light: whatever `shape` draws, screened onto `context` once per pass at that pass's blur (a
+/// sigma of 0 is the shape itself, sharp). Several passes at falling sigma give a hot core and a
+/// long falloff together, which no single blur can.
+func glow(onto context: CGContext, _ passes: [(sigma: CGFloat, alpha: CGFloat)], _ shape: (CGContext) -> Void) {
+    let layer = makeLayer()
+    shape(layer)
+    guard let image = layer.makeImage() else { fatalError("could not snapshot a layer") }
+    for pass in passes {
+        composite(pass.sigma > 0 ? blurred(image, sigma: pass.sigma) : image, onto: context, alpha: pass.alpha)
+    }
+}
 
-    // The sun, centred on the horizon so exactly half of it shows.
-    context.saveGState()
-    context.clip(to: CGRect(x: 0, y: horizon, width: CGFloat(side), height: CGFloat(side) - horizon))
-    context.addEllipse(in: CGRect(x: sun.x - sunRadius, y: sun.y - sunRadius, width: sunRadius * 2, height: sunRadius * 2))
-    context.clip()
-    context.drawLinearGradient(
-        gradient([(0, colour(palette.sunBottom)), (1, colour(palette.sunTop))]),
-        start: CGPoint(x: 0, y: horizon),
-        end: CGPoint(x: 0, y: horizon + sunRadius),
-        options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
-    )
-    context.restoreGState()
+/// A small deterministic generator, so the dither and therefore the checked-in PNGs come out
+/// identical on every run.
+struct Dither {
+    var state: UInt64 = 0xDA7B_12EA
 
-    // The halo: an arc, not a full ring, because the horizon would cut a full ring into two
-    // stubs. Stroked into a clip so it can carry the same gradient as the sun.
-    context.saveGState()
-    context.addArc(
-        center: sun,
-        radius: haloRadius,
-        startAngle: 14 * .pi / 180,
-        endAngle: 166 * .pi / 180,
-        clockwise: false
-    )
-    context.setLineWidth(30)
-    context.setLineCap(.round)
-    context.replacePathWithStrokedPath()
-    context.clip()
-    context.drawLinearGradient(
-        gradient([(0, colour(palette.sunBottom)), (0.5, colour(palette.halo)), (1, colour(palette.sunTop))]),
-        start: CGPoint(x: sun.x - haloRadius, y: 0),
-        end: CGPoint(x: sun.x + haloRadius, y: 0),
-        options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
-    )
-    context.restoreGState()
-
-    // The horizon itself: three stacked lines rather than one, which fakes a soft glow without
-    // a blur filter. Each fades out towards the edges, because a bar with hard ends draws
-    // attention to where it stops rather than to the light coming off it.
-    for (thickness, alpha) in [(CGFloat(14), CGFloat(0.13)), (6, 0.30), (3, 0.90)] {
-        context.saveGState()
-        context.clip(to: CGRect(x: 56, y: horizon - thickness / 2, width: CGFloat(side) - 112, height: thickness))
-        context.drawLinearGradient(
-            gradient([
-                (0, colour(palette.horizonLine, 0)),
-                (0.22, colour(palette.horizonLine, alpha * 0.5)),
-                (0.5, colour(palette.horizonLine, alpha)),
-                (0.78, colour(palette.horizonLine, alpha * 0.5)),
-                (1, colour(palette.horizonLine, 0)),
-            ]),
-            start: CGPoint(x: 56, y: 0),
-            end: CGPoint(x: CGFloat(side) - 56, y: 0),
-            options: []
-        )
-        context.restoreGState()
+    /// Triangular noise in -1...1: two uniform draws summed, which hides banding with less
+    /// visible grain than one uniform draw of the same width.
+    mutating func next() -> Float {
+        unit() + unit() - 1
     }
 
-    guard let image = context.makeImage() else { fatalError("could not snapshot the bitmap") }
+    private mutating func unit() -> Float {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return Float((z ^ (z >> 31)) >> 40) / Float(1 << 24)
+    }
+}
+
+/// The float picture as 8-bit RGB, dithered by a fraction of a level so the long dark gradients
+/// of the sky do not step. No alpha channel at all, rather than an opaque one: `noneSkipLast`
+/// makes ImageIO write a three-channel PNG, which is what the App Store's icon check wants.
+func flatten(_ context: CGContext) -> CGImage {
+    guard let data = context.data else { fatalError("the layer has no pixels") }
+    let floatsPerRow = context.bytesPerRow / MemoryLayout<Float>.size
+    let source = data.bindMemory(to: Float.self, capacity: floatsPerRow * side)
+    var pixels = [UInt8](repeating: 255, count: side * side * 4)
+    var dither = Dither()
+    for y in 0..<side {
+        for x in 0..<side {
+            let from = y * floatsPerRow + x * 4
+            let to = (y * side + x) * 4
+            let alpha = max(source[from + 3], 1e-6)
+            for channel in 0..<3 {
+                let value = source[from + channel] / alpha * 255 + dither.next()
+                pixels[to + channel] = UInt8(max(0, min(255, value.rounded())))
+            }
+        }
+    }
+    guard
+        let provider = CGDataProvider(data: Data(pixels) as CFData),
+        let image = CGImage(
+            width: side,
+            height: side,
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            bytesPerRow: side * 4,
+            space: colourSpace,
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.noneSkipLast.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: true,
+            intent: .defaultIntent
+        )
+    else {
+        fatalError("could not build the 8-bit image")
+    }
     return image
+}
+
+// MARK: - The picture
+
+/// A few stars, placed by hand high in the sky where the night still is. They vanish below 120pt,
+/// which is right: at home-screen size they would only be noise.
+let stars: [(x: CGFloat, y: CGFloat, radius: CGFloat, opacity: CGFloat)] = [
+    (168, 128, 2.4, 0.75), (818, 100, 2.0, 0.65), (330, 66, 1.5, 0.5), (912, 238, 1.4, 0.4), (606, 150, 1.1, 0.35),
+]
+
+func draw(_ palette: Palette) -> CGImage {
+    let context = makeLayer()
+    // The horizon is the top of a circle far wider than the icon, so it curves gently away on
+    // both sides. The sun sits a little below that line, so a thin slice of it is still hidden.
+    let horizon: CGFloat = 650
+    let earthRadius: CGFloat = 1450
+    let earth = CGPoint(x: 512, y: horizon + earthRadius)
+    let sunRadius: CGFloat = 196
+    let sun = CGPoint(x: 512, y: horizon + 38)
+
+    // Sky, then the stars, then the sky lit up around the sun.
+    context.drawLinearGradient(
+        gradient(palette.sky.map { ($0.0, colour($0.1)) }),
+        start: .zero,
+        end: CGPoint(x: 0, y: horizon),
+        options: [.drawsAfterEndLocation]
+    )
+    for star in stars {
+        glow(onto: context, [(0, 1), (star.radius * 2.2, 0.5)]) { layer in
+            layer.setFillColor(colour(0xFFFFFF, min(1, star.opacity * palette.starOpacity)))
+            layer.fillEllipse(in: disc(CGPoint(x: star.x, y: star.y), star.radius))
+        }
+    }
+    context.saveGState()
+    context.setBlendMode(.screen)
+    context.drawRadialGradient(
+        gradient([
+            (0, colour(palette.skyGlow.inner, palette.skyGlow.innerOpacity)),
+            (0.38, colour(palette.skyGlow.outer, palette.skyGlow.outerOpacity)),
+            (1, colour(palette.skyGlow.outer, 0)),
+        ]),
+        startCenter: sun,
+        startRadius: 0,
+        endCenter: sun,
+        endRadius: 720,
+        options: []
+    )
+    context.restoreGState()
+
+    // The sun: its bloom first, then the disc over it, brightest just above the horizon where
+    // the light is coming from rather than at its geometric centre.
+    glow(onto: context, [(110, 0.65), (34, 0.6), (10, 0.4)]) { layer in
+        layer.setFillColor(colour(palette.bloom))
+        layer.fillEllipse(in: disc(sun, sunRadius))
+    }
+    context.saveGState()
+    context.addEllipse(in: disc(sun, sunRadius))
+    context.clip()
+    context.drawRadialGradient(
+        gradient([
+            (0, colour(palette.sun[0])),
+            (0.40, colour(palette.sun[1])),
+            (0.78, colour(palette.sun[2])),
+            (1, colour(palette.sun[3])),
+        ]),
+        startCenter: CGPoint(x: sun.x, y: sun.y - 50),
+        startRadius: 0,
+        endCenter: sun,
+        endRadius: sunRadius,
+        options: [.drawsAfterEndLocation]
+    )
+    context.restoreGState()
+
+    // The ground: the night side of the curve, warmed only where the sun is about to reach it.
+    // It is drawn over the sun, which is what hides the sun's lower slice.
+    context.saveGState()
+    context.addEllipse(in: disc(earth, earthRadius))
+    context.clip()
+    context.drawLinearGradient(
+        gradient([(0, colour(palette.ground[0])), (0.22, colour(palette.ground[1])), (1, colour(palette.ground[2]))]),
+        start: CGPoint(x: 0, y: horizon),
+        end: CGPoint(x: 0, y: size),
+        options: []
+    )
+    let foot = CGPoint(x: sun.x, y: horizon)
+    context.drawRadialGradient(
+        gradient([
+            (0, colour(palette.groundWarmth, palette.groundWarmthOpacity)),
+            (0.35, colour(palette.groundWarmth, palette.groundWarmthOpacity * 0.45)),
+            (1, colour(palette.groundWarmth, 0)),
+        ]),
+        startCenter: foot,
+        startRadius: 0,
+        endCenter: foot,
+        endRadius: 560,
+        options: []
+    )
+    context.restoreGState()
+
+    // The rim of light along the horizon, white where the sun is and fading as the curve falls
+    // away. This line is the icon's silhouette at small sizes, so it gets the most passes.
+    glow(onto: context, [(0, 1), (3, 0.9), (14, 0.6), (40, 0.35)]) { layer in
+        layer.addEllipse(in: disc(earth, earthRadius + 2.5))
+        layer.setLineWidth(5)
+        layer.replacePathWithStrokedPath()
+        layer.clip()
+        layer.drawRadialGradient(
+            gradient([
+                (0, colour(palette.rim[0], 1)),
+                (0.16, colour(palette.rim[1], 0.95)),
+                (0.46, colour(palette.rim[2], 0.55)),
+                (1, colour(palette.rim[3], 0.12)),
+            ]),
+            startCenter: sun,
+            startRadius: 0,
+            endCenter: sun,
+            endRadius: 640,
+            options: [.drawsAfterEndLocation]
+        )
+    }
+
+    // A flare along the horizon: a thin diamond fading to nothing at its tips. It stops well
+    // short of the edges, because the horizon curves away beneath it and a flare that outruns
+    // the horizon reads as a line drawn across the sky.
+    glow(onto: context, [(1.6, 1)]) { layer in
+        let centre = CGPoint(x: sun.x, y: horizon - 1)
+        let length: CGFloat = 340
+        let width: CGFloat = 4.5
+        layer.move(to: CGPoint(x: centre.x + length, y: centre.y))
+        layer.addLine(to: CGPoint(x: centre.x, y: centre.y + width))
+        layer.addLine(to: CGPoint(x: centre.x - length, y: centre.y))
+        layer.addLine(to: CGPoint(x: centre.x, y: centre.y - width))
+        layer.closePath()
+        layer.clip()
+        layer.drawRadialGradient(
+            gradient([(0, colour(palette.flare, 0.95)), (0.18, colour(palette.flare, 0.43)), (1, colour(palette.flare, 0))]),
+            startCenter: centre,
+            startRadius: 0,
+            endCenter: centre,
+            endRadius: length,
+            options: []
+        )
+    }
+
+    return flatten(context)
 }
 
 // MARK: - Output

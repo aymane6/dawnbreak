@@ -150,9 +150,10 @@ RELEASE_NOTES = {
 # in a minute with no account and no seeded data. Rewritten for every build that goes out, because
 # notes about an older build send testers looking for a change that is not there.
 TESTFLIGHT_NOTES = {
-    "en-US": """Build 12 is the one going back to App Review, so most of it is about the first minute and the mission screens.
+    "en-US": """Build 13 is the one going back to App Review: build 12 with a new icon, so most of it is still about the first minute and the mission screens.
 
 WHAT CHANGED
+- A new icon: the sun breaking over the curve of the horizon, with its own dark and tinted versions for the Home Screen.
 - The screen before the alarm permission has a single button, Continue. The choice is made in the iOS alert, and the app works with either answer.
 - “Set my first alarm”, the last onboarding button, now opens the alarm editor.
 - Settings keeps only what does something. The app is always dark.
@@ -167,9 +168,10 @@ WORTH CHECKING
 3. Next time, press Stop instead: the alarm must come back a minute later.
 4. When an alarm rings, the X in the corner asks before it lets you go; from “Try this mission” it closes at once.
 5. Anything cut off, overlapping or in the wrong language: a screenshot is the best report.""",
-    "ar-SA": """الإصدار 12 هو الذي يعود إلى مراجعة Apple، لذا يتعلق معظمه بالدقيقة الأولى وبشاشات المهام.
+    "ar-SA": """الإصدار 13 هو الذي يعود إلى مراجعة Apple: هو الإصدار 12 مع أيقونة جديدة، لذا يتعلق معظمه بالدقيقة الأولى وبشاشات المهام.
 
 ما الذي تغيّر
+- أيقونة جديدة: الشمس تشرق فوق انحناءة الأفق، ولها نسختان داكنة وملوّنة للشاشة الرئيسية.
 - الشاشة التي تسبق إذن المنبهات فيها زر واحد: «متابعة». الاختيار يتم في تنبيه iOS، والتطبيق يعمل مهما كان الجواب.
 - زر «اضبط أول منبه»، آخر أزرار التعريف بالتطبيق، يفتح الآن محرر المنبه.
 - الإعدادات لا تحتفظ إلا بما له أثر. التطبيق داكن دائماً.
@@ -184,9 +186,10 @@ WORTH CHECKING
 ٣. في المرة التالية اضغط «إيقاف» بدلاً من ذلك: يجب أن يعود المنبه بعد دقيقة.
 ٤. عندما يرن منبه، تطلب علامة X في الزاوية التأكيد قبل أن تتركك؛ ومن «جرّب هذه المهمة» تُغلق فوراً.
 ٥. أي نص مقطوع أو متداخل أو بلغة خاطئة: لقطة شاشة هي أفضل بلاغ.""",
-    "de-DE": """Build 12 geht zurück in die App-Prüfung, deshalb geht es vor allem um die erste Minute und um die Missionsbildschirme.
+    "de-DE": """Build 13 geht zurück in die App-Prüfung: Es ist Build 12 mit einem neuen Symbol, deshalb geht es weiterhin vor allem um die erste Minute und um die Missionsbildschirme.
 
 WAS SICH GEÄNDERT HAT
+- Ein neues App-Symbol: die Sonne, die über dem gekrümmten Horizont aufgeht, mit eigenen Varianten in Dunkel und Getönt für den Home-Bildschirm.
 - Der Bildschirm vor der Alarm-Berechtigung hat nur noch eine Taste: Weiter. Die Entscheidung fällt in der iOS-Abfrage, und die App funktioniert mit beiden Antworten.
 - „Ersten Alarm stellen“, die letzte Taste der Einführung, öffnet jetzt den Alarm-Editor.
 - In den Einstellungen bleibt nur, was etwas bewirkt. Die App ist immer dunkel.
@@ -201,9 +204,10 @@ WAS DU PRÜFEN SOLLTEST
 3. Beim nächsten Mal drück stattdessen Stopp: Der Alarm muss eine Minute später zurückkommen.
 4. Wenn ein Alarm klingelt, fragt das X in der Ecke nach, bevor es dich gehen lässt; bei „Diese Mission ausprobieren“ schließt es sofort.
 5. Abgeschnittener, überlappender oder anderssprachiger Text: Ein Screenshot ist die beste Meldung.""",
-    "es-ES": """La build 12 es la que vuelve a la revisión de Apple, así que casi todo tiene que ver con el primer minuto y con las pantallas de misión.
+    "es-ES": """La build 13 es la que vuelve a la revisión de Apple: es la build 12 con un icono nuevo, así que casi todo sigue teniendo que ver con el primer minuto y con las pantallas de misión.
 
 QUÉ HA CAMBIADO
+- Un icono nuevo: el sol asomando sobre la curva del horizonte, con sus propias versiones oscura y tintada para la pantalla de inicio.
 - La pantalla previa al permiso de alarmas tiene un solo botón, Continuar. La decisión se toma en el aviso de iOS, y la app funciona con cualquiera de las dos respuestas.
 - «Crear mi primera alarma», el último botón de la presentación, ahora abre el editor de alarmas.
 - Ajustes solo conserva lo que hace algo. La app es siempre oscura.
@@ -218,9 +222,10 @@ QUÉ COMPROBAR
 3. La siguiente vez pulsa Parar: la alarma debe volver un minuto después.
 4. Cuando suena una alarma, la X de la esquina pide confirmación antes de dejarte ir; desde «Probar esta misión» cierra al instante.
 5. Texto cortado, superpuesto o en otro idioma: una captura de pantalla es el mejor aviso.""",
-    "fr-FR": """Le build 12 est celui qui repart en revue chez Apple : l’essentiel touche la première minute et les écrans de mission.
+    "fr-FR": """Le build 13 est celui qui repart en revue chez Apple : c’est le build 12 avec une nouvelle icône, donc l’essentiel touche toujours la première minute et les écrans de mission.
 
 CE QUI CHANGE
+- Une nouvelle icône : le soleil qui se lève sur la courbe de l’horizon, avec ses propres versions sombre et teintée pour l’écran d’accueil.
 - L’écran qui précède l’autorisation des alarmes n’a plus qu’un bouton, Continuer. Le choix se fait dans l’alerte d’iOS, et l’app fonctionne quelle que soit la réponse.
 - « Créer ma première alarme », le dernier bouton de la présentation, ouvre maintenant l’éditeur d’alarme.
 - Les réglages ne gardent que ce qui sert. L’app est toujours en mode sombre.
@@ -235,9 +240,10 @@ CE QUI CHANGE
 3. La fois suivante, touchez plutôt Arrêter : l’alarme doit revenir une minute plus tard.
 4. Quand une alarme sonne, la croix dans le coin demande confirmation avant de vous laisser partir ; depuis « Essayer cette mission », elle ferme tout de suite.
 5. Un texte coupé, superposé ou dans la mauvaise langue : une capture d’écran est le meilleur signalement.""",
-    "hi": """बिल्ड 12 वही है जो ऐप रिव्यू में वापस जा रहा है, इसलिए ज़्यादातर बदलाव पहले मिनट और मिशन स्क्रीन से जुड़े हैं।
+    "hi": """बिल्ड 13 वही है जो ऐप रिव्यू में वापस जा रहा है: यह नए आइकन के साथ बिल्ड 12 है, इसलिए ज़्यादातर बदलाव अब भी पहले मिनट और मिशन स्क्रीन से जुड़े हैं।
 
 क्या बदला
+- नया आइकन: क्षितिज की गोलाई के ऊपर उगता सूरज, होम स्क्रीन के लिए अपने डार्क और टिंटेड रूपों के साथ।
 - अलार्म की अनुमति से पहले वाली स्क्रीन पर अब सिर्फ़ एक बटन है: जारी रखें। फ़ैसला iOS के अलर्ट में होता है, और ऐप दोनों जवाबों के साथ काम करता है।
 - ऑनबोर्डिंग का आख़िरी बटन, “मेरा पहला अलार्म सेट करें”, अब अलार्म एडिटर खोलता है।
 - सेटिंग्स में सिर्फ़ वही बचा है जो सचमुच कुछ करता है। ऐप हमेशा डार्क रहता है।
@@ -252,9 +258,10 @@ CE QUI CHANGE
 3. अगली बार इसके बजाय रोकें दबाएँ: अलार्म एक मिनट बाद लौटना चाहिए।
 4. अलार्म बजने पर, कोने का X जाने देने से पहले पुष्टि माँगता है; “यह मिशन आज़माएँ” में यह तुरंत बंद हो जाता है।
 5. कटा हुआ, एक-दूसरे पर चढ़ा या गलत भाषा में कोई टेक्स्ट: स्क्रीनशॉट सबसे अच्छी रिपोर्ट है।""",
-    "it": """La build 12 è quella che torna alla revisione di Apple, quindi riguarda soprattutto il primo minuto e le schermate delle missioni.
+    "it": """La build 13 è quella che torna alla revisione di Apple: è la build 12 con una nuova icona, quindi riguarda ancora soprattutto il primo minuto e le schermate delle missioni.
 
 COSA CAMBIA
+- Una nuova icona: il sole che sorge sulla curva dell’orizzonte, con le sue versioni scura e colorata per la schermata Home.
 - La schermata prima del permesso per le sveglie ha un solo pulsante, Continua. La scelta si fa nell’avviso di iOS, e l’app funziona con entrambe le risposte.
 - «Crea la mia prima sveglia», l’ultimo pulsante della presentazione, ora apre l’editor della sveglia.
 - Le impostazioni tengono solo ciò che serve. L’app è sempre scura.
@@ -269,9 +276,10 @@ DA VERIFICARE
 3. La volta dopo premi invece Ferma: la sveglia deve tornare un minuto dopo.
 4. Quando suona una sveglia, la X nell’angolo chiede conferma prima di lasciarti andare; da «Prova questa missione» chiude subito.
 5. Testo tagliato, sovrapposto o nella lingua sbagliata: uno screenshot è la segnalazione migliore.""",
-    "ja": """ビルド12はApp Reviewに再提出するビルドです。変更の中心は、最初の1分とミッション画面です。
+    "ja": """ビルド13はApp Reviewに再提出するビルドです。ビルド12のアイコンを新しくしたもので、変更の中心は引き続き最初の1分とミッション画面です。
 
 【変更点】
+- 新しいアイコン：地平線の丸みの上に昇る太陽です。ホーム画面のダーク表示と色付き表示にも専用のバージョンがあります。
 - アラームの許可の前に出る画面のボタンは「続ける」だけになりました。選ぶのはiOSのダイアログで、どちらを選んでもアプリは動きます。
 - 最初の案内の最後のボタン「最初のアラームを設定」で、アラームの編集画面が開くようになりました。
 - 設定には効果のある項目だけを残しました。アプリは常にダーク表示です。
@@ -286,9 +294,10 @@ DA VERIFICARE
 3. 次は代わりに「停止」を押してください。1分後にアラームが戻ってくるはずです。
 4. アラームが鳴っているときは、隅の×は確認してから終了します。「このミッションを試す」からならすぐに閉じます。
 5. 文字の切れ、重なり、違う言語の表示があれば、スクリーンショットが一番の報告です。""",
-    "ko": """빌드 12는 App Review에 다시 보내는 빌드라서, 대부분 처음 1분과 미션 화면에 관한 변경입니다.
+    "ko": """빌드 13은 App Review에 다시 보내는 빌드입니다. 빌드 12에 새 아이콘을 더한 것이라, 대부분 여전히 처음 1분과 미션 화면에 관한 변경입니다.
 
 바뀐 점
+- 새 아이콘: 둥근 지평선 위로 떠오르는 해입니다. 홈 화면의 다크 모드와 색조 모드용 버전도 따로 있습니다.
 - 알람 권한 전에 나오는 화면에는 이제 '계속' 버튼 하나만 있습니다. 선택은 iOS 알림창에서 하고, 어느 쪽을 골라도 앱은 작동합니다.
 - 온보딩의 마지막 버튼 '첫 알람 만들기'를 누르면 이제 알람 편집 화면이 열립니다.
 - 설정에는 실제로 무언가를 하는 항목만 남겼습니다. 앱은 항상 다크 모드입니다.
@@ -303,9 +312,10 @@ DA VERIFICARE
 3. 다음에는 대신 '정지'를 누르세요. 1분 뒤 알람이 다시 울려야 합니다.
 4. 알람이 울릴 때는 모서리의 X가 확인을 받은 뒤에야 나가게 해 줍니다. '이 미션 미리 해보기'에서는 바로 닫힙니다.
 5. 잘리거나 겹치거나 다른 언어로 나온 글자가 있으면 스크린샷이 가장 좋은 제보입니다.""",
-    "pt-BR": """O build 12 é o que volta para a revisão da Apple, então quase tudo tem a ver com o primeiro minuto e com as telas de missão.
+    "pt-BR": """O build 13 é o que volta para a revisão da Apple: é o build 12 com um ícone novo, então quase tudo ainda tem a ver com o primeiro minuto e com as telas de missão.
 
 O QUE MUDOU
+- Um ícone novo: o sol nascendo sobre a curva do horizonte, com versões próprias escura e colorida para a Tela de Início.
 - A tela antes da permissão de alarmes tem um único botão, Continuar. A escolha é feita no alerta do iOS, e o app funciona com qualquer resposta.
 - “Criar meu primeiro alarme”, o último botão da apresentação, agora abre o editor de alarme.
 - Os ajustes guardam só o que faz alguma coisa. O app é sempre escuro.
@@ -320,9 +330,10 @@ O QUE VERIFICAR
 3. Na próxima vez, toque em Parar: o alarme deve voltar um minuto depois.
 4. Quando um alarme toca, o X no canto pede confirmação antes de deixar você sair; em “Testar esta missão” ele fecha na hora.
 5. Texto cortado, sobreposto ou no idioma errado: uma captura de tela é o melhor relato.""",
-    "ru": """Сборка 12 снова уходит на проверку в Apple, поэтому почти всё в ней касается первой минуты и экранов заданий.
+    "ru": """Сборка 13 снова уходит на проверку в Apple: это сборка 12 с новой иконкой, поэтому почти всё в ней по-прежнему касается первой минуты и экранов заданий.
 
 ЧТО ИЗМЕНИЛОСЬ
+- Новая иконка: солнце, встающее над изгибом горизонта, с собственными тёмным и тонированным вариантами для экрана «Домой».
 - На экране перед разрешением на будильники осталась одна кнопка: «Продолжить». Выбор делается в запросе iOS, и приложение работает при любом ответе.
 - Последняя кнопка знакомства, «Создать первый будильник», теперь открывает редактор будильника.
 - В настройках осталось только то, что действительно работает. Приложение всегда тёмное.
@@ -337,9 +348,10 @@ O QUE VERIFICAR
 3. В следующий раз нажмите «Стоп»: будильник должен вернуться через минуту.
 4. Когда звонит будильник, крестик в углу спрашивает подтверждение, прежде чем отпустить; в «Попробовать это задание» он закрывает сразу.
 5. Обрезанный, наложенный или не на том языке текст: скриншот будет лучшим сообщением.""",
-    "zh-Hans": """构建版本 12 将重新提交 App 审核，所以改动大多集中在第一分钟和任务界面。
+    "zh-Hans": """构建版本 13 将重新提交 App 审核：它是构建版本 12 换上新图标后的版本，所以改动大多仍集中在第一分钟和任务界面。
 
 【改动】
+- 新图标：太阳从弧形的地平线上升起，主屏幕的深色和着色模式也各有专门的版本。
 - 闹钟权限之前的那一屏只剩一个按钮：“继续”。选择在 iOS 弹窗里做，无论怎么选，App 都能用。
 - 引导的最后一个按钮“设置我的第一个闹钟”现在会打开闹钟编辑器。
 - 设置里只保留真正起作用的项目。App 始终是深色的。

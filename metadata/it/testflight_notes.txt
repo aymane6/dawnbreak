@@ -1,6 +1,7 @@
-La build 12 è quella che torna alla revisione di Apple, quindi riguarda soprattutto il primo minuto e le schermate delle missioni.
+La build 13 è quella che torna alla revisione di Apple: è la build 12 con una nuova icona, quindi riguarda ancora soprattutto il primo minuto e le schermate delle missioni.
 
 COSA CAMBIA
+- Una nuova icona: il sole che sorge sulla curva dell’orizzonte, con le sue versioni scura e colorata per la schermata Home.
 - La schermata prima del permesso per le sveglie ha un solo pulsante, Continua. La scelta si fa nell’avviso di iOS, e l’app funziona con entrambe le risposte.
 - «Crea la mia prima sveglia», l’ultimo pulsante della presentazione, ora apre l’editor della sveglia.
 - Le impostazioni tengono solo ciò che serve. L’app è sempre scura.
