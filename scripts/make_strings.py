@@ -35,8 +35,8 @@ from strings import capture, content, core, infoplist, missions, plurals, screen
 
 ROOT = Path(__file__).resolve().parent.parent
 # The kit is scanned too: it holds no views, but `MissionKind`, `Difficulty` and
-# `Preferences.Appearance` are where the derived keys are built, and a key it names is still a
-# key the app puts on screen.
+# `WakeRecord.Outcome` are where the derived keys are built, and a key it names is still a key the
+# app puts on screen.
 SCANNED = ("Sources", "Widget", "DawnbreakKit/Sources")
 
 # Keys the app builds at runtime from an enum, with the code that builds them. A row whose key
@@ -48,8 +48,7 @@ DERIVED = {
     "difficulty.": "Difficulty.titleKey",
     "sound.": "AlarmSound.titleKey",
     "weekday.": "Weekday.titleKey and .shortKey",
-    "appearance.": "Preferences.Appearance.titleKey",
-    "outcome.": "WakeOutcome.titleKey",
+    "outcome.": "WakeRecord.Outcome.titleKey",
     "typing.sentence.": "TypingChallenge.sentenceKey",
     "stats.window.": "StatsView.Window.titleKey",
     "draw.prompt.": "DrawingPrompt.titleKey",
@@ -295,7 +294,7 @@ def build():
 
     table = rows(
         core.CHROME, core.ERRORS, core.TIME, core.WEEKDAYS, core.WEEKDAYS_SHORT, core.REPEAT,
-        core.DIFFICULTY, core.SOUNDS, core.APPEARANCE, core.OUTCOMES, core.ALARM, core.WIDGET,
+        core.DIFFICULTY, core.SOUNDS, core.OUTCOMES, core.ALARM, core.WIDGET,
         missions.TITLES, missions.SUBTITLES, missions.INSTRUCTIONS, missions.RUNNER,
         missions.MATH, missions.PATTERN, missions.TYPING_UI, missions.MOTION, missions.CAMERA,
         missions.DRAW_FLAP,

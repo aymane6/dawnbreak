@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-"""Writes docs/ — the three pages App Store Connect wants URLs for.
+"""Writes docs/: the pages App Store Connect and the listing link to.
 
 Run from the repo root: `python3 scripts/make_pages.py`.
 
     docs/index.html      the marketing URL
     docs/privacy.html    the privacy policy URL, which Apple requires before submission
     docs/support.html    the support URL, which Apple also requires
+    docs/terms.html      the terms of use the description links to
 
-Served by GitHub Pages from this folder, which is why the output is three plain files with no build
-step, no dependencies and no JavaScript that the page needs in order to say anything.
+Served from this folder by the CDK app in infra/, an S3 bucket behind CloudFront, which is why the
+output is plain files with no build step, no dependencies and no JavaScript that the page needs in
+order to say anything.
 
 Each file carries all twelve translations. One URL per subject rather than twelve, because the
 twelve descriptions in `store.py` quote these URLs inside their text: a per-language URL would mean
@@ -38,10 +40,10 @@ from strings import LOCALES, RTL_LOCALES, SOURCE_LANGUAGE, pages, store
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs"
 
-# Where to send someone who has an actual problem. A repository issue rather than an email address,
-# because it is a channel that exists and works today, and a support page whose contact link bounces
-# is worse than one with no contact link at all.
-ISSUES_URL = "https://github.com/aymane6/dawnbreak/issues"
+# Where to send someone who has an actual problem. An email address rather than a repository issue:
+# a reader with an alarm that did not ring has no reason to own a GitHub account, and Apple wants the
+# support page to give an easy way to reach a person. The same address the terms page gives.
+SUPPORT_EMAIL = "fastpapershot.supp@outlook.com"
 
 # The palette, from Palette in scripts/frame-shots.swift and the app's own asset catalogue. Repeated
 # here rather than shared because a stylesheet and a Swift enum cannot import each other, and three
@@ -290,8 +292,10 @@ def markup(text: str) -> str:
     prose in twelve languages and an unescaped `&` in one of them would break the page silently.
     """
     escaped = html.escape(text, quote=False)
+    # `quote=False` leaves the attribute's quotes as they are, so that is what to look for. Only a
+    # web or mail link: the copy has no business running script from a page a reviewer opens.
     escaped = re.sub(
-        r"&lt;a href=&quot;([^&]+)&quot;&gt;(.*?)&lt;/a&gt;",
+        r'&lt;a href="((?:https://|mailto:)[^"<>]+)"&gt;(.*?)&lt;/a&gt;',
         r'<a href="\1">\2</a>',
         escaped,
     )
@@ -336,9 +340,9 @@ def footer_html(page: str, language: str, indent: str) -> str:
             continue
         target = "./" if other == "index" else f"{other}.html"
         links.append(f'{indent}    <a href="{target}">{html.escape(pages.TITLE[other][language])}</a>')
-    # Left as "GitHub" in every language, because that is the name of the place the link goes and
-    # nobody looks for a translation of it.
-    links.append(f'{indent}    <a href="{ISSUES_URL}">GitHub</a>')
+    # The address itself rather than a translated "Contact", so it can be read and copied from any
+    # of the twelve pages without opening a mail client.
+    links.append(f'{indent}    <a href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>')
     # `dir="ltr"` on the copyright, which is the same eleven Latin characters in all twelve
     # languages. Without it the Arabic page renders it as "Aymane Bammou 2026 ©": bidi reorders a
     # left-to-right run inside a right-to-left paragraph by putting its neutral characters, the sign
@@ -424,8 +428,8 @@ def main():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
 
-    # GitHub Pages runs Jekyll over the folder unless told not to, and Jekyll would take a `{{` in
-    # any future copy as a template tag. Nothing here needs it.
+    # For GitHub Pages, which served this folder before infra/ did: it runs Jekyll over it unless
+    # told not to, and Jekyll would take a `{{` in any future copy as a template tag.
     (OUT / ".nojekyll").write_text("", encoding="utf-8")
 
     for page in pages.PAGES:

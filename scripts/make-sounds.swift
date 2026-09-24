@@ -1,12 +1,12 @@
 #!/usr/bin/env swift
 //
-// Generates the eight alarm tones into Resources/Sounds/.
+// Generates the fourteen alarm tones into Resources/Sounds/.
 //
 // Run from the repo root: `swift scripts/make-sounds.swift`.
 //
 // Synthesised rather than licensed, because every alarm tone this app could have bought comes
 // with a licence that has to be honoured in an App Store submission, and a wake-up app whose
-// tones cannot be shipped is not a wake-up app. These are eight waveforms written out as CAF,
+// tones cannot be shipped is not a wake-up app. These are fourteen waveforms written out as CAF,
 // owned outright, and reproducible from this file.
 //
 // Two constraints shape all of them:
@@ -111,7 +111,7 @@ func burst(
     }
 }
 
-// MARK: - The eight tones
+// MARK: - The original eight
 
 /// Gentle. A slow harmonic swell, the audio equivalent of the icon: it arrives rather than
 /// starts. Four seconds of build, then an ease-off so the loop seam is silent.
@@ -186,7 +186,7 @@ func klaxon() -> [Double] {
     return out
 }
 
-/// Gentle. A wooden arpeggio up and back down. Marimba bars have a strong fourth partial and
+/// Standard. A wooden arpeggio up and back down. Marimba bars have a strong fourth partial and
 /// almost nothing between, which is the whole character.
 func marimba() -> [Double] {
     var out = [Double](repeating: 0, count: frames(3.4))
@@ -476,7 +476,7 @@ func hammer() -> [Double] {
     return out
 }
 
-/// Harsh. The two-tone attention signal: 853 and 960 Hz alternating without a gap, the pair used by
+/// Savage. The two-tone attention signal: 853 and 960 Hz alternating without a gap, the pair used by
 /// emergency broadcast systems because it is unmistakable and impossible to mistake for music.
 /// Public frequencies, synthesised here, nothing sampled.
 func pulse() -> [Double] {

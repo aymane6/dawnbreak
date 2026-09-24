@@ -92,7 +92,7 @@ final class ScreenshotTests: UITestCase {
         case .stats:
             waitFor(AccessibilityID.statsWindow, in: app)
         case .settings:
-            waitFor(AccessibilityID.settingsAppearance, in: app)
+            waitFor(AccessibilityID.settingsPermissions, in: app)
         case .onboarding:
             waitFor(AccessibilityID.onboardingNext, in: app)
         }

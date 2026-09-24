@@ -1,46 +1,55 @@
 Du verschläfst nicht, weil dein Wecker zu leise ist. Du verschläfst, weil ihn abzustellen einen Daumen kostet, eine halbe Sekunde und keinen einzigen Gedanken.
 
-Dawnbreak nimmt den Daumen aus der Rechnung. Um den Alarm still zu bekommen, musst du etwas tun, was ein schlafender Mensch nicht kann: in die Küche gehen und den Wasserkocher fotografieren, zehn Kniebeugen vor der Kamera machen, Kopfrechnen lösen, das dir mittags leichtfällt, den Barcode einer Packung im anderen Zimmer scannen.
+Dawnbreak nimmt den Daumen aus der Rechnung. Um den Alarm abzustellen, erledigst du eine Mission: in die Küche gehen und die Kamera auf den Wasserkocher richten, acht Kniebeugen vor der Kamera machen, Rechenaufgaben lösen, die dir mittags leichtfallen würden, den Barcode einer Packung im anderen Zimmer scannen.
 
-Wenn es still wird, bist du auf.
+Stellst du ihn ohne Mission ab, klingelt er eine Minute später wieder.
 
 ZWÖLF MISSIONEN
 
-- Rechnen: Aufgaben mit Zeitlimit, passend zur gewählten Schwierigkeit
-- Kniebeugen: von der Kamera gezählt, nicht von dir
-- Foto: einen bestimmten Gegenstand an einem bestimmten Ort fotografieren
-- Barcode: die Packung scannen, die du abends im Bad gelassen hast
-- Schütteln: weiterschütteln, bis der Balken voll ist
-- Schritte: eine festgelegte Zahl von Schritten gehen, vom Telefon gezählt
-- Muster: eine Folge wiederholen, die mit jeder Runde länger wird
-- Tippen: einen Satz abschreiben, genau, mit Satzzeichen
-- Zeichnen: zeichnen, was verlangt wird, und es wird geprüft
-- Gedächtnis: die Paare finden
-- Atmen: sechzig Sekunden ruhiges Atmen, bevor du freikommst
-- Halten: das Telefon aufrecht stillhalten, länger als dir lieb ist
+- Rechnen: Kopfrechnen passend zur Schwierigkeit. Nur Schwer und Brutal laufen auf Zeit, und nach einer falschen Antwort kommt eine neue Aufgabe
+- Gedächtnis: Merk dir, welche Felder aufleuchten, und tipp genau diese an
+- Sequenz: Wiederhole eine Folge farbiger Felder, die mit jedem richtigen Durchgang um eins länger wird
+- Tippen: Schreib einen Satz Wort für Wort ab, von einer kurzen Zeile bei Leicht bis zu einem langen Satz bei Brutal. Groß- und Kleinschreibung, Akzente und Satzzeichen zählen nicht
+- Schütteln: 15 bis 100 Mal
+- Schritte: 20 bis 200 Schritte, vom Telefon gezählt
+- Kniebeugen: 3, 8, 15 oder 25, von der Frontkamera auf dem Gerät gezählt
+- Foto: Registriere einmal einen Gegenstand, etwa den Wasserkocher. Morgens richtest du die Kamera auf einen gleichartigen. Die Erkennung läuft auf dem Gerät und prüft, was der Gegenstand ist, nicht wo er steht
+- Barcode: Registriere einen Barcode oder QR-Code, etwa auf einer Packung im anderen Zimmer, und scanne ihn dann
+- Zeichnen: Zeichne, was verlangt wird. Die Erkennung auf dem Gerät prüft es
+- Flattern: ein Flugspiel für einen Daumen. Flieg durch 2 bis 15 Lücken
+- Atmen: geführtes Atmen, 3 bis 10 Zyklen, von etwa 30 Sekunden bis über drei Minuten
+
+SO HART, WIE DU ES BRAUCHST
+
+- Vier Schwierigkeitsgrade: Leicht, Mittel, Schwer und Brutal
+- Bis zu zehn Runden derselben Mission
+- Bis zu drei weitere Missionen später am Morgen, jede klingelt 1 bis 60 Minuten, nachdem du die vorige geschafft hast
+- Schlummern von 1 bis 30 Minuten, so oft du es erlaubst, oder gar nicht
+- Vierzehn Wecktöne, von sanft bis gnadenlos
+- Probier eine Mission vorher im Alarm-Editor aus, lautlos und ohne dass ein Alarm gestellt wird. Was Brutal heißt, findest du besser um 14 Uhr heraus
 
 ER LÄSST NICHT LOCKER
 
-Stell den Alarm ohne fertige Mission ab, und er kommt eine Minute später zurück, auf den Sperrbildschirm, mit einem Titel, der sagt warum. Stelle so viele Runden ein, wie du brauchst: eine für einen Werktag, zehn für den Morgen eines Flugs.
-
-Er klingelt über Apples eigenes Alarmsystem auf dem Sperrbildschirm, also bei geschlossener App, gesperrtem Telefon und aktivem Nicht-Störmodus. Es gibt einen Notausgang in den Einstellungen, standardmäßig an, denn ein Alarm, der sich nicht abstellen lässt, ist eine Gefahr und kein Feature.
+- „Unerbittlich“ ist bei jedem neuen Alarm eingeschaltet: Stellst du ihn ab, ohne die Mission zu beenden, klingelt er eine Minute später wieder auf dem Sperrbildschirm, mit dem Titel „Mission offen“
+- App schließen hilft nicht: Bis die Mission erledigt ist, ist das nächste Klingeln schon gestellt
+- Er klingelt als Systemalarm, über AlarmKit: bei geschlossener App, bei gesperrtem Telefon, trotz Stummschaltung und in jedem Fokus, auch bei Nicht stören. Erfordert iOS 26
+- Einen Ausweg gibt es immer. Das X in der Ecke jedes Missionsbildschirms fragt nach, stoppt dann den Alarm und trägt den Morgen als Abbruch ein, denn ein Alarm, der sich nicht abstellen lässt, ist eine Gefahr und kein Feature
 
 JEDER MORGEN, AUFGESCHRIEBEN
 
-Neunzig Tage von dem, was wirklich passiert ist: wann du aufgestanden bist, wie lange die Mission gedauert hat, deine Serie, und jeder Morgen, an dem du den Alarm ohne Mission gestoppt hast. Die Zahlen schmeicheln absichtlich nicht. Genau das macht sie brauchbar.
+Bis zu 90 Tage: Aufwachzeiten, Dauer der Missionen, Serien, Schlummern und jeder Morgen, an dem du ihn ohne Mission abgestellt hast. Die Zahlen schmeicheln absichtlich nicht. Genau das macht sie brauchbar.
 
 ORDENTLICH GEBAUT
 
-- Zwölf Sprachen, inklusive Arabisch von rechts nach links, übersetzt und nicht durchgeschickt
-- Dunkel von Haus aus, weil du diesen Bildschirm um sechs Uhr morgens liest
-- Ein Sperrbildschirm-Widget mit dem nächsten Alarm
-- Vollständige VoiceOver-Unterstützung und Dynamic Type
-- Kein Konto. Kein Login. Keine Werbung. Keine Analytics
-- Nichts verlässt das Telefon. Es gibt keinen Server, zu dem es könnte
+- Zwölf Sprachen, auch Arabisch, von rechts nach links gesetzt
+- Durchgehend dunkel, weil du diesen Bildschirm um 6 Uhr liest
+- Ein Widget mit dem nächsten Alarm, für Sperrbildschirm und Home-Bildschirm
+- Kein Konto. Kein Login. Keine Werbung. Keine Analysedaten
+- Nichts verlässt das Telefon. Es gibt keinen Server, zu dem es gehen könnte
 
 GRATIS, ALLES DAVON
 
-Jede Mission, jeder Schwierigkeitsgrad, bis zu zehn Runden, so viele Alarme wie deine Woche braucht, neunzig Tage Verlauf. Es gibt nichts zu kaufen: kein Abo, keine Werbung, kein Konto.
+Jede Mission, jeder Schwierigkeitsgrad und jeder Ton, vom ersten Start an. Es gibt nichts zu kaufen: kein Abo, keine Werbung, kein Konto.
 
 Datenschutz: https://dawnbreak.app/privacy.html
 Nutzungsbedingungen: https://dawnbreak.app/terms.html

@@ -1,1 +1,1 @@
-aufwachen,verschlafen,schlummern,laut,klingelton,kniebeuge,barcode,foto,rechnen,serie,früh
+aufstehen,alarm,laut,extrem,mission,foto,barcode,rechnen,snooze,früh,pünktlich,töne,spiel,schlummern

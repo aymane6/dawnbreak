@@ -96,6 +96,7 @@ struct FlapMissionView: View {
         // fraction of a pipe, not a crash.
         while isRunning && !Task.isCancelled {
             try? await Task.sleep(for: .milliseconds(16))
+            let passedBefore = world.cleared
             world.step()
 
             if world.cleared >= config.flapTarget {
@@ -103,10 +104,17 @@ struct FlapMissionView: View {
                 callbacks.cleared()
                 return
             }
+            if world.cleared > passedBefore {
+                Haptics.tap()
+                callbacks.progressed()
+            }
             if world.crashed {
                 isRunning = false
                 // A crash restarts the run without restarting the whole mission: the round
-                // counter belongs to the runner, and one crash is not a failed morning.
+                // counter belongs to the runner, and one crash is not a failed morning. It
+                // still counts as being at it: a run only starts with a tap.
+                Haptics.error()
+                callbacks.progressed()
                 return
             }
         }

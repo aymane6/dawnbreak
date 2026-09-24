@@ -1,19 +1,17 @@
-La build 10 risolve una cosa che hai trovato tu e io no: hai detto che l'app aveva quattro suonerie. Ne ha quattordici, dalla build 8. Solo quattro erano sullo schermo.
+La build 12 è quella che torna alla revisione di Apple, quindi riguarda soprattutto il primo minuto e le schermate delle missioni.
 
-PERCHÉ NE VEDEVI QUATTRO
-Le suonerie erano una striscia orizzontale di piccole caselle dentro la scheda del suono. Quattro stanno su uno schermo da 6,9 pollici, tre su uno da 6,1, l'indicatore di scorrimento era nascosto e niente diceva che ce ne fossero altre. Hai letto bene lo schermo; era lo schermo a mentire.
+COSA CAMBIA
+- La schermata prima del permesso per le sveglie ha un solo pulsante, Continua. La scelta si fa nell’avviso di iOS, e l’app funziona con entrambe le risposte.
+- «Crea la mia prima sveglia», l’ultimo pulsante della presentazione, ora apre l’editor della sveglia.
+- Le impostazioni tengono solo ciò che serve. L’app è sempre scura.
+- Digitazione: niente più pulsante Verifica. Il round si supera con il tasto che completa la frase.
+- Disegno: dopo due errori dice cosa ha visto al posto del disegno e propone un’altra cosa da disegnare.
+- In arabo i calcoli non appaiono più al contrario.
+- Eliminare una sveglia chiede conferma.
 
-COM'È ADESSO
-La scheda del suono ha una riga: il nome della suoneria attuale, la sua icona di intensità e il numero 14. Toccandola si apre una schermata con tutte e quattordici le caselle, tre per riga, dalla più gentile alla peggiore, tutte visibili insieme e senza scorrimento su qualsiasi iPhone. Toccarne una la seleziona e ne suona un'anteprima.
-
-COSA IMPEDISCE CHE TORNI
-Un test apre quella schermata e verifica che tutte e quattordici le caselle siano dentro la finestra e toccabili dopo zero passate di dito, in inglese e in arabo. Ho rimesso la vecchia striscia per essere sicuro che fallisca: fallisce. Un secondo test verifica che la suoneria scelta sopravviva al salvataggio e alla riapertura.
-
-SULL'AGGIUNTA DI SUONI REGISTRATI
-Hai chiesto fonti open source. Ho verificato le licenze alla fonte, non nei riassunti, e la conclusione è che tutte e quattordici restano sintetizzate. In breve: solo l'audio CC0 può entrare in un binario a pagamento dell'App Store senza chiedere permesso a ogni autore, perché le FAQ di Creative Commons dicono che pubblicare un file CC BY tramite una piattaforma che applica protezione anticopia richiede il permesso espresso del licenziante, e l'App Store la applica. L'elenco completo è nel messaggio che accompagna questa build.
-
-VALE LA PENA CONTROLLARE
-1. Editor, riga del suono: deve dire la suoneria attuale e 14. Toccala e conta le caselle.
-2. Ascolta Vespone, Cicalino e Cicala da lì, e Sirena.
-3. Scegline una, salva, riapri la sveglia: deve restare selezionata.
-4. In arabo, la stessa schermata: caselle specchiate e nomi più lunghi; niente deve essere tagliato.
+DA VERIFICARE
+1. Elimina l’app e installa questa build. Due schermate con Avanti, poi una che offre solo Continua. Rispondi all’avviso come vuoi, poi tocca «Crea la mia prima sveglia»: si apre l’editor e, chiudendolo, che tu salvi o no, devi arrivare all’elenco delle sveglie.
+2. Imposta una sveglia tra due minuti, blocca il telefono e, quando suona, premi il pulsante con il nome della missione.
+3. La volta dopo premi invece Ferma: la sveglia deve tornare un minuto dopo.
+4. Quando suona una sveglia, la X nell’angolo chiede conferma prima di lasciarti andare; da «Prova questa missione» chiude subito.
+5. Testo tagliato, sovrapposto o nella lingua sbagliata: uno screenshot è la segnalazione migliore.

@@ -20,6 +20,10 @@ struct CaptureDataTests {
         #expect(alarms.count == 4)
         #expect(Set(alarms.map(\.id)).count == 4, "duplicate ids would collapse rows in the list")
         #expect(alarms.count(where: { !$0.isEnabled }) == 1, "one row has to be off, or the toggle reads as decoration")
+        // The list sorts by time, so the earliest alarm is the first card of the first screenshot,
+        // and a card that is off is a grey one under a header naming another alarm.
+        let earliest = alarms.min { ($0.hour, $0.minute) < ($1.hour, $1.minute) }
+        #expect(earliest?.isEnabled == true, "the list would open on the alarm that is off")
         #expect(alarms.allSatisfy { !$0.label.isEmpty })
         #expect(Set(alarms.map(\.mission.kind)).count > 1, "the mission chips would all say the same thing")
     }
@@ -63,12 +67,13 @@ struct CaptureDataTests {
         // Nine now, against a record of twelve. A column of nothing but wins would be a nicer
         // number and would read as invented, which is worse than a smaller true one.
         //
-        // The record run sits at 33 to 22 mornings ago, outside the thirty-day chart, which is the
-        // other thing these two numbers pin down: `window` scopes the bars, not the streaks.
+        // The record run sits at 33 to 22 mornings ago, outside the thirty-day window, which is the
+        // other thing these numbers pin down: `window` scopes the figures, not the streaks. Of
+        // the thirty mornings it does hold, two are the misses nine and twenty-one days back.
         #expect(stats.currentStreak == 9)
         #expect(stats.bestStreak == 12)
-        #expect(stats.wins == 41)
-        #expect(stats.totalWakes == 45)
+        #expect(stats.wins == 28)
+        #expect(stats.totalWakes == 30)
         #expect(stats.successRate > 0.9)
     }
 
@@ -82,7 +87,7 @@ struct CaptureDataTests {
         let average = try #require(stats.averageSecondsToDismiss)
         #expect((45...180).contains(Int(average)), "\(Int(average))s is not a believable mission")
 
-        let wake = try #require(stats.averageWakeMinuteOfDay)
+        let wake = try #require(stats.usualWakeMinuteOfDay)
         #expect((5 * 60...9 * 60).contains(Int(wake)), "the usual wake time landed at \(Int(wake)) minutes past midnight")
     }
 
@@ -117,8 +122,10 @@ struct CaptureDataTests {
         // Six screens, six screenshots, and the file names come from this enum rather than from a
         // list in the test, so adding a screen cannot leave a gap in the numbering.
         #expect(CaptureLaunch.Screen.allCases.count == 6)
-        #expect(CaptureLaunch.Screen.alarms.fileStem == "01-alarms")
-        #expect(CaptureLaunch.Screen.onboarding.fileStem == "06-onboarding")
+        #expect(CaptureLaunch.Screen.mission.fileStem == "01-mission")
+        #expect(CaptureLaunch.Screen.settings.fileStem == "06-settings")
+        // The three a search result shows, in the order `Screen` gives its reasons for.
+        #expect(Array(CaptureLaunch.Screen.allCases.prefix(3)) == [.mission, .alarms, .onboarding])
         #expect(Set(CaptureLaunch.Screen.allCases.map(\.fileStem)).count == CaptureLaunch.Screen.allCases.count)
     }
 

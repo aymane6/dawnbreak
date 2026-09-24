@@ -54,21 +54,4 @@ final class AlarmRingTests: UITestCase {
             "the mission was still owed and coming back to the app lost it"
         )
     }
-
-    /// AlarmKit's permission alert, if this simulator has never answered it.
-    ///
-    /// Matched in the simulator's language, not the test's: the alert is the system's. English
-    /// says "Allow", French says "Autoriser" — and "Ne pas autoriser" is why the French match
-    /// is exact rather than a prefix.
-    private func allowAlarmsIfAsked() {
-        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-        let alert = springboard.alerts.firstMatch
-        // Fifteen seconds, not five: on a simulator that has never seen the app, the prompt
-        // arrives only once the launch seed asks for authorization, behind a cold start.
-        guard alert.waitForExistence(timeout: 15) else { return }
-        let allow = alert.buttons.matching(
-            NSPredicate(format: "label BEGINSWITH[c] 'allow' OR label ==[c] 'autoriser'")
-        ).firstMatch
-        if allow.exists { allow.tap() }
-    }
 }

@@ -39,10 +39,9 @@ enum AccessibilityID {
     /// test that counts elements beginning with `ax.editor.tone.` cannot also match the opener.
     static func editorTone(_ soundName: String) -> String { "ax.editor.tone.\(soundName)" }
 
-    /// Proof that the mission screen is up. The header, not the escape hatch below it, which a
-    /// user can switch off in settings and is therefore not always on screen.
+    /// Proof that the mission screen is up.
     static let missionHeader = "ax.mission.header"
-    /// The escape hatch, present only while `Preferences.emergencyExitEnabled` is on.
+    /// The X in the corner of every mission screen. Never switchable: no alarm may trap anyone.
     static let missionExit = "ax.mission.exit"
     /// The banner that says the phone is being held. The smoke test looks for it, because "the
     /// mission refuses to count" is only a feature if the user is told so.
@@ -50,8 +49,12 @@ enum AccessibilityID {
 
     /// The 7/30/90-day picker in the stats toolbar.
     static let statsWindow = "ax.stats.window"
-    /// The appearance picker, far enough down the settings list to prove the screen scrolled.
-    static let settingsAppearance = "ax.settings.appearance"
-    /// The primary button on the onboarding pages.
+    /// The alarm permission row, near the top of settings: the screenshot waits for it.
+    static let settingsPermissions = "ax.settings.permissions"
+    /// The version row, at the foot of the settings list, so reaching it proves the list scrolls.
+    static let settingsVersion = "ax.settings.version"
+    /// The primary button on the onboarding pages, and the only one.
     static let onboardingNext = "ax.onboarding.next"
+    /// The page that explains the AlarmKit alert, which nothing may turn past but its button.
+    static let onboardingPermission = "ax.onboarding.permission"
 }

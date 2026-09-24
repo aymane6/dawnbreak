@@ -49,8 +49,10 @@ import base64
 import hashlib
 import plistlib
 import re
+import secrets
 import subprocess
 import tempfile
+import urllib.request
 from pathlib import Path
 
 from asc import BOLD, Client, RESET, TEAM, bad, die, good, run, say, warn
@@ -58,6 +60,12 @@ from asc import BOLD, Client, RESET, TEAM, bad, die, good, run, say, warn
 APP_GROUP = "group.com.aymbam.dawnbreak"
 CERTIFICATE_TYPE = "DISTRIBUTION"
 PROFILE_TYPE = "IOS_APP_STORE"
+# The intermediate every Apple Distribution certificate since 2021 is issued under, and its SHA-1.
+# Xcode installs it. Without it an identity is whole but `find-identity -v` leaves it out, so
+# `certificates` finds nothing usable and makes another: this Mac held only the first generation,
+# expired in 2023, on 2026-09-24.
+INTERMEDIATE = "https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer"
+INTERMEDIATE_SHA1 = "06EC06599F4ED0027CC58956B4D3AC1255114F35"
 # Where Xcode reads installed profiles from. `xcodebuild` will not fetch one for a manually signed
 # target unless it is already here, which is the whole point of installing them.
 PROFILE_DIRECTORY = Path.home() / "Library" / "Developer" / "Xcode" / "UserData" / "Provisioning Profiles"
@@ -106,6 +114,29 @@ def app_groups_capability(client: Client, resource_id: str) -> None:
 # ---------------------------------------------------------------------------
 
 
+def intermediate() -> None:
+    """The WWDR G3 certificate in a keychain, so that an identity which is here counts as one.
+
+    A certification authority's public certificate, not a credential: it signs nothing. The hash is
+    checked all the same, because a copy that did not chain to the Apple Root CA would complete
+    nothing and leave this script making certificates again.
+    """
+    listing = subprocess.run(["security", "find-certificate", "-a", "-Z", "-c",
+                              "Apple Worldwide Developer Relations Certification Authority"],
+                             capture_output=True, text=True, check=False).stdout
+    if INTERMEDIATE_SHA1 in listing:
+        good("WWDR G3 intermediate", "already in a keychain")
+        return
+    with tempfile.TemporaryDirectory(prefix="dawnbreak-wwdr.") as scratch:
+        path = Path(scratch) / "AppleWWDRCAG3.cer"
+        with urllib.request.urlopen(INTERMEDIATE, timeout=30) as response:
+            path.write_bytes(response.read())
+        if hashlib.sha1(path.read_bytes()).hexdigest().upper() != INTERMEDIATE_SHA1:
+            die(f"{INTERMEDIATE} is not the certificate this script expects, so nothing was imported")
+        run("security", "import", str(path), "-k", str(Path.home() / "Library/Keychains/login.keychain-db"))
+    good("WWDR G3 intermediate", "added to the login keychain")
+
+
 def local_identities() -> set[str]:
     """The SHA-1 hashes `security` will sign with, which is what makes a portal certificate usable.
 
@@ -124,8 +155,8 @@ def certificates(client: Client) -> tuple[list[str], set[str], str]:
     Returns the API ids to put in a profile, their SHA-1 hashes to check a profile against, and a
     name to print.
 
-    All of them, because this team has two and both are called "Apple Distribution: Aymane
-    BAMHAMED": one Xcode made, one `create_certificate` below made. `CODE_SIGN_IDENTITY` in
+    All of them, because this team holds several and they share one name: Xcode made the first,
+    and `create_certificate` below makes one on any Mac that has none. `CODE_SIGN_IDENTITY` in
     project.yml names an identity, and a name does not choose between two identities that share it,
     so which one signs is Xcode's decision. A profile carrying only the other one fails the archive
     with `Provisioning profile "Dawnbreak App Store" doesn't include signing certificate` after the
@@ -161,17 +192,28 @@ def create_certificate(client: Client) -> tuple[list[str], set[str], str]:
     with tempfile.TemporaryDirectory(prefix="dawnbreak-signing.") as scratch:
         folder = Path(scratch)
         key, csr, p12 = folder / "dist.key", folder / "dist.csr", folder / "dist.p12"
+        # Not an empty one: `security import` answers an empty-passphrase PKCS#12 with "The user
+        # name or passphrase you entered is not correct", whichever openssl wrote it. This one
+        # lives as long as the bundle does, which is the next two commands.
+        passphrase = secrets.token_hex(16)
         run("openssl", "req", "-new", "-newkey", "rsa:2048", "-nodes",
             "-keyout", str(key), "-out", str(csr), "-subj", "/CN=Dawnbreak Distribution/C=US")
         created = client.expect("POST", "/v1/certificates", {"data": {"type": "certificates",
             "attributes": {"certificateType": CERTIFICATE_TYPE, "csrContent": csr.read_text()}}})
         attributes = created["data"]["attributes"]
-        (folder / "dist.cer").write_bytes(base64.b64decode(attributes["certificateContent"]))
-        run("openssl", "x509", "-inform", "DER", "-in", str(folder / "dist.cer"), "-out", str(folder / "dist.pem"))
-        run("openssl", "pkcs12", "-export", "-inkey", str(key), "-in", str(folder / "dist.pem"),
-            "-out", str(p12), "-passout", "pass:", "-name", attributes["name"])
-        run("security", "import", str(p12), "-k", str(Path.home() / "Library/Keychains/login.keychain-db"),
-            "-P", "", "-f", "pkcs12", "-A")
+        try:
+            (folder / "dist.cer").write_bytes(base64.b64decode(attributes["certificateContent"]))
+            run("openssl", "x509", "-inform", "DER", "-in", str(folder / "dist.cer"), "-out", str(folder / "dist.pem"))
+            run("openssl", "pkcs12", "-export", "-inkey", str(key), "-in", str(folder / "dist.pem"),
+                "-out", str(p12), "-passout", f"pass:{passphrase}", "-name", attributes["name"])
+            run("security", "import", str(p12), "-k", str(Path.home() / "Library/Keychains/login.keychain-db"),
+                "-P", passphrase, "-f", "pkcs12", "-A")
+        except SystemExit:
+            # The key goes with this directory, so a certificate that missed the keychain can never
+            # sign anything, and Apple caps how many distribution certificates a team may hold.
+            client.call("DELETE", f"/v1/certificates/{created['data']['id']}")
+            warn(f"revoked certificate {created['data']['id']}, which this run had just created")
+            raise
     fingerprint = hashlib.sha1(base64.b64decode(attributes["certificateContent"])).hexdigest().upper()
     if fingerprint not in local_identities():
         die("the certificate was created but did not become a usable identity in the login keychain")
@@ -308,6 +350,7 @@ def main() -> int:
         app_groups_capability(client, resources[identifier])
 
     print(f"\n{BOLD}Certificates{RESET}")
+    intermediate()
     certificate_ids, fingerprints, certificate_name = certificates(client)
 
     print(f"\n{BOLD}Profiles{RESET}")

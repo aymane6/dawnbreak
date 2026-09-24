@@ -1,46 +1,55 @@
 No te quedas dormido porque tu alarma suene poco. Te quedas dormido porque apagarla cuesta un pulgar, medio segundo y ningún pensamiento.
 
-Dawnbreak quita el pulgar de la ecuación. Para silenciar la alarma tienes que hacer algo que una persona dormida no puede: ir a la cocina y fotografiar la tetera, hacer diez sentadillas ante la cámara, resolver cuentas que a mediodía te parecerían fáciles, escanear el código de barras de una caja que está en otra habitación.
+Dawnbreak quita el pulgar de la ecuación. Para apagar la alarma completas una misión: ir a la cocina y apuntar la cámara a la tetera, hacer ocho sentadillas delante de la cámara, resolver cuentas que a mediodía te parecerían fáciles, escanear el código de barras de una caja que está en otra habitación.
 
-Cuando se calla, ya estás de pie.
+Si la apagas sin hacer la misión, un minuto después vuelve a sonar.
 
 DOCE MISIONES
 
-- Cálculo: cuentas con tiempo límite, del tamaño de la dificultad que elijas
-- Sentadillas: las cuenta la cámara, no tú
-- Foto: ve y fotografía un objeto concreto, en un sitio concreto
-- Código de barras: escanea la caja que dejaste anoche en el baño
-- Agitar: sigue agitando hasta llenar la barra
-- Pasos: camina un número fijo de pasos, contados por el teléfono
-- Patrón: repite una secuencia que se alarga en cada ronda
-- Escribir: copia una frase, exacta, con su puntuación
-- Dibujar: dibuja lo que te pide, y lo comprueba
-- Memoria: encuentra las parejas
-- Respirar: sesenta segundos de respiración pausada antes de soltarte
-- Sostener: mantén el teléfono quieto y vertical, más tiempo del que querrías
+- Cálculo: cálculo mental a la medida de la dificultad. Solo Difícil y Brutal van contra reloj, y una respuesta incorrecta trae una cuenta nueva
+- Memoria: fíjate en qué casillas se iluminan y toca esas mismas
+- Secuencia: repite una serie de botones de colores que crece en uno cada vez que aciertas
+- Escritura: copia una frase palabra por palabra, desde una línea corta en Fácil hasta una larga en Brutal. Mayúsculas, tildes y puntuación no cuentan
+- Agitar: de 15 a 100 sacudidas
+- Pasos: de 20 a 200 pasos, contados por el teléfono
+- Sentadillas: 3, 8, 15 o 25, contadas por la cámara frontal, en el propio dispositivo
+- Foto: registra un objeto una vez, la tetera por ejemplo. Por la mañana, apunta la cámara a uno parecido. El reconocimiento se hace en el dispositivo y comprueba qué objeto es, no dónde está
+- Código de barras: registra un código de barras o un código QR, por ejemplo el de una caja en otra habitación, y luego escanéalo
+- Dibujo: dibuja lo que te pide, y el reconocimiento en el dispositivo lo comprueba
+- Aleteo: un juego de vuelo que se juega con un pulgar. Supera de 2 a 15 huecos
+- Respirar: respiración guiada, de 3 a 10 ciclos, desde unos 30 segundos hasta más de tres minutos
+
+TAN DURA COMO LA NECESITES
+
+- Cuatro dificultades: Fácil, Medio, Difícil y Brutal
+- Hasta diez rondas de la misma misión
+- Hasta tres misiones más a lo largo de la mañana, cada una suena entre 1 y 60 minutos después de superar la anterior
+- Posponer de 1 a 30 minutos, tantas veces como permitas, o ninguna
+- Catorce tonos de alarma, de suaves a despiadados
+- Prueba una misión antes desde el editor de la alarma, en silencio y sin programar nada. Las dos de la tarde son un buen momento para descubrir qué significa Brutal
 
 NO SE RINDE
 
-Para la alarma sin acabar la misión y vuelve un minuto después, en la pantalla bloqueada, con un título que dice por qué. Pon las rondas que necesites: una para un día de semana, diez para la mañana de un vuelo.
-
-Suena en la pantalla bloqueada a través del propio sistema de alarmas de Apple, así que funciona con la app cerrada, el teléfono bloqueado y el modo No molestar activado. Hay una salida de emergencia en Ajustes, activada por defecto, porque una alarma que no se puede parar es un peligro y no una función.
+- El modo Implacable viene activado en cada alarma nueva: si la apagas sin terminar la misión, vuelve a sonar un minuto después en la pantalla bloqueada, con el título «Misión sin terminar»
+- Cerrar la app no te libra: hasta que termines la misión, el siguiente aviso ya está programado
+- Suena como alarma del sistema, a través de AlarmKit: con la app cerrada, el teléfono bloqueado, en modo silencio y con cualquier modo de concentración, No molestar incluido. Requiere iOS 26
+- Siempre hay una salida. La X de la esquina de cada pantalla de misión pide confirmación, luego para la alarma y registra la mañana como abandono, porque una alarma que no se puede parar es un peligro y no una función
 
 CADA MAÑANA, POR ESCRITO
 
-Noventa días de lo que pasó de verdad: a qué hora despertaste, cuánto tardó la misión, tu racha, y cada mañana en la que paraste la alarma sin hacer la misión. Los números no halagan, y es a propósito. Por eso sirven.
+Hasta 90 días de horas de despertar, lo que tardaron las misiones, rachas, posposiciones y las mañanas en que la apagaste sin hacer la misión. Los números no halagan, y es a propósito. Por eso sirven.
 
 HECHA EN SERIO
 
-- Doce idiomas, incluido el árabe de derecha a izquierda, traducidos y no pasados por una máquina
-- Oscuro por defecto, porque esta pantalla la lees a las seis de la mañana
-- Un widget en la pantalla bloqueada con la próxima alarma
-- Compatibilidad completa con VoiceOver y texto dinámico
+- Doce idiomas, incluido el árabe, de derecha a izquierda
+- Oscura de principio a fin, porque esta pantalla la lees a las 6 de la mañana
+- Un widget con la próxima alarma, para la pantalla bloqueada y la de inicio
 - Sin cuenta. Sin iniciar sesión. Sin anuncios. Sin analítica
-- Nada sale del teléfono. No hay servidor al que pudiera salir
+- Nada sale del teléfono. No hay ningún servidor al que pudiera salir
 
 GRATIS, SIN EXCEPCIONES
 
-Todas las misiones, todas las dificultades, hasta diez rondas, tantas alarmas como necesite tu semana y noventa días de historial. No hay nada que comprar: ni suscripción, ni anuncios, ni cuenta.
+Todas las misiones, todas las dificultades y todos los tonos, desde el primer momento. No hay nada que comprar: ni suscripción, ni anuncios, ni cuenta.
 
 Privacidad: https://dawnbreak.app/privacy.html
 Términos de uso: https://dawnbreak.app/terms.html

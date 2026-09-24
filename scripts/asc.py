@@ -35,6 +35,13 @@ BASE = "https://api.appstoreconnect.apple.com"
 TEAM = "2Y97DK7UM4"
 BUNDLE_ID = "com.aymbam.dawnbreak"
 
+# The state of a review submission Apple has sent back with a rejected item. It keeps its
+# `submittedDate`, so it reads as sent, and it is still the submission to answer: Apple's help has the
+# same one resubmitted ("click Resubmit to App Review from the submission details page") and takes no
+# new items into it meanwhile, so a fresh draft beside it would have nothing it is allowed to hold.
+# Build 11's submission came back in this state on 2026-09-24, under Guideline 5.1.1(iv).
+SENT_BACK = "UNRESOLVED_ISSUES"
+
 # The same folders scripts/release.sh searches, in the same order, so a key that works for one works
 # for all of them.
 KEY_FOLDERS = ("./private_keys", "~/private_keys", "~/.private_keys", "~/.appstoreconnect/private_keys")

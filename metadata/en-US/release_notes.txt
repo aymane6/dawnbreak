@@ -1,5 +1,5 @@
 First release.
 
-Twelve missions, as many alarms as your week needs, four difficulties, and a lock screen alarm that comes back if you stop it without doing the mission. Twelve languages. No account, no adverts, nothing leaves your phone.
+Dawnbreak is an alarm clock you stop by completing a mission: twelve of them, four difficulties, up to ten rounds. Stop it without the mission and it rings again a minute later. Twelve languages. Free: nothing to buy, no account, no ads, and nothing leaves your phone.
 
-If something is wrong, the support page is one tap away in Settings. It gets read.
+If something is wrong, Settings has a “Contact support” link that opens an email, and the support page is linked on this page. Messages get read.

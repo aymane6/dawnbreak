@@ -5,8 +5,9 @@ import UIKit
 /// Settings, kept short on purpose.
 ///
 /// Every row here is either something the user has a real reason to change (clock format,
-/// appearance, bedtime) or something the app owes them (permissions, data erasure, the
-/// escape hatch). Nothing is here for symmetry.
+/// haptics) or something the app owes them (permissions, data erasure). The way
+/// out of a mission is not a setting: it is the X on every mission screen, always there.
+/// Nothing is here for symmetry, and nothing is here that the app does not act on.
 struct SettingsView: View {
     @Environment(\.app) private var app
     @State private var isConfirmingErase = false
@@ -16,8 +17,6 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 wakeSection
-                bedtimeSection
-                appearanceSection
                 permissionsSection
                 dataSection
                 aboutSection
@@ -62,80 +61,8 @@ struct SettingsView: View {
             Toggle(isOn: hapticsBinding) {
                 Text("settings.haptics", bundle: .main)
             }
-
-            Toggle(isOn: escapeBinding) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("settings.escapeHatch", bundle: .main)
-                    Text("settings.escapeHatch.body", bundle: .main)
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
-                }
-            }
         } header: {
             Text("settings.section.wake", bundle: .main)
-        }
-        .tint(Theme.accent)
-        .listRowBackground(Theme.surface)
-    }
-
-    private var bedtimeSection: some View {
-        Section {
-            Toggle(isOn: bedtimeBinding) {
-                Text("settings.bedtimeReminder", bundle: .main)
-            }
-            if app.preferences.bedtimeReminderEnabled {
-                HStack {
-                    Text("settings.bedtime", bundle: .main)
-                    Spacer()
-                    Text(clock.full(hour: app.preferences.bedtimeHour, minute: app.preferences.bedtimeMinute))
-                        .font(Theme.bodyFont.monospacedDigit())
-                        .foregroundStyle(Theme.accent)
-                }
-                Stepper(value: bedtimeHourBinding, in: 18...29) {
-                    Text("settings.bedtime.hour", bundle: .main)
-                        .font(Theme.captionFont)
-                }
-                Stepper(value: bedtimeMinuteBinding, in: 0...55, step: 5) {
-                    Text("settings.bedtime.minute", bundle: .main)
-                        .font(Theme.captionFont)
-                }
-            }
-            HStack {
-                Text("settings.sleepGoal", bundle: .main)
-                Spacer()
-                // Preformatted rather than handed to `%.1f`: the number style drops the
-                // trailing ".0" on a whole number and picks the region's decimal separator,
-                // so a French user sees "7 h" and "7,5 h" instead of "7.0 h".
-                Text(localized("settings.sleepGoal.value", app.preferences.sleepGoalHours
-                    .formatted(.number.precision(.fractionLength(0...1)))))
-                    .foregroundStyle(Theme.accent)
-                    .font(Theme.bodyFont.monospacedDigit())
-            }
-            Slider(value: sleepGoalBinding, in: 5...10, step: 0.5) {
-                Text("settings.sleepGoal", bundle: .main)
-            }
-            .tint(Theme.accent)
-        } header: {
-            Text("settings.section.sleep", bundle: .main)
-        } footer: {
-            Text("settings.section.sleep.footer", bundle: .main)
-        }
-        .tint(Theme.accent)
-        .listRowBackground(Theme.surface)
-    }
-
-    private var appearanceSection: some View {
-        Section {
-            Picker(selection: appearanceBinding) {
-                ForEach(Preferences.Appearance.allCases) { option in
-                    Text(key: option.titleKey).tag(option)
-                }
-            } label: {
-                Text("settings.appearance", bundle: .main)
-            }
-            .accessibilityIdentifier(AccessibilityID.settingsAppearance)
-        } header: {
-            Text("settings.section.appearance", bundle: .main)
         }
         .tint(Theme.accent)
         .listRowBackground(Theme.surface)
@@ -151,11 +78,13 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("settings.permission.alarms", bundle: .main)
                     Text(key: authorizationKey)
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
+                        .font(.footnote)
+                        .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
-                if app.bridge.authorization != .authorized {
+                // Only while iOS has never asked. After a refusal the system will not ask again,
+                // so a button here would do nothing; the iOS Settings row below is the way back.
+                if app.bridge.authorization == .notDetermined {
                     Button {
                         Task { await app.bridge.requestAuthorization() }
                     } label: {
@@ -166,6 +95,7 @@ struct SettingsView: View {
                     .tint(Theme.accent)
                 }
             }
+            .accessibilityIdentifier(AccessibilityID.settingsPermissions)
 
             Button {
                 guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
@@ -174,7 +104,7 @@ struct SettingsView: View {
                 Label {
                     Text("settings.openSystemSettings", bundle: .main)
                 } icon: {
-                    Image(systemName: "gear").foregroundStyle(Theme.accent)
+                    Image(systemName: "gearshape").foregroundStyle(Theme.accent)
                 }
             }
         } header: {
@@ -214,6 +144,8 @@ struct SettingsView: View {
                     .foregroundStyle(Theme.textSecondary)
                     .monospacedDigit()
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier(AccessibilityID.settingsVersion)
             Link(destination: URL(string: "https://dawnbreak.app/privacy.html")!) {
                 Text("legal.privacy", bundle: .main)
             }
@@ -265,40 +197,7 @@ struct SettingsView: View {
         Binding(get: { app.preferences.hapticsEnabled }, set: { app.preferences.hapticsEnabled = $0 })
     }
 
-    private var escapeBinding: Binding<Bool> {
-        Binding(get: { app.preferences.emergencyExitEnabled }, set: { app.preferences.emergencyExitEnabled = $0 })
-    }
-
-    private var bedtimeBinding: Binding<Bool> {
-        Binding(get: { app.preferences.bedtimeReminderEnabled }, set: { app.preferences.bedtimeReminderEnabled = $0 })
-    }
-
-    /// Allowed up to 29 so "01:30" can be expressed as a bedtime that belongs to the previous
-    /// evening; the modulo keeps it a valid hour of day.
-    private var bedtimeHourBinding: Binding<Int> {
-        Binding(
-            get: { app.preferences.bedtimeHour < 12 ? app.preferences.bedtimeHour + 24 : app.preferences.bedtimeHour },
-            set: { app.preferences.bedtimeHour = $0 % 24 }
-        )
-    }
-
-    private var bedtimeMinuteBinding: Binding<Int> {
-        Binding(get: { app.preferences.bedtimeMinute }, set: { app.preferences.bedtimeMinute = $0 })
-    }
-
-    private var sleepGoalBinding: Binding<Double> {
-        Binding(get: { app.preferences.sleepGoalHours }, set: { app.preferences.sleepGoalHours = $0 })
-    }
-
-    private var appearanceBinding: Binding<Preferences.Appearance> {
-        Binding(get: { app.preferences.appearance }, set: { app.preferences.appearance = $0 })
-    }
-
     // MARK: - Derived copy
-
-    private var clock: ClockFormatter {
-        ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
-    }
 
     private var authorizationSymbol: String {
         app.bridge.authorization == .authorized ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"

@@ -26,7 +26,7 @@ struct StopAlarmIntent: LiveActivityIntent {
     /// The whole point: the app comes to the front on the mission screen rather than the
     /// alarm simply going quiet.
     static let openAppWhenRun = true
-    /// Hidden from the Shortcuts library, which is also why these three titles are the only
+    /// Hidden from the Shortcuts library, which is also why these two titles are the only
     /// user-facing strings in the app left in English: nobody sees them. An intent whose one
     /// parameter is an alarm's UUID is not something a person can usefully build a shortcut
     /// out of, and offering it would put "Stop alarm" in Shortcuts next to a text field
@@ -64,27 +64,6 @@ struct StartMissionIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         await AlarmBridge.shared.handleMissionRequested(hint: alarmID)
-        return .result()
-    }
-}
-
-/// Fired by the countdown presentation's pause button when the user snoozes.
-struct SnoozeAlarmIntent: LiveActivityIntent {
-    static let title: LocalizedStringResource = "Snooze"
-    static let description = IntentDescription("Silences the alarm for a few minutes, then rings again.")
-    /// The one that must not open the app: a snooze is a request to be left alone for nine
-    /// minutes, and bringing the app to the front would defeat it.
-    static let openAppWhenRun = false
-    static let isDiscoverable = false
-
-    @Parameter(title: "Alarm")
-    var alarmID: String
-
-    init() {}
-    init(alarmID: UUID) { self.alarmID = alarmID.uuidString }
-
-    func perform() async throws -> some IntentResult {
-        await AlarmBridge.shared.handleSnoozePressed(hint: alarmID)
         return .result()
     }
 }

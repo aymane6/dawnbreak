@@ -555,7 +555,7 @@ exports[`snapshot 1`] = `
           "cdk-hnb659fds-assets-123456789012-us-east-1",
         ],
         "SourceObjectKeys": [
-          "eb5b6fad34feaf1f9d71e857582ffb93d77e9edd409e0f55c63798bf5882c08c.zip",
+          "fc6d7409a1ac08099a99cb1b60ef479b7b562d6515cb26e868055867c911e983.zip",
         ],
         "SystemMetadata": {
           "cache-control": "public, max-age=300",

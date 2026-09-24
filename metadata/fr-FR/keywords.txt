@@ -1,1 +1,1 @@
-réveiller,dormeur,oreiller,retard,rappel,fort,sonnerie,squat,code,barres,photo,calcul
+alarme,matin,défi,calcul,photo,lever,snooze,fort,scan,squat,sonnerie,jeu,retard,code,barre,lit,maths

@@ -1,3 +1,4 @@
+import AlarmKit
 import DawnbreakKit
 import Foundation
 
@@ -65,7 +66,11 @@ enum CaptureMode {
         UserDefaults.standard.removePersistentDomain(forName: CaptureLaunch.defaultsSuite)
         let defaults = UserDefaults(suiteName: CaptureLaunch.defaultsSuite) ?? .standard
 
-        let environment = AppEnvironment(directory: directory, defaults: defaults)
+        // Its own bridge, over `CaptureScheduler` rather than AlarmKit. A throwaway environment
+        // takes a throwaway bridge, for the reason `AppEnvironment.init` gives.
+        let armed = Set(demoAlarms().filter(\.isEnabled).map(\.id))
+        let bridge = AlarmBridge(system: CaptureScheduler(armed: armed))
+        let environment = AppEnvironment(directory: directory, defaults: defaults, bridge: bridge)
         seed(environment)
         return environment
     }
@@ -133,14 +138,16 @@ enum CaptureMode {
         return PendingMission(alarm: silent, scheduledFor: scheduled)
     }
 
-    /// The time the mission header draws on a capture run, and nil in every normal run.
+    /// The time a capture run's headers are drawn at, and nil in every normal run: the mission
+    /// header's clock, and the "in 20 h" under the alarm list's next alarm.
     ///
     /// 9:41 is what `scripts/shots.sh` overrides the status bar to, and the two are read together:
     /// on the wall clock the header photographed "Course du matin 14:19" under an 09:41 clock in the
-    /// 19 August set, with a different time in each of the twelve languages. Pinned here rather than
-    /// in the mission itself for the reason in `ringingMission` above: `PendingMission.startedAt` is
-    /// the instant the alarm went off, the store treats it as the mission's age, and a mission dated
-    /// six hours ago is a mission it is right to throw away.
+    /// 19 August set, with a different time in each of the twelve languages, and on 24 September
+    /// the list counted "in 16 h 58 min" to an alarm twenty hours after the 9:41 above it. Pinned
+    /// here rather than in the mission itself for the reason in `ringingMission` above:
+    /// `PendingMission.startedAt` is the instant the alarm went off, the store treats it as the
+    /// mission's age, and a mission dated six hours ago is a mission it is right to throw away.
     static var headerTime: Date? {
         guard isActive else { return nil }
         return Calendar.autoupdatingCurrent.date(bySettingHour: 9, minute: 41, second: 0, of: Date())
@@ -184,7 +191,10 @@ enum CaptureMode {
         UUID(uuidString: String(format: "DA00%04X-0000-4000-A000-%012X", daysAgo, daysAgo)) ?? UUID()
     }
 
-    /// Four alarms: two on the weekday schedule, one for the weekend, and one switched off.
+    /// Four alarms: two on the weekday schedule, one of them switched off, one for the weekend,
+    /// and a one-off for an early flight. The one that is off is the second weekday alarm rather
+    /// than the flight: the list sorts by time, and with the flight off the store's first
+    /// screenshot opened on a greyed-out card under a header naming a different alarm.
     ///
     /// The labels are localized, which is the whole point of a localized screenshot. A French
     /// listing whose alarm still says "Morning run" tells the reader the app was translated by
@@ -201,7 +211,6 @@ enum CaptureMode {
                 repeatDays: .weekdays,
                 mission: MissionConfig(kind: .math, difficulty: .medium, rounds: 3),
                 soundName: AlarmSound.sunrise.rawValue,
-                gentleWakeSeconds: 45,
                 createdAt: created(0)
             ),
             AlarmDraft(
@@ -209,6 +218,7 @@ enum CaptureMode {
                 hour: 7, minute: 0,
                 label: localized("capture.label.work"),
                 repeatDays: .weekdays,
+                isEnabled: false,
                 mission: MissionConfig(kind: .typing, difficulty: .hard, rounds: 1),
                 soundName: AlarmSound.radar.rawValue,
                 createdAt: created(1)
@@ -220,14 +230,12 @@ enum CaptureMode {
                 repeatDays: .weekend,
                 mission: MissionConfig(kind: .steps, difficulty: .medium, rounds: 1),
                 soundName: AlarmSound.birdsong.rawValue,
-                gentleWakeSeconds: 90,
                 createdAt: created(2)
             ),
             AlarmDraft(
                 id: ID.flight,
                 hour: 5, minute: 40,
                 label: localized("capture.label.flight"),
-                isEnabled: false,
                 mission: MissionConfig(kind: .shake, difficulty: .hard, rounds: 2),
                 soundName: AlarmSound.klaxon.rawValue,
                 snooze: .off,
@@ -239,9 +247,9 @@ enum CaptureMode {
     /// Forty-five mornings, one per day, oldest first.
     ///
     /// Enough that the 30-day chart is full and the 90-day one is not empty. The four misses are
-    /// placed by hand rather than sprinkled: the nearest one is nine days back, and there is an
-    /// eleven-day run behind it, so the screenshot shows a streak of nine under a record of
-    /// eleven. A column of nothing but wins would be a nicer number and would read as invented.
+    /// placed by hand rather than sprinkled: the nearest one is nine days back, and there is a
+    /// twelve-day run further behind, so the screenshot shows a streak of nine under a record of
+    /// twelve. A column of nothing but wins would be a nicer number and would read as invented.
     private static func demoRecords(weekday: AlarmDraft, weekend: AlarmDraft) -> [WakeRecord] {
         let calendar = Calendar.autoupdatingCurrent
         let misses: Set<Int> = [9, 21, 34, 41]
@@ -297,4 +305,29 @@ enum CaptureMode {
             )
         }
     }
+}
+
+/// What a capture run schedules against instead of AlarmKit: permission given, every seeded alarm
+/// that is on held by the system, and nothing ever sent to the daemon.
+///
+/// The simulator's own answer is not a state worth photographing, whichever it happens to be.
+/// Denied put "Alarms are blocked" across the first screenshot of the 24 September French check,
+/// and "Blocked" in Settings. Granted is no better: a capture run schedules nothing, so every row
+/// would carry "Not armed" and the header would have no next alarm to show. What a reader should
+/// see is the app as it is for someone who said yes, and that is now a property of this type
+/// rather than of whichever machine the run lands on. It is also a second guard behind the
+/// `relentless` switch in `ringingMission`: nothing a capture run does can reach the daemon.
+private struct CaptureScheduler: AlarmScheduler {
+    let armed: Set<UUID>
+
+    var authorizationState: AlarmManager.AuthorizationState { .authorized }
+    func requestAuthorization() async throws -> AlarmManager.AuthorizationState { .authorized }
+    func authorizationUpdates() -> AsyncStream<AlarmManager.AuthorizationState> { AsyncStream { $0.finish() } }
+
+    func snapshot() -> AlarmSnapshot? { AlarmSnapshot(scheduled: armed, alerting: []) }
+    func armedUpdates() -> AsyncStream<Set<UUID>> { AsyncStream { $0.finish() } }
+
+    func cancel(id: UUID) {}
+    func schedule(_ alarm: AlarmDraft) async throws {}
+    func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date, titled: LocalizedStringResource?) async throws {}
 }

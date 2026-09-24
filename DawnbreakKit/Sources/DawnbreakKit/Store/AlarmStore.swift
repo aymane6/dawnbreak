@@ -13,6 +13,11 @@ public final class AlarmStore {
     /// Surfaced in the UI rather than swallowed: a write that failed means the alarm the
     /// user just set will not survive a relaunch, and they need to know that now.
     public private(set) var lastError: StoreError?
+    /// The file was there but could not be read, which is what a launch before the first
+    /// unlock after a restart looks like. The list is empty only because it is unknown, so
+    /// nothing is written and nothing may be reconciled against it until `reloadIfUnread`
+    /// gets through.
+    public private(set) var isUnread = false
 
     private let file: JSONFileStore<Payload>
 
@@ -30,8 +35,20 @@ public final class AlarmStore {
 
     public init(directory: URL = StoreLocation.supportDirectory()) {
         self.file = JSONFileStore(url: directory.appendingPathComponent("alarms.json"), fallback: { Payload() })
-        let payload = file.load()
+        guard let payload = file.loadIfReadable() else {
+            isUnread = true
+            return
+        }
         self.alarms = Self.migrate(payload).alarms.sorted(by: Self.byTime)
+    }
+
+    /// Tries again to read a list that could not be read at launch. Cheap when there is
+    /// nothing to do, so it is called on every return to the foreground and before every
+    /// mutation.
+    public func reloadIfUnread() {
+        guard isUnread, let payload = file.loadIfReadable() else { return }
+        alarms = Self.migrate(payload).alarms.sorted(by: Self.byTime)
+        isUnread = false
     }
 
     /// `nonisolated` so `peek` can migrate a payload it read outside the main actor. The
@@ -79,6 +96,7 @@ public final class AlarmStore {
     // MARK: - Mutations
 
     public func upsert(_ alarm: AlarmDraft) {
+        reloadIfUnread()
         if let index = alarms.firstIndex(where: { $0.id == alarm.id }) {
             alarms[index] = alarm
         } else {
@@ -89,11 +107,13 @@ public final class AlarmStore {
     }
 
     public func remove(id: UUID) {
+        reloadIfUnread()
         alarms.removeAll { $0.id == id }
         persist()
     }
 
     public func setEnabled(_ enabled: Bool, id: UUID) {
+        reloadIfUnread()
         guard let index = alarms.firstIndex(where: { $0.id == id }) else { return }
         alarms[index].isEnabled = enabled
         persist()
@@ -104,6 +124,7 @@ public final class AlarmStore {
     /// A one-shot alarm that has fired is done; it is switched off rather than deleted so
     /// the user can flick it back on tomorrow without retyping the mission.
     public func retireIfOneShot(id: UUID) {
+        reloadIfUnread()
         guard let index = alarms.firstIndex(where: { $0.id == id }), alarms[index].isOneShot else { return }
         alarms[index].isEnabled = false
         persist()
@@ -121,6 +142,11 @@ public final class AlarmStore {
     public func clearError() { lastError = nil }
 
     private func persist() {
+        // Writing now would put a list built without the one on disk in its place.
+        guard !isUnread else {
+            lastError = StoreError(messageKey: "error.saveFailed", underlying: "the saved alarm list could not be read yet")
+            return
+        }
         do {
             try file.save(Payload(version: 1, alarms: alarms))
             lastError = nil
@@ -138,6 +164,9 @@ public final class AlarmStore {
 public final class WakeLogStore {
     public private(set) var records: [WakeRecord] = []
     public static let maximumRecords = 2000
+    /// As on `AlarmStore`: the file could not be read at launch, so `records` holds only
+    /// what this process logged since, and writing it would erase the history.
+    public private(set) var isUnread = false
 
     private let file: JSONFileStore<Payload>
 
@@ -148,23 +177,38 @@ public final class WakeLogStore {
 
     public init(directory: URL = StoreLocation.supportDirectory()) {
         self.file = JSONFileStore(url: directory.appendingPathComponent("wake-log.json"), fallback: { Payload() })
-        self.records = file.load().records
+        guard let payload = file.loadIfReadable() else {
+            isUnread = true
+            return
+        }
+        self.records = payload.records
+    }
+
+    /// Tries again to read a log that could not be read at launch. A morning logged in the
+    /// meantime is kept, after the history it belongs at the end of.
+    public func reloadIfUnread() {
+        guard isUnread, let payload = file.loadIfReadable() else { return }
+        let known = Set(payload.records.map(\.id))
+        records = payload.records + records.filter { !known.contains($0.id) }
+        trimToCap()
+        isUnread = false
+        save()
     }
 
     public func append(_ record: WakeRecord) {
+        reloadIfUnread()
         records.append(record)
-        if records.count > Self.maximumRecords {
-            records.removeFirst(records.count - Self.maximumRecords)
-        }
-        try? file.save(Payload(version: 1, records: records))
+        trimToCap()
+        save()
     }
 
     /// Amends the record for an alarm that is still in progress — a snooze, a dodge —
     /// without writing a second row for the same morning.
     public func amendLatest(alarmID: UUID, _ change: (inout WakeRecord) -> Void) {
+        reloadIfUnread()
         guard let index = records.lastIndex(where: { $0.alarmID == alarmID }) else { return }
         change(&records[index])
-        try? file.save(Payload(version: 1, records: records))
+        save()
     }
 
     public func stats(window: Int = 30, now: Date = Date()) -> WakeStats {
@@ -175,6 +219,21 @@ public final class WakeLogStore {
     /// has to be one tap and has to actually delete the file.
     public func eraseAll() {
         records = []
-        try? file.save(Payload(version: 1, records: []))
+        // Erasing is the one write that needs no history to be right.
+        isUnread = false
+        save()
+    }
+
+    private func trimToCap() {
+        guard records.count > Self.maximumRecords else { return }
+        records.removeFirst(records.count - Self.maximumRecords)
+    }
+
+    private func save() {
+        guard !isUnread else {
+            NSLog("[Dawnbreak] wake log not written: the saved log could not be read yet")
+            return
+        }
+        try? file.save(Payload(version: 1, records: records))
     }
 }

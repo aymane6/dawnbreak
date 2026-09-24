@@ -1,3 +1,4 @@
+import CoreText
 import Foundation
 import Testing
 @testable import DawnbreakKit
@@ -100,6 +101,55 @@ struct MathChallengeTests {
             .prompt(in: Locale(identifier: "de_DE")) == "1000 × 4")
     }
 
+    @Test("An Arabic problem is drawn in the order the keypad reads", arguments: [false, true])
+    func arabicPromptOrder(rightToLeftParagraph: Bool) {
+        // Nine minus two, in an Arabic iPhone's digits. Drawn from `prompt` the operator resolves
+        // right to left and the screen shows "٢ − ٩"; this is the assertion that caught it.
+        let challenge = MathChallenge(left: 9, right: 2, op: .subtract, answer: 7)
+        let arabic = Locale(identifier: "ar_EG")
+        #expect(drawnOrder(challenge.prompt(in: arabic), rightToLeft: rightToLeftParagraph) == ["٢", "−", "٩"])
+        #expect(drawnOrder(challenge.displayPrompt(in: arabic), rightToLeft: rightToLeftParagraph) == ["٩", "−", "٢"])
+        // A two-digit operand keeps its own digits in order too.
+        let product = MathChallenge(left: 12, right: 3, op: .multiply, answer: 36)
+        #expect(drawnOrder(product.displayPrompt(in: arabic), rightToLeft: rightToLeftParagraph) == ["١", "٢", "×", "٣"])
+        // Latin digits were never affected, and the marks change nothing about them.
+        #expect(drawnOrder(challenge.displayPrompt(in: Locale(identifier: "en_US")), rightToLeft: rightToLeftParagraph) == ["9", "−", "2"])
+    }
+
+    /// The characters of `text` in the order CoreText lays them out, left to right, with the
+    /// spaces and the invisible direction marks left out. CoreText because it is what draws the
+    /// text in the app, so this is the order a reader sees rather than a reading of the rules.
+    private func drawnOrder(_ text: String, rightToLeft: Bool) -> [String] {
+        var direction: CTWritingDirection = rightToLeft ? .rightToLeft : .leftToRight
+        let style = withUnsafePointer(to: &direction) { pointer in
+            var setting = CTParagraphStyleSetting(
+                spec: .baseWritingDirection,
+                valueSize: MemoryLayout<CTWritingDirection>.size,
+                value: pointer
+            )
+            return CTParagraphStyleCreate(&setting, 1)
+        }
+        let attributed = NSAttributedString(string: text, attributes: [
+            NSAttributedString.Key(kCTParagraphStyleAttributeName as String): style,
+            NSAttributedString.Key(kCTFontAttributeName as String): CTFontCreateWithName("Helvetica" as CFString, 20, nil),
+        ])
+        let line = CTLineCreateWithAttributedString(attributed)
+        let utf16 = Array(text.utf16)
+        var placed: [(x: CGFloat, character: String)] = []
+        for run in CTLineGetGlyphRuns(line) as? [CTRun] ?? [] {
+            let count = CTRunGetGlyphCount(run)
+            var indices = [CFIndex](repeating: 0, count: count)
+            var positions = [CGPoint](repeating: .zero, count: count)
+            CTRunGetStringIndices(run, CFRange(location: 0, length: count), &indices)
+            CTRunGetPositions(run, CFRange(location: 0, length: count), &positions)
+            for (index, position) in zip(indices, positions) {
+                placed.append((position.x, String(utf16CodeUnits: [utf16[index]], count: 1)))
+            }
+        }
+        let invisible: Set<String> = [" ", "\u{200E}", "\u{2066}", "\u{2069}"]
+        return placed.sorted { $0.x < $1.x }.map(\.character).filter { !invisible.contains($0) }
+    }
+
     @Test("A half-typed answer keeps its shape in the locale's digits")
     func typedDigits() {
         let arabic = Locale(identifier: "ar_EG")
@@ -190,6 +240,32 @@ struct TypingTests {
         #expect(challenge.accepts("朝日が昇る"))
     }
 
+    /// The marks a phone keyboard hides behind a long press. Each sentence is one the catalog
+    /// really ships, and each typed line is what a person types without hunting for the mark.
+    @Test("Punctuation the keyboard hides is never asked for, and the words still are",
+          arguments: [
+              ("Твоя кровать — это ловушка.", "твоя кровать - это ловушка"),
+              ("Твоя кровать — это ловушка.", "Твоя кровать это ловушка"),
+              ("L’alarme n’a pas failli ; vous avez négocié avec elle et perdu.",
+               "L'alarme n'a pas failli; vous avez negocie avec elle et perdu"),
+              ("Из четвёртого нажатия «отложить» ещё ничего хорошего не выходило.",
+               "Из четвёртого нажатия \"отложить\" ещё ничего хорошего не выходило"),
+              ("計算を解く、100歩歩く。", "計算を解く100歩歩く"),
+          ])
+    func hiddenPunctuation(sentence: String, typed: String) {
+        let challenge = TypingChallenge(sentenceKey: "k", sentence: sentence)
+        #expect(challenge.accepts(typed))
+        #expect(challenge.firstMismatch(in: typed) == nil)
+    }
+
+    @Test("Leaving punctuation out does not let a word go missing")
+    func wordsStillCount() {
+        let challenge = TypingChallenge(sentenceKey: "k", sentence: "Твоя кровать — это ловушка.")
+        #expect(!challenge.accepts("Твоя кровать ловушка"))
+        #expect(!challenge.accepts("Твоя кровать — это"))
+        #expect(challenge.firstMismatch(in: "Твоя кровать ловушка") == 13)
+    }
+
     @Test("Progress grows with the shared prefix and never exceeds 1")
     func progress() {
         let challenge = TypingChallenge(sentenceKey: "k", sentence: "wake up now")
@@ -250,6 +326,16 @@ struct DrawingTests {
         #expect(!cat.matches(observations: [("bicycle", 0.99)], threshold: 0.3))
     }
 
+    @Test("A miss is explained only in words every language has")
+    func missesNameOnlyPrompts() {
+        // The label a boat drawing often gets, spelled the way one taxonomy spells it.
+        #expect(DrawingPrompt.prompt(forLabel: "Sail_Boat")?.nameKey == "draw.prompt.boat")
+        #expect(DrawingPrompt.prompt(forLabel: "house")?.nameKey == "draw.prompt.house")
+        // Labels no prompt uses have no translation, so the screen says "not quite" instead.
+        #expect(DrawingPrompt.prompt(forLabel: "structure") == nil)
+        #expect(DrawingPrompt.prompt(forLabel: "document") == nil)
+    }
+
     @Test("Every prompt has a distinct label and a catalog key")
     func promptsAreWellFormed() {
         let labels = DrawingPrompt.all.map(\.visionLabel)
@@ -295,7 +381,7 @@ struct MissionConfigTests {
     /// This is the shape of a bug that shipped: sequence at brutal plays eleven pads, replaying the
     /// whole prefix each round, which is forty-six seconds of watching before a finger may move, and
     /// it carried a thirty-second limit. Running out restarts the round, so the grid reset forever
-    /// and the alarm could only be escaped through the emergency exit, which is switchable off. An
+    /// and the alarm could only be escaped through the emergency exit, which could then be switched off. An
     /// alarm that cannot be cleared is the worst failure this app has, and App Review would have
     /// found it by choosing the hardest setting.
     @Test("Every timed mission has time to be presented, and then some", arguments: MissionKind.allCases)

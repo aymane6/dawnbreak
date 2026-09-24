@@ -1,19 +1,17 @@
-Build 10 fixes something you found and I had not: you said the app had four alarm tones. It has fourteen, and it has had since build 8. Only four were on screen.
+Build 12 is the one going back to App Review, so most of it is about the first minute and the mission screens.
 
-WHY YOU SAW FOUR
-The tones were a horizontal strip of small tiles inside the sound card. Four fit on a 6.9-inch screen, three on a 6.1-inch one, the scroll indicator was hidden, and nothing said there was more. You read the screen correctly; the screen was lying.
-
-WHAT IT IS NOW
-The sound card has one row: the name of the current tone, its loudness icon, and the number 14. Tapping it opens a screen with all fourteen tiles laid out three to a row, gentlest first, worst last, every one visible at once with no scrolling on any iPhone. Tapping a tile selects it and plays a preview. The icon and its colour say which class it is: waveform for gentle, two waves for standard, three for harsh, a red triangle for savage.
-
-WHAT NOW STOPS IT COMING BACK
-A test opens that screen and checks all fourteen tiles are inside the window and tappable after zero swipes, in English and in Arabic. I put the old strip back to be sure it fails: it does. A second test checks a chosen tone survives saving and reopening the alarm.
-
-ON ADDING RECORDED SOUNDS
-You asked for open-source sources. I checked the licences at the source rather than trusting a summary, and the answer is that all fourteen stay synthesised. The short reason: only CC0 audio can go into a paid App Store binary without asking each author for permission, because Creative Commons' own FAQ says that publishing a CC BY file through a platform that applies copy protection needs the licensor's express permission, and the App Store does apply it. The full list of what is usable and what looks free but is not is in the message that came with this build.
+WHAT CHANGED
+- The screen before the alarm permission has a single button, Continue. The choice is made in the iOS alert, and the app works with either answer.
+- “Set my first alarm”, the last onboarding button, now opens the alarm editor.
+- Settings keeps only what does something. The app is always dark.
+- Typing: no Check button. The round clears on the keystroke that completes the sentence.
+- Draw: after two misses it says what it saw instead, and offers something else to draw.
+- In Arabic, sums are no longer shown back to front.
+- Deleting an alarm asks first.
 
 WORTH CHECKING
-1. Editor, the sound row: it should say the current tone and 14. Tap it and count the tiles.
-2. Listen to Hornet, Buzzer and Cicada from that screen, and Siren.
-3. Pick one, save, reopen the alarm: it must still be selected.
-4. In Arabic, the same screen: the tiles are mirrored and the names are longer; nothing should be cut off.
+1. Delete the app and install this build. Two screens with Next, then one with Continue and nothing else. Answer the alert either way, then tap “Set my first alarm”: the editor opens, and closing it, saved or not, must leave you on the alarm list.
+2. Set an alarm two minutes ahead, lock the phone, and when it rings press the button with the mission's name.
+3. Next time, press Stop instead: the alarm must come back a minute later.
+4. When an alarm rings, the X in the corner asks before it lets you go; from “Try this mission” it closes at once.
+5. Anything cut off, overlapping or in the wrong language: a screenshot is the best report.

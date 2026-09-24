@@ -37,7 +37,11 @@ struct ShakeMissionView: View {
         .onAppear { monitor.start() }
         .onDisappear { monitor.stop() }
         .onChange(of: monitor.count) { _, count in
-            guard !cleared, count >= target else { return }
+            guard !cleared else { return }
+            guard count >= target else {
+                callbacks.progressed()
+                return
+            }
             cleared = true
             callbacks.cleared()
         }
@@ -87,7 +91,11 @@ struct StepsMissionView: View {
         .onAppear { monitor.start() }
         .onDisappear { monitor.stop() }
         .onChange(of: monitor.steps) { _, steps in
-            guard !cleared, steps >= target else { return }
+            guard !cleared else { return }
+            guard steps >= target else {
+                callbacks.progressed()
+                return
+            }
             cleared = true
             callbacks.cleared()
         }
@@ -123,10 +131,7 @@ struct BreatheMissionView: View {
     }
 
     var body: some View {
-        MissionScaffold(
-            instructionKey: MissionKind.breathe.instructionKey,
-            instruction: localized(stage.labelKey)
-        ) {
+        MissionScaffold(instructionKey: MissionKind.breathe.instructionKey) {
             VStack(spacing: 26) {
                 ZStack {
                     Circle()
@@ -142,7 +147,7 @@ struct BreatheMissionView: View {
                 }
                 .frame(width: 250, height: 250)
 
-                Text(localized("mission.breathe.cycle", cyclesDone + 1, config.breathe.cycles))
+                Text(localized("mission.breathe.cycle", min(cyclesDone + 1, config.breathe.cycles), config.breathe.cycles))
                     .font(Theme.captionFont.monospacedDigit())
                     .foregroundStyle(Theme.textTertiary)
             }
@@ -162,8 +167,9 @@ struct BreatheMissionView: View {
             cyclesDone += 1
             // A cycle done is progress, and this mission needs to say so out loud: brutal is
             // ten cycles of twenty seconds, which outlasts the three minutes the runner buys
-            // on appearing, and the alarm would ring over someone breathing on cue.
-            callbacks.progressed()
+            // on appearing, and the alarm would ring over someone breathing on cue. Not the
+            // last one, which `cleared` reports.
+            if cyclesDone < pattern.cycles { callbacks.progressed() }
         }
         callbacks.cleared()
     }

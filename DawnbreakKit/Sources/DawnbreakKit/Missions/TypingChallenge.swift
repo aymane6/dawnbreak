@@ -50,8 +50,13 @@ public struct TypingChallenge: Hashable, Sendable {
     /// Compares what was typed against the sentence.
     ///
     /// Forgiving about the things a phone keyboard decides for you and unforgiving about
-    /// the rest: case, curly vs straight apostrophes, and runs of whitespace are ignored;
-    /// missing words are not. Trailing punctuation the autocorrect adds is tolerated.
+    /// the rest: case, accents, width, runs of whitespace and every punctuation mark are
+    /// ignored; a missing or misspelt word is not.
+    ///
+    /// Punctuation is left out rather than compared because the sentences carry marks the
+    /// keyboard hides behind a long press: the Russian dash, the French space before a
+    /// semicolon, guillemets. A round that only clears once someone finds one at 06:00 is a
+    /// wall, and the words are what keep a person reading.
     public func accepts(_ typed: String) -> Bool {
         Self.normalise(typed) == Self.normalise(sentence)
     }
@@ -77,18 +82,17 @@ public struct TypingChallenge: Hashable, Sendable {
     }
 
     static func normalise(_ text: String) -> String {
-        text
-            .replacingOccurrences(of: "\u{2019}", with: "'")
-            .replacingOccurrences(of: "\u{2018}", with: "'")
-            .replacingOccurrences(of: "\u{201C}", with: "\"")
-            .replacingOccurrences(of: "\u{201D}", with: "\"")
-            // Folds accents and case together, and folds the width of CJK punctuation,
-            // which is what a Japanese keyboard produces for a full stop.
-            .folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+        // Folds accents and case together, and the width of CJK characters.
+        let folded = text.folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+        // Removed rather than turned into spaces: Chinese and Japanese put no space around a
+        // comma, so a space in its place would be one more thing to type.
+        let unpunctuated = String(String.UnicodeScalarView(
+            folded.unicodeScalars.filter { !CharacterSet.punctuationCharacters.contains($0) }
+        ))
+        return unpunctuated
             .components(separatedBy: .whitespacesAndNewlines)
             .filter { !$0.isEmpty }
             .joined(separator: " ")
-            .trimmingCharacters(in: CharacterSet(charactersIn: ".。!！?？"))
     }
 }
 
@@ -129,6 +133,16 @@ public struct DrawingPrompt: Hashable, Sendable, Identifiable {
 
     public static func random(using generator: inout some RandomNumberGenerator) -> DrawingPrompt {
         all.randomElement(using: &generator)!
+    }
+
+    /// The prompt a classifier label belongs to, so a miss can be explained in the reader's own
+    /// language: "Looked more like: HOUSE" rather than the classifier's English "structure". Nil
+    /// for the great many labels no prompt uses, which have no name in the other eleven.
+    public static func prompt(forLabel label: String) -> DrawingPrompt? {
+        let wanted = canonical(label)
+        return all.first { prompt in
+            ([prompt.visionLabel] + prompt.acceptedLabels).contains { canonical($0) == wanted }
+        }
     }
 
     /// True when any of the classifier's top observations matches this prompt above

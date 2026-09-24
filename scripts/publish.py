@@ -20,9 +20,9 @@ gets sent, so what Apple receives is what the repository shows in a diff. `scrip
 writes those files and `scripts/asc-preflight.py` checks they are current, which makes a stale
 listing a preflight failure rather than a surprise on the store page.
 
-It stops short of one thing on purpose: it does not submit anything for review. Submitting is
-irreversible from a script's point of view, and it is not what "prepare the submission" means. The
-last line prints what is left, which is a person clicking Submit once they have read the page.
+It stops short of one thing on purpose: it does not submit anything for review. Writing the
+listing can be undone and sending it cannot, so sending is `scripts/submit.py`, and the last lines
+here print how to run it once the page has been read.
 
     export ASC_KEY_ID=XXXXXXXXXX
     export ASC_ISSUER_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -42,7 +42,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from asc import BOLD, Client, RESET, app_record, die, good, problem, say, warn
+from asc import BOLD, Client, RESET, SENT_BACK, app_record, die, good, problem, say, warn
 from strings import store
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -650,8 +650,10 @@ def submission(client: Client, app_id: str, version_id: str) -> str:
     and sending it is not, so they are two scripts: `scripts/submit.py` is the one that sends, it
     re-reads the draft rather than trusting this run, and it needs `--send` before it does anything.
     """
+    sent_back = False
     for draft in client.collection(f"/v1/apps/{app_id}/reviewSubmissions?limit=50"):
-        if draft["attributes"]["submittedDate"]:
+        sent_back = draft["attributes"]["state"] == SENT_BACK
+        if draft["attributes"]["submittedDate"] and not sent_back:
             continue
         identifier = draft["id"]
         break
@@ -670,6 +672,10 @@ def submission(client: Client, app_id: str, version_id: str) -> str:
     held = {(item.get("relationships", {}).get("appStoreVersion", {}).get("data") or {}).get("id")
             for item in items}
     if version_id in held:
+        if sent_back:
+            # Still the rejected item, answered by everything written above. `scripts/submit.py
+            # --send` marks it resolved and resubmits this same submission.
+            return f"{len(items)} item sent back by Apple, ready to resubmit"
         return f"{len(items)} item staged, ready to send"
 
     status, payload = client.call("POST", "/v1/reviewSubmissionItems", {"data": {
@@ -690,7 +696,7 @@ def submission(client: Client, app_id: str, version_id: str) -> str:
 def content_rights(client: Client, app_id: str) -> str:
     """Whether the app ships anything somebody else owns.
 
-    It does not, and that is a fact about this repository rather than an opinion: the eight alarm
+    It does not, and that is a fact about this repository rather than an opinion: the fourteen alarm
     tones are synthesised by `scripts/make-sounds.swift`, the icon by `scripts/make-icon.swift`,
     there is no bundled font, and `DawnbreakKit` declares no package dependencies. Left unanswered
     this alone blocks the submission, and it is not a question a person needs to weigh.

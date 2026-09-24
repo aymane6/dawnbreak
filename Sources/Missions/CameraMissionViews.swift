@@ -59,7 +59,7 @@ struct PhotoMissionView: View {
                             Text("mission.photo.holdStill", bundle: .main)
                         }
                         .font(Theme.captionFont)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onAccent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
                         .background(Theme.success.opacity(0.9), in: .capsule)
@@ -84,11 +84,15 @@ struct PhotoMissionView: View {
 
     /// What the classifier currently thinks it is looking at, so a user standing in front of
     /// the wrong object is not left guessing why nothing is happening.
+    ///
+    /// In English only. The classifier's labels are English, and "Détecté : coffee_mug" is a
+    /// debugging line, not a hint; the other eleven languages keep the plain instruction.
     private var hintText: String {
-        guard let best = recogniser.bestLabel, best.confidence > 0.15 else {
+        guard let best = recogniser.bestLabel, best.confidence > 0.15,
+              Bundle.main.preferredLocalizations.first?.hasPrefix("en") == true else {
             return localized("mission.photo.searching")
         }
-        return localized("mission.photo.seeing", best.label)
+        return localized("mission.photo.seeing", best.label.replacingOccurrences(of: "_", with: " "))
     }
 
     private func watchForMatch() async {
@@ -210,7 +214,11 @@ struct SquatsMissionView: View {
         .task { await counter.start() }
         .onDisappear { counter.stop() }
         .onChange(of: counter.count) { _, count in
-            guard !cleared, count >= config.squatTarget else { return }
+            guard !cleared else { return }
+            guard count >= config.squatTarget else {
+                callbacks.progressed()
+                return
+            }
             cleared = true
             counter.stop()
             callbacks.cleared()

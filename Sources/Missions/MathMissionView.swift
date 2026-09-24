@@ -25,22 +25,19 @@ struct MathMissionView: View {
     var body: some View {
         MissionScaffold(instructionKey: MissionKind.math.instructionKey) {
             VStack(spacing: 18) {
-                Text(verbatim: challenge.prompt(in: locale))
+                // Left to right even in Arabic, like the keypad under it and every calculator on
+                // the platform. The layout direction alone does not do it: `displayPrompt` says why
+                // the string itself has to carry the direction.
+                Text(verbatim: challenge.displayPrompt(in: locale))
                     .font(Theme.clock(46))
                     .foregroundStyle(Theme.textPrimary)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .padding(.horizontal, 20)
-                    // Left to right even in Arabic, which is not cosmetic: bidi lays a run of
-                    // Arabic-Indic numbers out right to left, so "٩ − ٢" would appear as "٢ − ٩"
-                    // and someone answering the problem in front of them would type −7. Every
-                    // calculator on the platform, Apple's included, writes arithmetic this way.
                     .environment(\.layoutDirection, .leftToRight)
                     .accessibilityLabel(Text(verbatim: challenge.prompt(in: locale)))
 
-                Text(verbatim: typed.isEmpty ? "—" : typed.localizedDigits(in: locale))
-                    .font(Theme.clock(56))
-                    .foregroundStyle(wrong ? Theme.danger : Theme.accent)
+                answer
                     .frame(minWidth: 140, minHeight: 72)
                     .background(Theme.surface, in: .rect(cornerRadius: Theme.Metric.controlRadius))
                     .overlay(
@@ -58,6 +55,22 @@ struct MathMissionView: View {
                 onDelete: deleteLast,
                 onSubmit: submit
             )
+        }
+    }
+
+    /// A caret until the first key, then the digits, isolated left to right so an Arabic minus
+    /// stays in front of the number the way the keypad typed it. Not a dash for "nothing yet": on
+    /// the difficulties that allow a negative answer, a dash in the answer box reads as a minus
+    /// that was never typed.
+    @ViewBuilder private var answer: some View {
+        if typed.isEmpty {
+            Capsule()
+                .fill(wrong ? Theme.danger : Theme.textTertiary)
+                .frame(width: 3, height: 44)
+        } else {
+            Text(verbatim: "\u{2066}" + typed.localizedDigits(in: locale) + "\u{2069}")
+                .font(Theme.clock(56))
+                .foregroundStyle(wrong ? Theme.danger : Theme.accent)
         }
     }
 
@@ -122,17 +135,17 @@ struct Keypad: View {
                 if allowsNegative {
                     key("−", accessibilityKey: "keypad.negative") { onDigit("-") }
                 } else {
-                    key("⌫", accessibilityKey: "keypad.delete", tint: Theme.textSecondary, action: onDelete)
+                    deleteKey
                 }
                 key("0") { onDigit("0") }
                 if allowsNegative {
-                    key("⌫", accessibilityKey: "keypad.delete", tint: Theme.textSecondary, action: onDelete)
+                    deleteKey
                 } else {
                     Button(action: onSubmit) {
                         Image(systemName: "checkmark")
                             .font(.system(size: 22, weight: .bold))
                             .frame(maxWidth: .infinity, minHeight: 58)
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onAccent)
                             .background(Theme.dawnGradient)
                             .clipShape(.rect(cornerRadius: 14))
                     }
@@ -144,13 +157,31 @@ struct Keypad: View {
                     Image(systemName: "checkmark")
                         .font(.system(size: 20, weight: .bold))
                         .frame(maxWidth: .infinity, minHeight: 52)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onAccent)
                         .background(Theme.dawnGradient)
                         .clipShape(.rect(cornerRadius: 14))
                 }
                 .accessibilityLabel(Text("keypad.submit", bundle: .main))
             }
         }
+        // Not mirrored in Arabic. A number pad is a physical layout, one to nine from the top
+        // left, on the passcode screen and in the Phone app alike; mirrored, it also put the
+        // delete key where a right-handed thumb confirms.
+        .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private var deleteKey: some View {
+        Button {
+            Haptics.tap()
+            onDelete()
+        } label: {
+            Image(systemName: "delete.backward")
+                .font(.system(size: 22, weight: .semibold))
+                .frame(maxWidth: .infinity, minHeight: 58)
+                .foregroundStyle(Theme.textSecondary)
+                .background(Theme.surfaceRaised, in: .rect(cornerRadius: 14))
+        }
+        .accessibilityLabel(Text("keypad.delete", bundle: .main))
     }
 
     private func key(

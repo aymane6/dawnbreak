@@ -4,15 +4,17 @@ import SwiftUI
 /// Retype a sentence.
 ///
 /// The sentence comes out of the string catalog, so a Japanese user retypes Japanese. The
-/// comparison is `TypingChallenge`'s, which forgives case, accents and the curly apostrophe
-/// the keyboard substitutes, and forgives nothing else.
+/// comparison is `TypingChallenge`'s, which forgives case, accents, width, spacing and
+/// punctuation, and forgives nothing else: every word has to be there and spelt right.
+/// There is no Check button: the round clears on the keystroke that completes the sentence,
+/// so a button could only ever say no.
 struct TypingMissionView: View {
     let config: MissionConfig
     let callbacks: MissionCallbacks
 
     @State private var challenge: TypingChallenge
     @State private var typed = ""
-    @State private var isFocused = false
+    @State private var cleared = false
     @FocusState private var fieldFocus: Bool
 
     init(config: MissionConfig, callbacks: MissionCallbacks) {
@@ -60,24 +62,13 @@ struct TypingMissionView: View {
                 )
                 .padding(.horizontal, Theme.Metric.gutter)
                 .onChange(of: typed) { _, new in
-                    guard challenge.accepts(new) else { return }
+                    // Deleting the character typed after the last one matches again.
+                    guard !cleared, challenge.accepts(new) else { return }
+                    cleared = true
                     fieldFocus = false
                     callbacks.cleared()
                 }
             }
-        } control: {
-            Button {
-                guard !typed.isEmpty else { return }
-                if challenge.accepts(typed) {
-                    callbacks.cleared()
-                } else {
-                    typed = ""
-                    callbacks.mistake()
-                }
-            } label: {
-                Text("mission.typing.check", bundle: .main)
-            }
-            .buttonStyle(DawnButtonStyle())
         }
         .task {
             // A short delay: focusing immediately races the full-screen cover's own

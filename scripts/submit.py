@@ -24,12 +24,15 @@ have answered with days later, or worse, accepted.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from asc import BOLD, Client, RESET, app_record, bad, die, good, problem, say
+from asc import BOLD, Client, RESET, SENT_BACK, app_record, bad, die, good, problem, say
+
+PROJECT = Path(__file__).resolve().parent.parent / "project.yml"
 
 # Apple reviews a version in one of these states and refuses one in any other. `READY_FOR_REVIEW` is
 # what a staged-but-unsent version reads as, and is the expected value here.
@@ -37,23 +40,47 @@ SENDABLE = {"READY_FOR_REVIEW", "PREPARE_FOR_SUBMISSION", "DEVELOPER_REJECTED", 
             "METADATA_REJECTED", "INVALID_BINARY"}
 
 
+def built_here() -> str:
+    """`CURRENT_PROJECT_VERSION` out of project.yml: the build number this checkout makes.
+
+    A rejected version keeps the build it was rejected with until another is attached, and
+    `publish.py` attaches the newest one Apple has finished processing. Run while the new upload is
+    still processing, it attaches the old one again, and sending that is a second rejection for the
+    same reason, days later.
+    """
+    found = re.search(r'CURRENT_PROJECT_VERSION:\s*"?([0-9]+)"?', PROJECT.read_text(encoding="utf-8"))
+    if not found:
+        die("no CURRENT_PROJECT_VERSION in project.yml")
+    return found.group(1)
+
+
 def draft(client: Client, app_id: str) -> dict:
-    """The one un-submitted review submission, or the reason there is nothing to send."""
+    """The one review submission to send, or the reason there is nothing to send.
+
+    Either a draft nobody has sent yet, or one Apple sent back with a rejected item, which is
+    resubmitted rather than replaced: see `SENT_BACK` in asc.py.
+    """
     drafts = [entry for entry in client.collection(f"/v1/apps/{app_id}/reviewSubmissions?limit=50")
-              if not entry["attributes"]["submittedDate"]]
+              if not entry["attributes"]["submittedDate"]
+              or entry["attributes"]["state"] == SENT_BACK]
     if not drafts:
         die("there is no un-submitted draft. Run `python3 scripts/publish.py` first: it writes the\n"
             "  listing and stages the version, which is what this script sends.")
     if len(drafts) > 1:
-        die(f"there are {len(drafts)} un-submitted drafts, which is one too many to guess between:\n"
+        die(f"there are {len(drafts)} drafts waiting to be sent, which is one too many to guess between:\n"
             + "\n".join(f"    {entry['id']}  {entry['attributes']['state']}" for entry in drafts))
     return drafts[0]
 
 
 def contents(client: Client, submission_id: str) -> list[dict]:
-    """What the draft actually holds, resolved to versions rather than item ids."""
-    return client.collection(f"/v1/reviewSubmissions/{submission_id}/items"
-                             "?include=appStoreVersion&limit=50")
+    """What the draft actually holds, resolved to versions rather than item ids.
+
+    Less what was taken out of it: a removed item stays listed, and Apple neither reviews it nor
+    lets it back into the same submission.
+    """
+    return [item for item in client.collection(f"/v1/reviewSubmissions/{submission_id}/items"
+                                               "?include=appStoreVersion&limit=50")
+            if item["attributes"].get("state") != "REMOVED"]
 
 
 def main() -> int:
@@ -79,6 +106,7 @@ def main() -> int:
     # Every item, checked before anything is sent. A draft with a version in the wrong state, or with
     # no build, is a rejection Apple can already see; there is no reason to spend a queue slot on it.
     ready = True
+    rejected = [item["id"] for item in items if item["attributes"].get("state") == "REJECTED"]
     for item in items:
         related = (item.get("relationships", {}).get("appStoreVersion", {}).get("data") or {})
         if not related:
@@ -101,11 +129,19 @@ def main() -> int:
             bad(f"build {build['attributes']['version']} is "
                 f"{build['attributes']['processingState']}, not VALID")
             ready = False
+        elif build["attributes"]["version"] != built_here():
+            bad(f"build {build['attributes']['version']} is attached, and this checkout builds "
+                f"{built_here()}: once build {built_here()} is processed, re-run "
+                "`python3 scripts/publish.py`, which attaches it")
+            ready = False
         else:
             good(f"build {build['attributes']['version']}", "VALID")
 
     if not ready:
         die("nothing was sent.")
+
+    if rejected:
+        good("sent back by Apple", f"{len(rejected)} rejected item, marked resolved by `--send`")
 
     if not arguments.send:
         print()
@@ -113,6 +149,19 @@ def main() -> int:
         return 0
 
     print(f"\n{BOLD}Sending{RESET}")
+    # What the web UI's "Add for Review" does to a rejected item once it has been edited, and the
+    # submission cannot go back while any item is still rejected. Apple takes it once per item before
+    # a resubmission, which is why it waits for `--send` rather than happening in `publish.py`.
+    for item_id in rejected:
+        status, payload = client.call("PATCH", f"/v1/reviewSubmissionItems/{item_id}", {"data": {
+            "type": "reviewSubmissionItems",
+            "id": item_id,
+            "attributes": {"resolved": True}}})
+        if status >= 300:
+            die("Apple would not take the rejected item back, and nothing was sent:\n  "
+                + problem(payload).replace("; ", "\n  "))
+        good("resolved", f"item {item_id}  {payload['data']['attributes'].get('state')}")
+
     status, payload = client.call("PATCH", f"/v1/reviewSubmissions/{submission['id']}", {"data": {
         "type": "reviewSubmissions",
         "id": submission["id"],

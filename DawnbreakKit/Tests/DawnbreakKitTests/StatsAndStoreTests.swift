@@ -107,31 +107,39 @@ struct WakeStatsTests {
         #expect(stats.bestStreak == 1)
     }
 
-    /// The reason `averageWakeMinuteOfDay` is a circular mean: 23:50 and 00:10 average to
-    /// midnight, not to 12:00. A naive arithmetic mean gets this exactly 12 hours wrong,
-    /// and "your average wake time is 12:00" on a 6am alarm is a visible, embarrassing bug.
-    @Test("Wake times either side of midnight average to midnight")
-    func circularMeanAcrossMidnight() throws {
+    /// The reason `usualWakeMinuteOfDay` is measured round the clock: 23:50, 00:05 and 00:10 are
+    /// three mornings within twenty minutes, and the middle one is 00:05. Taken as plain numbers
+    /// they are 5, 10 and 1430, whose median is 00:10 and whose mean is eight in the morning.
+    @Test("Wake times either side of midnight have their middle at midnight")
+    func circularMedianAcrossMidnight() throws {
         let records = [
-            record("2026-03-09 23:50", dismissed: "2026-03-09 23:50"),
+            record("2026-03-08 23:50", dismissed: "2026-03-08 23:50"),
+            record("2026-03-09 00:05", dismissed: "2026-03-09 00:05"),
             record("2026-03-10 00:10", dismissed: "2026-03-10 00:10")
         ]
         let stats = WakeStats.compute(from: records, window: 7, now: day("2026-03-10 09:00"), calendar: utcCalendar)
-        let average = try #require(stats.averageWakeMinuteOfDay)
-        // Within a minute of midnight, from either side.
-        #expect(min(average, 1440 - average) < 1.0)
+        #expect(try #require(stats.usualWakeMinuteOfDay) == 5)
     }
 
-    @Test("A normal spread of morning wake times averages sensibly")
-    func circularMeanMornings() throws {
+    @Test("A normal spread of morning wake times has its middle in the middle")
+    func circularMedianMornings() throws {
         let records = [
             record("2026-03-08 06:30", dismissed: "2026-03-08 06:30"),
             record("2026-03-09 07:00", dismissed: "2026-03-09 07:00"),
             record("2026-03-10 07:30", dismissed: "2026-03-10 07:30")
         ]
         let stats = WakeStats.compute(from: records, window: 7, now: day("2026-03-10 09:00"), calendar: utcCalendar)
-        let average = try #require(stats.averageWakeMinuteOfDay)
-        #expect(abs(average - 420) < 1.0)   // 07:00
+        #expect(try #require(stats.usualWakeMinuteOfDay) == 420)   // 07:00
+    }
+
+    /// Why it is a median at all. Five weekdays at 6:15 and a weekend at 8:30 have a mean of
+    /// 6:54, which is not a time that week ever got up at.
+    @Test("A week of early weekdays and a late weekend usually gets up early")
+    func usualWakeIsNotTheMean() throws {
+        let weekdays = ["03", "04", "05", "06", "09"].map { record("2026-03-\($0) 06:15") }
+        let weekend = ["07", "08"].map { record("2026-03-\($0) 08:30") }
+        let stats = WakeStats.compute(from: weekdays + weekend, window: 7, now: day("2026-03-09 09:00"), calendar: utcCalendar)
+        #expect(try #require(stats.usualWakeMinuteOfDay) == 375)   // 06:15
     }
 
     @Test("Average time-to-dismiss ignores the mornings that were never cleared")
@@ -180,12 +188,48 @@ struct WakeStatsTests {
         #expect(try #require(stats.daily.first(where: { $0.losses > 0 })).losses == 1)
     }
 
-    @Test("Records older than the window are still counted in the totals")
-    func windowDoesNotTruncateTotals() {
-        let records = [record("2025-01-01 07:00"), record("2026-03-10 07:00")]
+    /// The period is the whole screen's, not the chart's. When the totals spanned the log, "7
+    /// days" redrew the chart under a success rate that did not move, which reads as a picker
+    /// that does nothing.
+    @Test("The window scopes every figure")
+    func windowScopesTheFigures() {
+        let records = [
+            record("2026-02-01 07:00", outcome: .bailedOut, mission: .squats, snoozes: 2, dodges: 1),
+            record("2026-03-08 07:00"), record("2026-03-09 07:00"), record("2026-03-10 07:00"),
+        ]
         let stats = WakeStats.compute(from: records, window: 7, now: day("2026-03-10 09:00"), calendar: utcCalendar)
-        #expect(stats.totalWakes == 2)      // totals span the whole log
-        #expect(stats.daily.count == 7)     // the chart does not
+        #expect(stats.totalWakes == 3)
+        #expect(stats.successRate == 1)
+        #expect(stats.totalSnoozes == 0)
+        #expect(stats.totalDodges == 0)
+        #expect(stats.byMission[.squats] == nil)
+        #expect(stats.daily.count == 7)
+    }
+
+    /// The window's first day is inside it: seven days ending today is today and the six before.
+    @Test("The window's edges are the days it names")
+    func windowEdges() {
+        let records = [record("2026-03-03 23:59", outcome: .bailedOut), record("2026-03-04 00:00")]
+        let stats = WakeStats.compute(from: records, window: 7, now: day("2026-03-10 09:00"), calendar: utcCalendar)
+        #expect(stats.totalWakes == 1)
+        #expect(stats.wins == 1)
+    }
+
+    @Test("A streak that began before the window is counted whole")
+    func streakOutlivesTheWindow() {
+        let records = (1...10).map { record(String(format: "2026-03-%02d 07:00", $0)) }
+        let stats = WakeStats.compute(from: records, window: 7, now: day("2026-03-10 09:00"), calendar: utcCalendar)
+        #expect(stats.totalWakes == 7)
+        #expect(stats.currentStreak == 10)
+        #expect(stats.bestStreak == 10)
+    }
+
+    @Test("A log with nothing in the window reads as an empty window, not an empty log")
+    func emptyWindow() {
+        let stats = WakeStats.compute(from: [record("2026-01-10 07:00")], window: 7, now: day("2026-03-10 09:00"), calendar: utcCalendar)
+        #expect(stats.totalWakes == 0)
+        #expect(stats.daily.count == 7)
+        #expect(stats.daily.allSatisfy { !$0.hasAlarm })
     }
 
     @Test("Outcomes agree about what counts as a win")
@@ -254,6 +298,84 @@ struct StoreTests {
         for i in 0..<5 { try store.save(Box(value: "v\(i)")) }
         let files = try FileManager.default.contentsOfDirectory(atPath: directory.path)
         #expect(files == ["box.json"])
+    }
+
+    /// Stands in for the data-protection class, which keeps the files closed after a
+    /// restart until the phone is first unlocked. Mode 000 fails the read the same way and
+    /// still lets the directory be renamed into, so a write that should not happen would.
+    private func makeUnreadable(_ url: URL) throws {
+        try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: url.path)
+    }
+
+    private func makeReadable(_ url: URL) throws {
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: url.path)
+    }
+
+    @Test("A file that cannot be read yet is left in place, not quarantined")
+    func unreadableFileLeftInPlace() throws {
+        let directory = temporaryDirectory()
+        let url = directory.appendingPathComponent("box.json")
+        let store = JSONFileStore(url: url, fallback: { Box(value: "fallback") })
+        try store.save(Box(value: "kept"))
+        try makeUnreadable(url)
+        defer { try? makeReadable(url) }
+
+        #expect(store.loadIfReadable() == nil)
+        #expect(store.load() == Box(value: "fallback"))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path) == ["box.json"])
+
+        try makeReadable(url)
+        #expect(store.loadIfReadable() == Box(value: "kept"))
+    }
+
+    /// The morning this protects: the phone restarted for an update at 03:00, the alarm
+    /// rings at 06:00 and its Stop button launches the app before anyone has unlocked it.
+    @MainActor
+    @Test("An alarm list that cannot be read yet is never written over, and loads once it can be")
+    func unreadableAlarmListSurvives() throws {
+        let directory = temporaryDirectory()
+        let url = directory.appendingPathComponent("alarms.json")
+        AlarmStore(directory: directory).upsert(AlarmDraft(hour: 6, minute: 30, label: "kept"))
+        try makeUnreadable(url)
+        defer { try? makeReadable(url) }
+
+        let early = AlarmStore(directory: directory)
+        #expect(early.isUnread)
+        #expect(early.alarms.isEmpty)
+        early.upsert(AlarmDraft(hour: 9, minute: 0, label: "written blind"))
+        #expect(early.lastError?.messageKey == "error.saveFailed")
+
+        try makeReadable(url)
+        #expect(try FileManager.default.contentsOfDirectory(atPath: directory.path) == ["alarms.json"])
+        #expect(AlarmStore(directory: directory).alarms.map(\.label) == ["kept"])
+
+        early.reloadIfUnread()
+        #expect(!early.isUnread)
+        #expect(early.alarms.map(\.label) == ["kept"])
+    }
+
+    @MainActor
+    @Test("A wake log that cannot be read yet keeps its history and the morning logged meanwhile")
+    func unreadableWakeLogMerges() throws {
+        let directory = temporaryDirectory()
+        let url = directory.appendingPathComponent("wake-log.json")
+        let older = WakeRecord(alarmID: UUID(), scheduledFor: Date(timeIntervalSince1970: 1), outcome: .completed, mission: .math, difficulty: .easy)
+        WakeLogStore(directory: directory).append(older)
+        try makeUnreadable(url)
+        defer { try? makeReadable(url) }
+
+        let early = WakeLogStore(directory: directory)
+        #expect(early.isUnread)
+        let meanwhile = WakeRecord(alarmID: UUID(), scheduledFor: Date(timeIntervalSince1970: 2), outcome: .completed, mission: .math, difficulty: .easy)
+        early.append(meanwhile)
+
+        try makeReadable(url)
+        #expect(WakeLogStore(directory: directory).records.map(\.id) == [older.id])
+
+        early.reloadIfUnread()
+        #expect(!early.isUnread)
+        #expect(early.records.map(\.id) == [older.id, meanwhile.id])
+        #expect(WakeLogStore(directory: directory).records.map(\.id) == [older.id, meanwhile.id])
     }
 
     @MainActor

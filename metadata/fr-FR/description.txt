@@ -1,46 +1,55 @@
-Vous ne dormez pas trop parce que votre réveil est trop discret. Vous dormez trop parce que l’arrêter demande un pouce, une demi-seconde, et aucune réflexion.
+Vous ne dormez pas trop parce que votre réveil est trop discret. Vous dormez trop parce que l’arrêter demande un pouce, une demi-seconde et aucune réflexion.
 
-Dawnbreak retire le pouce de l’équation. Pour faire taire l’alarme, il faut faire quelque chose qu’une personne endormie ne peut pas faire : aller dans la cuisine et photographier la bouilloire, enchaîner dix squats face caméra, résoudre un calcul qui vous paraîtrait facile à midi, scanner le code-barres d’une boîte laissée dans une autre pièce.
+Dawnbreak retire le pouce de l’équation. Pour arrêter l’alarme, vous accomplissez une mission : aller dans la cuisine et pointer l’appareil photo vers la bouilloire, enchaîner huit squats face à la caméra, résoudre un calcul qui vous paraîtrait facile à midi, scanner le code-barres d’une boîte dans une autre pièce.
 
-Quand le silence revient, vous êtes debout.
+Arrêtée sans la mission, elle sonne de nouveau une minute plus tard.
 
 DOUZE MISSIONS
 
-- Calcul : des opérations chronométrées, calibrées sur la difficulté choisie
-- Squats : comptés par la caméra, pas par vous
-- Photo : allez photographier un objet précis, à un endroit précis
-- Code-barres : scannez la boîte laissée dans la salle de bain hier soir
-- Secouer : continuez jusqu’à remplir la barre
-- Pas : marchez un nombre de pas défini, comptés par le téléphone
-- Séquence : répétez une suite qui s’allonge à chaque manche
-- Saisie : recopiez une phrase, à l’identique, ponctuation comprise
-- Dessin : dessinez ce qui est demandé, et c’est vérifié
-- Mémoire : retrouvez les paires
-- Respiration : soixante secondes de souffle posé avant d’être libéré
-- Immobilité : gardez le téléphone droit et immobile, plus longtemps que vous ne voudriez
+- Calcul : du calcul mental à la mesure de la difficulté. Seuls Difficile et Brutal sont chronométrés, et une mauvaise réponse amène un nouveau calcul
+- Mémoire : repérez les cases qui s’allument, puis touchez les mêmes
+- Séquence : reproduisez une suite de touches colorées qui s’allonge d’une touche par réussite
+- Frappe : recopiez une phrase mot pour mot, d’une ligne courte en Facile à une longue phrase en Brutal. Majuscules, accents et ponctuation ne comptent pas
+- Secouer : de 15 à 100 secousses
+- Pas : de 20 à 200 pas, comptés par le téléphone
+- Squats : 3, 8, 15 ou 25, comptés par la caméra avant, sur l’appareil
+- Photo : enregistrez un objet une fois, la bouilloire par exemple. Le matin, cadrez un objet du même genre. La reconnaissance, faite sur l’appareil, vérifie ce qu’est l’objet, pas où il se trouve
+- Code-barres : enregistrez un code-barres ou un QR code, sur une boîte dans une autre pièce par exemple, puis scannez-le
+- Dessin : dessinez ce qui vous est demandé, la reconnaissance sur l’appareil vérifie
+- Battement : un jeu de vol à un pouce. Franchissez de 2 à 15 passages
+- Respiration : respiration guidée, de 3 à 10 cycles, d’environ 30 secondes à plus de trois minutes
+
+AUSSI DUR QUE NÉCESSAIRE
+
+- Quatre difficultés : Facile, Moyen, Difficile et Brutal
+- Jusqu’à dix manches de la même mission
+- Jusqu’à trois missions de plus dans la matinée : chacune sonne de 1 à 60 minutes après la réussite de la précédente
+- Rappel de 1 à 30 minutes, autant de fois que vous l’autorisez, ou pas du tout
+- Quatorze sonneries, de la plus douce à la plus féroce
+- Essayez d’abord une mission depuis l’éditeur d’alarme, en silence et sans rien programmer. Mieux vaut découvrir à 14 h ce que veut dire Brutal
 
 ELLE N’ABANDONNE PAS
 
-Arrêtez l’alarme sans finir la mission et elle revient une minute plus tard, sur l’écran verrouillé, avec un titre qui dit pourquoi. Réglez autant de manches qu’il faut : une pour un jour de semaine, dix pour le matin d’un avion.
-
-Elle sonne sur l’écran verrouillé via le système d’alarmes d’Apple, donc app fermée, téléphone verrouillé, mode Ne pas déranger actif. Il existe une sortie d’urgence, dans les réglages, activée par défaut, parce qu’une alarme impossible à arrêter est un danger et non une fonctionnalité.
+- Le mode Implacable est activé pour chaque nouvelle alarme : arrêtée sans finir la mission, elle sonne de nouveau une minute plus tard sur l’écran verrouillé, sous le titre « Mission non terminée »
+- Fermer l’app ne sert à rien : tant que la mission n’est pas faite, la prochaine sonnerie est déjà programmée
+- Elle sonne comme une alarme système, via AlarmKit : app fermée, téléphone verrouillé, en mode silencieux et dans tous les modes de concentration, Ne pas déranger compris. iOS 26 requis
+- Il y a toujours une issue. La croix dans le coin de chaque écran de mission demande confirmation, puis arrête l’alarme et note la matinée comme un abandon, parce qu’une alarme impossible à arrêter est un danger, pas une fonctionnalité
 
 CHAQUE MATIN, NOTÉ
 
-Quatre-vingt-dix jours de ce qui s’est réellement passé : l’heure du lever, la durée de la mission, votre série, et chaque matin où vous avez arrêté l’alarme sans faire la mission. Les chiffres ne flattent pas, volontairement. C’est ce qui les rend utiles.
+Jusqu’à 90 jours d’heures de réveil, de durées de mission, de séries et de rappels, avec les matins où vous l’avez arrêtée sans la mission. Les chiffres ne flattent pas, exprès. C’est ce qui les rend utiles.
 
 FAIT SÉRIEUSEMENT
 
-- Douze langues, dont l’arabe de droite à gauche, traduites et non passées à la machine
-- Sombre par défaut, parce que cet écran se lit à six heures du matin
-- Un widget d’écran verrouillé avec la prochaine alarme
-- Prise en charge complète de VoiceOver et du texte dynamique
-- Sans compte. Sans connexion. Sans publicité. Sans analytique
-- Rien ne quitte le téléphone. Il n’y a aucun serveur où aller
+- Douze langues, dont l’arabe, affiché de droite à gauche
+- Sombre de bout en bout, parce que vous lisez cet écran à 6 h
+- Un widget avec la prochaine alarme, pour l’écran verrouillé et l’écran d’accueil
+- Ni compte, ni connexion, ni publicité, ni analytique
+- Rien ne quitte le téléphone. Il n’y a aucun serveur où l’envoyer
 
 GRATUIT, EN ENTIER
 
-Toutes les missions, toutes les difficultés, jusqu’à dix manches, autant d’alarmes que votre semaine en demande, quatre-vingt-dix jours d’historique. Il n’y a rien à acheter : aucun abonnement, aucune publicité, aucun compte.
+Toutes les missions, difficultés et sonneries, dès le premier lancement. Rien à acheter : ni abonnement, ni publicité, ni compte.
 
 Confidentialité : https://dawnbreak.app/privacy.html
 Conditions d’utilisation : https://dawnbreak.app/terms.html

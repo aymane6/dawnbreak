@@ -22,6 +22,10 @@ enum Theme {
     static let dawnStart = Color(hex: 0xFFA24B)
     static let dawnEnd = Color(hex: 0xFF5E62)
     static let accent = Color(hex: 0xFF7F52)
+    /// The ink for anything drawn on the accent or the gradient. Near-black, not white: white
+    /// on this orange is 2.5:1 and on the amber end of the gradient 2:1, far under the 4.5:1
+    /// WCAG AA asks of text, where this reads 6.5:1 at the coral end and better everywhere else.
+    static let onAccent = Color(hex: 0x0B0D14)
 
     /// Twilight violet, used only by the stats screen so charts never compete with the
     /// primary action for attention.
@@ -29,7 +33,9 @@ enum Theme {
 
     static let textPrimary = Color(hex: 0xF6F4F1)
     static let textSecondary = Color(hex: 0x9BA0B5)
-    static let textTertiary = Color(hex: 0x666C82)
+    /// Lighter than it looks like it needs to be: this is the hint and caption colour, and
+    /// anything darker falls under 4.5:1 on `surfaceRaised`, which is where most hints sit.
+    static let textTertiary = Color(hex: 0x8A90A6)
 
     static let success = Color(hex: 0x4BD69C)
     static let warning = Color(hex: 0xFFC24B)
@@ -111,12 +117,13 @@ struct Card<Content: View>: View {
 /// The one prominent button in the app. Uses the dawn gradient, full width, and a large
 /// touch target, because at 06:00 the primary action has to be unmissable.
 struct DawnButtonStyle: ButtonStyle {
-    var isEnabled = true
+    /// Read from the environment, so `.disabled(_:)` is all a caller has to say.
+    @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Theme.headlineFont)
-            .foregroundStyle(.white)
+            .foregroundStyle(isEnabled ? Theme.onAccent : Theme.textTertiary)
             .frame(maxWidth: .infinity, minHeight: 56)
             .background {
                 if isEnabled {
@@ -149,5 +156,32 @@ extension View {
     /// runs under the status bar.
     func dawnCanvas() -> some View {
         background(Theme.canvasGradient.ignoresSafeArea())
+    }
+
+    /// The small tracked capitals over a group or a readout, in the languages whose script has
+    /// capitals.
+    ///
+    /// Only there, because everywhere else it does harm and no good. Arabic and Devanagari are
+    /// joined scripts that tracking pulls apart: Arabic letters lose their connections and a Hindi
+    /// word its head line. Neither has a case to change, and nor do Chinese, Japanese or Korean.
+    func eyebrow(tracking: CGFloat) -> some View {
+        modifier(Eyebrow(tracking: tracking))
+    }
+}
+
+private struct Eyebrow: ViewModifier {
+    let tracking: CGFloat
+    @Environment(\.locale) private var locale
+
+    /// The shipped languages written without letter case. Any other is assumed to have it, which
+    /// holds for every Latin and Cyrillic language the app could add next.
+    private static let caseless: Set<String> = ["ar", "hi", "ja", "ko", "zh"]
+
+    @ViewBuilder func body(content: Content) -> some View {
+        if Self.caseless.contains(locale.language.languageCode?.identifier ?? "") {
+            content
+        } else {
+            content.textCase(.uppercase).tracking(tracking)
+        }
     }
 }

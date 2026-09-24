@@ -12,9 +12,12 @@ public struct WakeStats: Hashable, Sendable {
     public var bestStreak: Int
     /// Seconds, averaged over records that were actually cleared.
     public var averageSecondsToDismiss: Double?
-    /// Average clock time of a successful dismissal, as minutes past midnight. Averaging
-    /// clock times naively is wrong across midnight, so this uses the circular mean.
-    public var averageWakeMinuteOfDay: Double?
+    /// The clock time a successful dismissal usually happens at, as minutes past midnight: the
+    /// median of the cleared mornings, measured round the clock. The median, because most logs
+    /// hold two kinds of morning: weekdays at 6:15 and weekends at 8:30 averaged to 6:55, a time
+    /// that log never once got up at, under a label that says "usual". Round the clock, so 23:50
+    /// and 00:10 are twenty minutes apart rather than most of a day.
+    public var usualWakeMinuteOfDay: Double?
     public var totalSnoozes: Int
     public var totalDodges: Int
     public var byMission: [MissionKind: MissionTally]
@@ -42,13 +45,15 @@ public struct WakeStats: Hashable, Sendable {
 
     public static let empty = WakeStats(
         totalWakes: 0, wins: 0, currentStreak: 0, bestStreak: 0,
-        averageSecondsToDismiss: nil, averageWakeMinuteOfDay: nil,
+        averageSecondsToDismiss: nil, usualWakeMinuteOfDay: nil,
         totalSnoozes: 0, totalDodges: 0, byMission: [:], daily: []
     )
 
     /// - Parameters:
     ///   - records: the whole log; order does not matter.
-    ///   - window: how many days the daily series covers, ending on `now`'s day.
+    ///   - window: how many days every figure covers, ending on `now`'s day. The streaks are
+    ///     the exception and walk the whole log: a run that began before the window is still
+    ///     the run, and a record is a record.
     ///   - now: injected so the tests do not depend on the machine clock.
     public static func compute(
         from records: [WakeRecord],
@@ -59,13 +64,11 @@ public struct WakeStats: Hashable, Sendable {
         guard !records.isEmpty else { return withEmptyDays(window: window, now: now, calendar: calendar) }
 
         var stats = WakeStats.empty
-        stats.totalWakes = records.count
+        let today = calendar.startOfDay(for: now)
+        let firstDay = calendar.date(byAdding: .day, value: 1 - max(1, window), to: today) ?? today
 
         var dismissDurations: [Double] = []
-        // Circular mean: each wake time becomes a unit vector on the 24h circle and the
-        // vectors are summed. This is what makes 23:50 and 00:10 average to midnight
-        // rather than to noon.
-        var sinSum = 0.0, cosSum = 0.0, angleCount = 0
+        var wakeMinutes: [Double] = []
         var tallies: [MissionKind: (attempts: Int, wins: Int, seconds: [Double])] = [:]
         /// Day-of-win set, keyed by the start of the local day, for the streak walk.
         var winDays = Set<Date>()
@@ -73,6 +76,10 @@ public struct WakeStats: Hashable, Sendable {
 
         for record in records {
             let day = calendar.startOfDay(for: record.scheduledFor)
+            if record.outcome.isWin { winDays.insert(day) }
+            guard day >= firstDay else { continue }
+
+            stats.totalWakes += 1
             var tally = tallies[record.mission] ?? (0, 0, [])
             tally.attempts += 1
 
@@ -84,7 +91,6 @@ public struct WakeStats: Hashable, Sendable {
             if record.outcome.isWin {
                 stats.wins += 1
                 tally.wins += 1
-                winDays.insert(day)
                 bucket.wins += 1
 
                 if let seconds = record.secondsToDismiss {
@@ -94,8 +100,7 @@ public struct WakeStats: Hashable, Sendable {
                 if let dismissedAt = record.dismissedAt {
                     let parts = calendar.dateComponents([.hour, .minute], from: dismissedAt)
                     let minuteOfDay = Double((parts.hour ?? 0) * 60 + (parts.minute ?? 0))
-                    let angle = minuteOfDay / 1440 * 2 * .pi
-                    sinSum += sin(angle); cosSum += cos(angle); angleCount += 1
+                    wakeMinutes.append(minuteOfDay)
                     bucket.minutes.append(minuteOfDay)
                 }
             } else {
@@ -109,12 +114,7 @@ public struct WakeStats: Hashable, Sendable {
         if !dismissDurations.isEmpty {
             stats.averageSecondsToDismiss = dismissDurations.reduce(0, +) / Double(dismissDurations.count)
         }
-        if angleCount > 0 {
-            // atan2 handles the quadrant; the modulo brings a negative angle back onto 0…2π.
-            var mean = atan2(sinSum / Double(angleCount), cosSum / Double(angleCount))
-            if mean < 0 { mean += 2 * .pi }
-            stats.averageWakeMinuteOfDay = mean / (2 * .pi) * 1440
-        }
+        stats.usualWakeMinuteOfDay = circularMedian(wakeMinutes)
 
         stats.byMission = tallies.mapValues { tally in
             MissionTally(
@@ -160,6 +160,26 @@ public struct WakeStats: Hashable, Sendable {
             previous = day
         }
         return best
+    }
+
+    // MARK: - Wake time
+
+    /// The recorded time closest, round the clock, to all the others: a median on a circle,
+    /// picked from the times themselves, so it is always a morning that happened. Quadratic, over
+    /// at most a quarter of mornings. Sorted first, so a tie, which an even count can produce,
+    /// goes to the earlier time on every run.
+    static func circularMedian(_ minutes: [Double]) -> Double? {
+        let sorted = minutes.sorted()
+        let spread = sorted.map { candidate in
+            (candidate, sorted.reduce(0) { total, other in total + clockDistance(candidate, other) })
+        }
+        return spread.min { $0.1 < $1.1 }?.0
+    }
+
+    /// Minutes between two times of day, the short way round.
+    static func clockDistance(_ first: Double, _ second: Double) -> Double {
+        let apart = abs(first - second).truncatingRemainder(dividingBy: 1440)
+        return min(apart, 1440 - apart)
     }
 
     // MARK: - Series

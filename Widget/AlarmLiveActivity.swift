@@ -124,7 +124,7 @@ private struct MissionSummary: View {
         HStack(spacing: 10) {
             Image(systemName: metadata.mission.systemImage)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.onAccent)
                 .frame(width: 30, height: 30)
                 .background(Theme.dawnGradient, in: .circle)
 

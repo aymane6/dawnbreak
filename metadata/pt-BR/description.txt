@@ -1,46 +1,55 @@
 Você não dorme demais porque o alarme é baixo. Você dorme demais porque desligá-lo custa um polegar, meio segundo e nenhum pensamento.
 
-O Dawnbreak tira o polegar da conta. Para silenciar o alarme você tem que fazer algo que uma pessoa dormindo não consegue: ir até a cozinha e fotografar a chaleira, fazer dez agachamentos na frente da câmera, resolver contas que ao meio-dia pareceriam fáceis, escanear o código de barras de uma caixa em outro quarto.
+O Dawnbreak tira o polegar da conta. Para desligar o alarme, você cumpre uma missão: ir até a cozinha e apontar a câmera para a chaleira, fazer oito agachamentos na frente da câmera, resolver contas que ao meio-dia pareceriam fáceis, escanear o código de barras de uma caixa em outro cômodo.
 
-Quando o silêncio chega, você já está de pé.
+Desligou sem fazer a missão? Um minuto depois ele toca de novo.
 
 DOZE MISSÕES
 
-- Cálculo: contas com tempo limite, no tamanho da dificuldade escolhida
-- Agachamentos: quem conta é a câmera, não você
-- Foto: vá fotografar um objeto específico, em um lugar específico
-- Código de barras: escaneie a caixa que você deixou no banheiro ontem à noite
-- Sacudir: continue sacudindo até a barra encher
-- Passos: caminhe um número definido de passos, contados pelo telefone
-- Sequência: repita uma série que fica mais longa a cada rodada
-- Digitação: copie uma frase, igual, com pontuação e tudo
-- Desenho: desenhe o que for pedido, e ele verifica
-- Memória: encontre os pares
-- Respiração: sessenta segundos de respiração calma antes de ser liberado
-- Firmeza: mantenha o telefone em pé e imóvel, mais tempo do que você gostaria
+- Cálculo: contas de cabeça no tamanho da dificuldade. Só Difícil e Brutal têm limite de tempo, e uma resposta errada traz uma conta nova
+- Memória: veja quais quadrados acendem e toque nos mesmos
+- Sequência: repita uma série de botões coloridos que cresce um a cada acerto
+- Digitação: redigite uma frase palavra por palavra, de uma linha curta no Fácil a uma frase longa no Brutal. Maiúsculas, acentos e pontuação não contam
+- Agitar: de 15 a 100 sacudidas
+- Passos: de 20 a 200 passos, contados pelo telefone
+- Agachamentos: 3, 8, 15 ou 25, contados pela câmera frontal, no próprio aparelho
+- Foto: cadastre um objeto uma vez, a chaleira, por exemplo. De manhã, aponte a câmera para um parecido. O reconhecimento roda no aparelho e confere o que o objeto é, não onde ele está
+- Código de barras: cadastre um código de barras ou QR code, numa caixa em outro cômodo, por exemplo, e depois escaneie
+- Desenho: desenhe o que for pedido, e o reconhecimento no aparelho confere
+- Voo: um jogo de voar com um polegar só. Passe por 2 a 15 vãos
+- Respirar: respiração guiada, de 3 a 10 ciclos, de uns 30 segundos a mais de três minutos
+
+TÃO DIFÍCIL QUANTO VOCÊ PRECISAR
+
+- Quatro dificuldades: Fácil, Médio, Difícil e Brutal
+- Até dez rodadas da mesma missão
+- Até mais três missões ao longo da manhã, cada uma tocando de 1 a 60 minutos depois que você concluir a anterior
+- Soneca de 1 a 30 minutos, quantas vezes você permitir, ou nenhuma
+- Catorze toques de alarme, dos suaves aos impiedosos
+- Teste uma missão antes, no editor do alarme, em silêncio e sem nada agendado. Duas da tarde é uma boa hora para descobrir o que Brutal quer dizer
 
 ELE NÃO DESISTE
 
-Pare o alarme sem terminar a missão e ele volta um minuto depois, na tela bloqueada, com um título que diz por quê. Coloque quantas rodadas precisar: uma para um dia de semana, dez para a manhã de um voo.
-
-Ele toca na tela bloqueada pelo próprio sistema de alarmes da Apple, então funciona com o app fechado, o telefone bloqueado e o Não Perturbe ligado. Existe uma saída de emergência nos ajustes, ligada por padrão, porque um alarme que não pode ser parado é um risco e não um recurso.
+- O modo Implacável vem ligado em todo alarme novo: desligou sem terminar a missão, ele toca de novo um minuto depois na tela bloqueada, com o título “Missão não concluída”
+- Fechar o app não adianta: enquanto a missão não termina, o próximo toque já está marcado
+- Ele toca como alarme do sistema, pelo AlarmKit: com o app fechado, o telefone bloqueado, no modo silencioso e com qualquer Foco, Não Perturbe incluído. Requer iOS 26
+- Sempre existe uma saída. O X no canto de cada tela de missão pede confirmação, depois para o alarme e registra a manhã como desistência, porque um alarme que não pode ser parado é um risco e não um recurso
 
 CADA MANHÃ, ANOTADA
 
-Noventa dias do que realmente aconteceu: a que hora você acordou, quanto durou a missão, sua sequência, e cada manhã em que você parou o alarme sem fazer a missão. Os números não são gentis, de propósito. É isso que os torna úteis.
+Até 90 dias de horários de despertar, tempo das missões, sequências, sonecas e as manhãs em que você desligou sem fazer a missão. Os números não são gentis, de propósito. É isso que os torna úteis.
 
 FEITO DIREITO
 
-- Doze idiomas, incluindo o árabe da direita para a esquerda, traduzidos e não passados numa máquina
-- Escuro por padrão, porque esta tela você lê às seis da manhã
-- Um widget na tela bloqueada com o próximo alarme
-- Suporte completo a VoiceOver e texto dinâmico
+- Doze idiomas, inclusive árabe, da direita para a esquerda
+- Escuro do início ao fim, porque você lê esta tela às 6 da manhã
+- Um widget com o próximo alarme, para a tela bloqueada e a Tela de Início
 - Sem conta. Sem login. Sem anúncios. Sem analytics
 - Nada sai do telefone. Não existe servidor para onde ir
 
 GRÁTIS, TUDO
 
-Todas as missões, todas as dificuldades, até dez rodadas, quantos alarmes a sua semana precisar e noventa dias de histórico. Não há nada para comprar: nenhuma assinatura, nenhum anúncio, nenhuma conta.
+Todas as missões, todas as dificuldades e todos os toques, desde a primeira abertura. Não há nada para comprar: nenhuma assinatura, nenhum anúncio, nenhuma conta.
 
 Privacidade: https://dawnbreak.app/privacy.html
 Termos de uso: https://dawnbreak.app/terms.html

@@ -254,7 +254,8 @@ struct SquatJudgeTests {
         #expect(judge.count == 1)
     }
 
-    @Test("A rep taken before the phone has settled does not count")    func theSettlePeriodIsRespected() {
+    @Test("A rep taken before the phone has settled does not count")
+    func theSettlePeriodIsRespected() {
         var judge = SquatJudge()
         // The squat starts 0.2s after the phone is put down: inside the 1.5s settle window.
         _ = Self.run(&judge, Self.planted(from: 0, to: 6), Self.honestSquat(startingAt: 0.2))

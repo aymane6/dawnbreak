@@ -94,9 +94,13 @@ fi
 # Sets UDID and PREFERENCES, which everything below reads.
 prepare_simulator() {
   command -v xcodegen >/dev/null || die "xcodegen is not installed: brew install xcodegen"
+  # Homebrew's by path, for the reason release.sh gives: a link or a copy earlier on PATH writes
+  # a project without xcodegen's build-setting presets.
+  local xcodegen=/opt/homebrew/bin/xcodegen
+  [[ -x "$xcodegen" ]] || xcodegen="$(command -v xcodegen)"
 
   say "Generating the project"
-  xcodegen generate --quiet
+  "$xcodegen" generate --quiet
 
   say "Creating $SIMULATOR if it does not exist"
   UDID=$(xcrun simctl list devices --json \
@@ -268,7 +272,9 @@ if [[ $FRAME_ONLY -eq 0 ]]; then
     use_language "$language" "$apple_locale"
 
     # A failure here is not fatal to the run: eleven good languages plus a named twelfth is more
-    # useful than an aborted script, and the summary at the end says which ones to retake.
+    # useful than an aborted script, and the summary at the end says which ones to retake. Without
+    # diagnostics, because Xcode 27 collects the simulator's after a failure: on 2026-09-24 a run
+    # whose tests had all finished sat over six minutes in that collection and had to be stopped.
     if ! env \
       TEST_RUNNER_DAWNBREAK_SHOTS="$RAW" \
       TEST_RUNNER_DAWNBREAK_SHOTS_ONLY="$store" \
@@ -278,6 +284,7 @@ if [[ $FRAME_ONLY -eq 0 ]]; then
         -destination "platform=iOS Simulator,id=$UDID" \
         -derivedDataPath "$DERIVED" \
         -only-testing:DawnbreakUITests/ScreenshotTests \
+        -collect-test-diagnostics never \
         -quiet \
         CODE_SIGNING_ALLOWED=NO
     then

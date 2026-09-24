@@ -19,7 +19,7 @@ settings:
     # extension disagrees with the app about CFBundleVersion, and the widget's Info.plist
     # reads these two rather than repeating the numbers.
     MARKETING_VERSION: "1.0.0"
-    CURRENT_PROJECT_VERSION: 11
+    CURRENT_PROJECT_VERSION: 12
     # The screenshot automation needs to distinguish "real launch" from "capture run", and
     # the mission screens need deterministic challenges when captured. That switch is a
     # launch argument, not a build flag, so the shipped binary is the captured binary.
@@ -102,7 +102,9 @@ targets:
         # in the Dynamic Island. Without this the alarm rings with no way to reach the
         # mission.
         NSSupportsLiveActivities: true
-        NSSupportsLiveActivitiesFrequentUpdates: true
+        # No NSSupportsLiveActivitiesFrequentUpdates: that key buys a higher push budget for
+        # activities updated from a server, and nothing here pushes. All it did was put a
+        # "More Frequent Updates" switch in Settings that changed nothing.
         UIBackgroundModes:
           # The mission screen keeps the alarm audible while the user solves it, which
           # continues after the screen locks itself again.

@@ -73,6 +73,12 @@ done
 for tool in xcodegen xcodebuild python3; do
   command -v "$tool" >/dev/null || die "$tool is not installed"
 done
+# Homebrew's by path when it is there. xcodegen reads its build-setting presets from
+# ../share/xcodegen beside the path it was started from, and a link or a copy earlier on PATH
+# (~/.local/bin on the build Mac) has none there: the project it writes silently lacks every
+# preset setting, down to the app's product name.
+XCODEGEN=/opt/homebrew/bin/xcodegen
+[[ -x "$XCODEGEN" ]] || XCODEGEN="$(command -v xcodegen)"
 mkdir -p "$LOGS"
 
 # Resolved before anything is built, because the archive is the first step that signs: finding out
@@ -93,7 +99,7 @@ fi
 # ---------------------------------------------------------------------------
 
 say "Generating the project"
-xcodegen generate --quiet
+"$XCODEGEN" generate --quiet
 
 # ---------------------------------------------------------------------------
 # 2. Preflight
@@ -129,12 +135,15 @@ if [[ "$RUN_TESTS" -eq 1 ]]; then
   [[ -n "$UDID" ]] || die "no iOS simulator is available to run the tests on"
 
   say "Testing the app (simulator $UDID)"
+  # No diagnostics: after a failure Xcode 27 collects the simulator's first, and on 2026-09-24 that
+  # held a finished run over six minutes on this Mac before it had to be stopped.
   xcodebuild test \
     -project Dawnbreak.xcodeproj \
     -scheme Dawnbreak \
     -destination "platform=iOS Simulator,id=$UDID" \
     -only-testing:DawnbreakTests \
     -derivedDataPath "$BUILD/derived" \
+    -collect-test-diagnostics never \
     -quiet > "$LOGS/test.log" 2>&1 || {
       tail -40 "$LOGS/test.log" >&2
       die "the app tests failed, see build/logs/test.log"
@@ -274,7 +283,7 @@ cat <<'NEXT'
     metadata/<locale>/*.txt          name, subtitle, keywords, description, promotional text
     metadata/review_information/     the notes and the contact
     build/shots/framed/<locale>/     the screenshots, 1320×2868
-    docs/                            the privacy policy and support pages GitHub Pages serves
+    docs/                            the pages dawnbreak.app serves, deployed from infra/
 
   Bump CURRENT_PROJECT_VERSION in project.yml before the next upload: App Store Connect
   refuses a build number it has already seen.

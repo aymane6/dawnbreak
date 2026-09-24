@@ -21,7 +21,9 @@ public struct AlarmDraft: Codable, Hashable, Sendable, Identifiable {
     /// which is the point of it: this only scales the in-app mission-screen audio.
     public var volume: Double
     public var vibrate: Bool
-    /// Ramp the in-app volume from silence to `volume` over this many seconds. 0 = off.
+    /// Once a ramp of the in-app volume from silence to `volume`, over this many seconds. Nothing
+    /// reads it since build 12 took away its control: mission audio starts at `volume`. Still
+    /// encoded and decoded, so an alarm saved by an older build keeps its value.
     public var gentleWakeSeconds: Int
     public var snooze: SnoozePolicy
     /// Missions the alarm demands again after this one is cleared, each a few minutes out.
@@ -172,8 +174,4 @@ public enum AlarmSound: String, Codable, CaseIterable, Sendable, Identifiable {
         case .siren, .pulse, .hornet, .buzzer, .cicada: .savage
         }
     }
-
-    /// Two are deliberately gentle; the editor sorts them first for people who want to be
-    /// woken rather than startled.
-    public var isGentle: Bool { loudness == .gentle }
 }

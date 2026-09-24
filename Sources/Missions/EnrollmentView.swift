@@ -55,7 +55,7 @@ struct EnrollmentView: View {
                 } label: {
                     Text("enroll.save", bundle: .main)
                 }
-                .buttonStyle(DawnButtonStyle(isEnabled: capturedReference != nil))
+                .buttonStyle(DawnButtonStyle())
                 .disabled(capturedReference == nil)
                 .padding(.horizontal, Theme.Metric.gutter)
                 .padding(.bottom, 20)
@@ -140,7 +140,7 @@ struct EnrollmentView: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 9)
                         .background(Theme.dawnGradient, in: .capsule)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.onAccent)
                 }
             }
         } else {
@@ -154,7 +154,8 @@ struct EnrollmentView: View {
             Text(text)
         }
         .font(Theme.captionFont)
-        .foregroundStyle(.white)
+        // Dark ink: every tint passed here is a light colour, and white on the green was 1.8:1.
+        .foregroundStyle(Theme.onAccent)
         .padding(.horizontal, 12)
         .padding(.vertical, 7)
         .background(tint.opacity(0.9), in: .capsule)
@@ -178,10 +179,11 @@ struct EnrollmentView: View {
     }
 
     private var deniedCard: some View {
+        // No second button: nothing is ringing here, and the Cancel in the corner already says
+        // what "skip this mission and stop the alarm" would have meant.
         MissionUnavailableView(
             titleKey: "mission.camera.denied.title",
-            bodyKey: "enroll.camera.denied.body",
-            onOverride: { dismiss() }
+            bodyKey: "enroll.camera.denied.body"
         )
         .frame(maxHeight: .infinity)
     }

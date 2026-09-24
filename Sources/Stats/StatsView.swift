@@ -10,6 +10,11 @@ struct StatsView: View {
     @Environment(\.app) private var app
     @State private var window: Window = .month
 
+    /// Both charts, at one height so they read as a pair. 140 rather than 150: Arabic and Hindi
+    /// lines stand taller, and at 150 the second chart's dates sat under the tab bar in the first
+    /// screenful of a 6.9-inch phone.
+    private static let chartHeight: CGFloat = 140
+
     enum Window: Int, CaseIterable, Identifiable {
         case week = 7
         case month = 30
@@ -28,15 +33,23 @@ struct StatsView: View {
             ScrollView {
                 let stats = stats
                 VStack(spacing: 16) {
-                    if stats.totalWakes == 0 {
-                        EmptyStatsCard()
+                    if app.log.records.isEmpty {
+                        EmptyStatsCard(titleKey: "stats.empty.title", bodyKey: "stats.empty.body")
+                            .padding(.top, 40)
                     } else {
-                        headline(stats)
-                        streakCard(stats)
-                        outcomeChart(stats)
-                        wakeTimeChart(stats)
-                        missionTable(stats)
-                        honestyCard(stats)
+                        windowPicker
+                        if stats.totalWakes == 0 {
+                            // Mornings exist, only not in this period. The first-morning card
+                            // would tell someone back from a fortnight away to go and wake up.
+                            EmptyStatsCard(titleKey: "stats.emptyWindow.title", bodyKey: "stats.emptyWindow.body")
+                        } else {
+                            headline(stats)
+                            streakCard(stats)
+                            outcomeChart(stats)
+                            wakeTimeChart(stats)
+                            missionTable(stats)
+                            honestyCard(stats)
+                        }
                     }
                 }
                 .padding(.horizontal, Theme.Metric.gutter)
@@ -45,21 +58,21 @@ struct StatsView: View {
             .scrollBounceBehavior(.basedOnSize)
             .dawnCanvas()
             .navigationTitle(Text("tab.stats", bundle: .main))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Picker(selection: $window) {
-                        ForEach(Window.allCases) { option in
-                            Text(key: option.titleKey).tag(option)
-                        }
-                    } label: {
-                        Text("stats.window", bundle: .main)
-                    }
-                    .pickerStyle(.menu)
-                    .tint(Theme.accent)
-                    .accessibilityIdentifier(AccessibilityID.statsWindow)
-                }
-            }
         }
+    }
+
+    /// On the screen rather than as a menu in the corner, because it scopes every figure under
+    /// it, and a row of three segments says so where a "30 days" in the toolbar did not.
+    private var windowPicker: some View {
+        Picker(selection: $window) {
+            ForEach(Window.allCases) { option in
+                Text(key: option.titleKey).tag(option)
+            }
+        } label: {
+            Text("stats.window", bundle: .main)
+        }
+        .pickerStyle(.segmented)
+        .accessibilityIdentifier(AccessibilityID.statsWindow)
     }
 
     // MARK: - Cards
@@ -77,7 +90,7 @@ struct StatsView: View {
                 tint: Theme.accent
             )
             MetricTile(
-                value: averageWakeText(stats),
+                value: usualWakeText(stats),
                 labelKey: "stats.averageWake",
                 tint: Theme.dusk
             )
@@ -130,6 +143,9 @@ struct StatsView: View {
                     )
                     .foregroundStyle(Theme.success)
                     .cornerRadius(3)
+                    // A day without an alarm is not a data point. Left in, VoiceOver read out
+                    // thirty zeros to find three mornings.
+                    .accessibilityHidden(point.wins == 0)
 
                     BarMark(
                         x: .value(localized("stats.axis.day"), point.date, unit: .day),
@@ -137,6 +153,9 @@ struct StatsView: View {
                     )
                     .foregroundStyle(Theme.danger.opacity(0.85))
                     .cornerRadius(3)
+                    // Drawn below the axis, spoken as the count it is rather than "minus two".
+                    .accessibilityValue(Text(point.losses.formatted(.number.grouping(.never))))
+                    .accessibilityHidden(point.losses == 0)
                 }
                 .chartYAxis {
                     AxisMarks { value in
@@ -148,15 +167,9 @@ struct StatsView: View {
                         }
                     }
                 }
-                .chartXAxis {
-                    AxisMarks(values: .stride(by: .day, count: window == .week ? 1 : 7)) { _ in
-                        AxisGridLine().foregroundStyle(Theme.hairline.opacity(0.5))
-                        // `.narrow` so a 90-day window does not overlap its own labels in
-                        // languages with long month names.
-                        AxisValueLabel(format: .dateTime.day().month(.narrow))
-                    }
-                }
-                .frame(height: 150)
+                .chartXScale(domain: periodDomain(stats))
+                .chartXAxis { dayAxis }
+                .frame(height: Self.chartHeight)
                 .accessibilityLabel(Text("stats.chart.outcomes", bundle: .main))
 
                 HStack(spacing: 14) {
@@ -189,8 +202,11 @@ struct StatsView: View {
                         .foregroundStyle(Theme.dawnStart)
                         .symbolSize(28)
                     }
+                    // Not from zero. Mornings sit within an hour or two of each other, and an
+                    // axis that starts at midnight pressed them into one flat line at the top.
+                    .chartYScale(domain: wakeDomain(points))
                     .chartYAxis {
-                        AxisMarks(values: .automatic(desiredCount: 4)) { value in
+                        AxisMarks(values: wakeMarks(points)) { value in
                             AxisGridLine().foregroundStyle(Theme.hairline)
                             AxisValueLabel {
                                 if let minutes = value.as(Double.self) {
@@ -199,13 +215,12 @@ struct StatsView: View {
                             }
                         }
                     }
-                    .chartXAxis {
-                        AxisMarks(values: .stride(by: .day, count: window == .week ? 1 : 7)) { _ in
-                            AxisGridLine().foregroundStyle(Theme.hairline.opacity(0.5))
-                            AxisValueLabel(format: .dateTime.day().month(.narrow))
-                        }
-                    }
-                    .frame(height: 150)
+                    // The whole period, like the chart above, so a day sits under its own bar.
+                    // Left to fit its points, this one started on the first morning in the log
+                    // and, at ninety days, drew a month where the chart above drew a quarter.
+                    .chartXScale(domain: periodDomain(stats))
+                    .chartXAxis { dayAxis }
+                    .frame(height: Self.chartHeight)
                     .accessibilityLabel(Text("stats.chart.wakeTime", bundle: .main))
                 }
             }
@@ -283,12 +298,64 @@ struct StatsView: View {
 
     // MARK: - Helpers
 
+    /// The date axis both charts share, marked for the period. A week names its days, a month
+    /// dates its weeks, a quarter names its months. One format for all three either overlapped
+    /// itself at ninety days or, as a narrow month, read "S 24" at seven.
+    private var dayAxis: some AxisContent {
+        AxisMarks(values: dayAxisValues) { _ in
+            AxisGridLine().foregroundStyle(Theme.hairline.opacity(0.5))
+            // Centred under the day or the month it names. A month's labels stay on their tick,
+            // because they date a single day.
+            AxisValueLabel(format: dayAxisFormat, centered: window != .month)
+        }
+    }
+
+    private var dayAxisValues: AxisMarkValues {
+        switch window {
+        case .week: .stride(by: .day)
+        case .month: .stride(by: .day, count: 7)
+        case .quarter: .stride(by: .month)
+        }
+    }
+
+    private var dayAxisFormat: Date.FormatStyle {
+        switch window {
+        case .week: .dateTime.weekday(.abbreviated)
+        case .month: .dateTime.day().month(.abbreviated)
+        case .quarter: .dateTime.month(.abbreviated)
+        }
+    }
+
+    /// From the first day of the period to the end of its last, which is where a bar of the last
+    /// day stops.
+    private func periodDomain(_ stats: WakeStats) -> ClosedRange<Date> {
+        let first = stats.daily.first?.date ?? .now
+        let last = stats.daily.last?.date ?? first
+        return first...(Calendar.autoupdatingCurrent.date(byAdding: .day, value: 1, to: last) ?? last)
+    }
+
+    /// From the hour before the earliest morning to the hour after the latest. Left to itself,
+    /// the scale counted in hundreds of minutes and marked the axis 05:00, 06:40, 08:20.
+    private func wakeDomain(_ points: [WakeStats.DayPoint]) -> ClosedRange<Double> {
+        let minutes = points.compactMap(\.minuteOfDay)
+        let low = ((minutes.min() ?? 0) / 60).rounded(.down) * 60
+        let high = ((minutes.max() ?? 0) / 60).rounded(.up) * 60
+        return low...max(high, low + 60)
+    }
+
+    /// On the hour, or every other hour when the mornings spread wider than five.
+    private func wakeMarks(_ points: [WakeStats.DayPoint]) -> [Double] {
+        let domain = wakeDomain(points)
+        let step: Double = domain.upperBound - domain.lowerBound > 300 ? 120 : 60
+        return Array(stride(from: domain.lowerBound, through: domain.upperBound, by: step))
+    }
+
     private var clock: ClockFormatter {
         ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
     }
 
-    private func averageWakeText(_ stats: WakeStats) -> String {
-        guard let minutes = stats.averageWakeMinuteOfDay else { return "—" }
+    private func usualWakeText(_ stats: WakeStats) -> String {
+        guard let minutes = stats.usualWakeMinuteOfDay else { return "—" }
         let total = Int(minutes.rounded())
         return clock.full(hour: total / 60 % 24, minute: total % 60)
     }
@@ -342,16 +409,20 @@ private struct LegendDot: View {
 }
 
 private struct EmptyStatsCard: View {
+    let titleKey: String
+    let bodyKey: String
+
     var body: some View {
         Card {
             VStack(spacing: 10) {
                 Image(systemName: "chart.bar.xaxis")
                     .font(.system(size: 34))
                     .foregroundStyle(Theme.dawnGradient)
-                Text("stats.empty.title", bundle: .main)
+                Text(key: titleKey)
                     .font(Theme.headlineFont)
                     .foregroundStyle(Theme.textPrimary)
-                Text("stats.empty.body", bundle: .main)
+                    .multilineTextAlignment(.center)
+                Text(key: bodyKey)
                     .font(Theme.captionFont)
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -360,6 +431,5 @@ private struct EmptyStatsCard: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 18)
         }
-        .padding(.top, 40)
     }
 }

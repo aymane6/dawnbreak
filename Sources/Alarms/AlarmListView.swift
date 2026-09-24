@@ -6,7 +6,7 @@ struct AlarmListView: View {
     @Environment(\.app) private var app
     @State private var editing: EditorRoute?
     /// Ticks once a minute so the "in 7 h 20 min" line stays true without a timer per row.
-    @State private var now = Date()
+    @State private var now = CaptureMode.headerTime ?? Date()
 
     private enum EditorRoute: Identifiable {
         case new
@@ -24,12 +24,15 @@ struct AlarmListView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 14) {
-                    NextAlarmHeader(next: app.alarms.nextUp(now: now), now: now)
-                        .padding(.bottom, 6)
-
                     if app.alarms.alarms.isEmpty {
+                        // No header above it: "nothing is armed, every alarm below is off" over
+                        // a card saying there are no alarms was the first thing a clean install
+                        // showed, and it contradicted itself.
                         EmptyAlarmsCard { addAlarm() }
                     } else {
+                        NextAlarmHeader(next: nextUp, now: now)
+                            .padding(.bottom, 6)
+
                         ForEach(app.alarms.alarms) { alarm in
                             AlarmRow(
                                 alarm: alarm,
@@ -54,12 +57,15 @@ struct AlarmListView: View {
             .navigationTitle(Text("alarms.title", bundle: .main))
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
+                    // A Label, sized by the toolbar: a forced frame made its glass circle the
+                    // biggest thing in the bar.
                     Button(action: addAlarm) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 17, weight: .semibold))
-                            .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
+                        Label {
+                            Text("alarms.add", bundle: .main)
+                        } icon: {
+                            Image(systemName: "plus")
+                        }
                     }
-                    .accessibilityLabel(Text("alarms.add", bundle: .main))
                     .accessibilityIdentifier(AccessibilityID.addAlarm)
                 }
             }
@@ -68,7 +74,7 @@ struct AlarmListView: View {
             // sheet would make the mission cover fail with "already presenting". Losing an
             // unsaved edit to a ringing alarm is a fair trade; losing the mission screen is not.
             .sheet(item: Binding(
-                get: { app.bridge.activeMission == nil ? editing : nil },
+                get: { app.bridge.isMissionOnScreen ? nil : editing },
                 set: { editing = $0 }
             )) { route in
                 switch route {
@@ -88,7 +94,7 @@ struct AlarmListView: View {
                 // One minute is the resolution of everything on this screen, so the timer
                 // fires on the minute boundary rather than every second.
                 while !Task.isCancelled {
-                    now = Date()
+                    now = CaptureMode.headerTime ?? Date()
                     let secondsToNextMinute = 60 - (Calendar.current.component(.second, from: now))
                     try? await Task.sleep(for: .seconds(secondsToNextMinute))
                 }
@@ -100,10 +106,18 @@ struct AlarmListView: View {
                 // "already presenting". The failure is still there to read once the mission
                 // settles; `lastFailure` is not cleared by waiting.
                 isPresented: Binding(
-                    get: { app.bridge.lastFailure != nil && app.bridge.activeMission == nil },
+                    get: { app.bridge.lastFailure != nil && !app.bridge.isMissionOnScreen },
                     set: { if !$0 { app.bridge.clearFailure() } }
                 )
             ) {
+                if app.bridge.lastFailure?.opensSettings == true {
+                    Button {
+                        app.bridge.clearFailure()
+                        handleOpenSettings()
+                    } label: {
+                        Text("action.openSettings", bundle: .main)
+                    }
+                }
                 Button(role: .cancel) { app.bridge.clearFailure() } label: { Text("action.ok", bundle: .main) }
             } message: {
                 if let failure = app.bridge.lastFailure {
@@ -111,8 +125,7 @@ struct AlarmListView: View {
                     // hidden: a dialog that says only "iOS refused" leaves the user with
                     // nothing to try and nothing to report, which is how a scheduling bug
                     // survives a whole beta.
-                    Text(key: failure.messageKey)
-                        + Text(verbatim: failure.detail.isEmpty ? "" : "\n\n\(failure.detail)")
+                    Text(verbatim: localized(failure.messageKey) + (failure.detail.isEmpty ? "" : "\n\n\(failure.detail)"))
                 }
             }
         }
@@ -121,7 +134,7 @@ struct AlarmListView: View {
     /// Shown when AlarmKit permission is missing, because in that state every alarm in the
     /// list is a lie: it will not ring.
     @ViewBuilder private var permissionBanner: some View {
-        if app.bridge.authorization == .denied && !app.alarms.alarms.isEmpty {
+        if app.bridge.authorization == .denied {
             HStack(spacing: 12) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(Theme.warning)
@@ -134,11 +147,7 @@ struct AlarmListView: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer(minLength: 8)
-                Button {
-                    if let url = URL(string: UIApplication.openSettingsURLString) {
-                        UIApplication.shared.open(url)
-                    }
-                } label: {
+                Button(action: handleOpenSettings) {
                     Text("action.openSettings", bundle: .main)
                         .font(Theme.captionFont)
                 }
@@ -153,10 +162,27 @@ struct AlarmListView: View {
         }
     }
 
+    /// The soonest alarm that will actually ring: on, set up, and, once iOS has said yes, held
+    /// by the system. The same test the row's "Not armed" tag uses, so the header can no longer
+    /// point at a row that carries that tag.
+    private var nextUp: (alarm: AlarmDraft, fireDate: Date)? {
+        let ringing = app.alarms.alarms.filter { alarm in
+            alarm.isEnabled
+                && !alarm.mission.isIncomplete
+                && (app.bridge.authorization != .authorized || app.bridge.armedIDs.contains(alarm.id))
+        }
+        return AlarmStore.nextUp(in: ringing, now: now)
+    }
+
     // MARK: - Actions
 
     private func addAlarm() {
         editing = .new
+    }
+
+    private func handleOpenSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 
     private func toggle(_ alarm: AlarmDraft, to enabled: Bool) {
@@ -186,8 +212,7 @@ private struct NextAlarmHeader: View {
                 Text("alarms.nextUp", bundle: .main)
                     .font(Theme.captionFont)
                     .foregroundStyle(Theme.textSecondary)
-                    .textCase(.uppercase)
-                    .tracking(0.8)
+                    .eyebrow(tracking: 0.8)
 
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(formatter.digits(hour: next.alarm.hour, minute: next.alarm.minute))
@@ -313,7 +338,11 @@ private struct AlarmRow: View {
             Text("alarm.delete.body", bundle: .main)
         }
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text("alarms.rowHint", bundle: .main))
+        // The long press that shows Delete is not something VoiceOver can find; a named action
+        // is, in the rotor, and it goes through the same confirmation.
+        .accessibilityAction(named: Text("action.deleteAlarm", bundle: .main)) { confirmingDelete = true }
         // After `.combine`, so it lands on the element the test can actually tap rather than on
         // a container the combined child has replaced.
         .accessibilityIdentifier(AccessibilityID.alarmRow)

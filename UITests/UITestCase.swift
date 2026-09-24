@@ -110,6 +110,23 @@ class UITestCase: XCTestCase {
         Thread.sleep(forTimeInterval: 0.9)
     }
 
+    /// AlarmKit's permission alert, if this simulator has never answered it.
+    ///
+    /// Matched in the simulator's language, not the test's: the alert is the system's. English
+    /// says "Allow", French says "Autoriser" — and "Ne pas autoriser" is why the French match
+    /// is exact rather than a prefix.
+    func allowAlarmsIfAsked(timeout: TimeInterval = 15) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        let alert = springboard.alerts.firstMatch
+        // Fifteen seconds, not five: on a simulator that has never seen the app, the prompt
+        // arrives only once the launch seed asks for authorization, behind a cold start.
+        guard alert.waitForExistence(timeout: timeout) else { return }
+        let allow = alert.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH[c] 'allow' OR label ==[c] 'autoriser'")
+        ).firstMatch
+        if allow.exists { allow.tap() }
+    }
+
     /// Fails if anything is on top of the app.
     ///
     /// This is the classic way a screenshot run produces seventy-two unusable images: one

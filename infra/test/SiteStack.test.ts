@@ -12,8 +12,7 @@ test('snapshot', () => {
   });
   const template = Template.fromStack(stack);
 
-  // The three URLs the App Store listing and the paywall link. Printed by the stack so a deploy
-  // ends by showing what a reviewer will open.
+  // The three URLs the stack prints, so a deploy ends by showing what a reviewer will open.
   const outputs = template.toJSON().Outputs;
   expect(outputs.SiteUrl.Value).toBe('https://dawnbreak.app/');
   expect(outputs.PrivacyUrl.Value).toBe('https://dawnbreak.app/privacy');

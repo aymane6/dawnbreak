@@ -1,19 +1,17 @@
-Build 10 behebt etwas, das du gefunden hast und ich nicht: du sagtest, die App habe vier Wecktöne. Sie hat vierzehn, seit Build 8. Nur vier waren zu sehen.
+Build 12 geht zurück in die App-Prüfung, deshalb geht es vor allem um die erste Minute und um die Missionsbildschirme.
 
-WARUM DU VIER GESEHEN HAST
-Die Töne waren ein waagrechter Streifen kleiner Kacheln in der Klangkarte. Vier passen auf einen 6,9-Zoll-Bildschirm, drei auf einen 6,1-Zoll-, der Scrollbalken war ausgeblendet, und nichts sagte, dass es mehr gibt. Du hast den Bildschirm richtig gelesen; der Bildschirm hat gelogen.
+WAS SICH GEÄNDERT HAT
+- Der Bildschirm vor der Alarm-Berechtigung hat nur noch eine Taste: Weiter. Die Entscheidung fällt in der iOS-Abfrage, und die App funktioniert mit beiden Antworten.
+- „Ersten Alarm stellen“, die letzte Taste der Einführung, öffnet jetzt den Alarm-Editor.
+- In den Einstellungen bleibt nur, was etwas bewirkt. Die App ist immer dunkel.
+- Tippen: keine Prüfen-Taste mehr. Die Runde gilt mit dem Anschlag, der den Satz vollendet.
+- Zeichnen: Nach zwei Fehlversuchen sagt die App, was sie stattdessen gesehen hat, und bietet etwas anderes zum Zeichnen an.
+- Auf Arabisch stehen Rechenaufgaben nicht mehr verkehrt herum.
+- Das Löschen eines Alarms fragt vorher nach.
 
-WIE ES JETZT IST
-Die Klangkarte hat eine Zeile: der Name des aktuellen Tons, sein Lautstärke-Symbol und die Zahl 14. Ein Tipp öffnet einen Bildschirm mit allen vierzehn Kacheln, drei pro Reihe, sanft zuerst, schlimm zuletzt, alle gleichzeitig sichtbar, ohne Scrollen auf jedem iPhone. Ein Tipp auf eine Kachel wählt sie und spielt eine Vorschau. Symbol und Farbe nennen die Klasse.
-
-WAS DAS KÜNFTIG VERHINDERT
-Ein Test öffnet diesen Bildschirm und prüft, dass alle vierzehn Kacheln im Fenster liegen und antippbar sind, nach null Wischern, auf Englisch und auf Arabisch. Ich habe den alten Streifen zurückgesetzt, um sicher zu sein, dass er scheitert: er scheitert. Ein zweiter Test prüft, dass ein gewählter Ton Speichern und Wiederöffnen übersteht.
-
-ZU AUFGENOMMENEN KLÄNGEN
-Du hast nach Open-Source-Quellen gefragt. Ich habe die Lizenzen an der Quelle geprüft, nicht in Zusammenfassungen, und das Ergebnis ist: alle vierzehn bleiben synthetisiert. Kurz gesagt: nur CC0-Audio darf ohne Einzelgenehmigung in eine bezahlte App-Store-Binärdatei, denn die FAQ von Creative Commons sagt selbst, dass die Veröffentlichung einer CC-BY-Datei über eine Plattform mit Kopierschutz die ausdrückliche Erlaubnis des Lizenzgebers braucht, und der App Store wendet ihn an. Die vollständige Liste steht in der Nachricht zu diesem Build.
-
-WORAUF ES ANKOMMT
-1. Editor, Klangzeile: sie soll den aktuellen Ton und 14 nennen. Antippen und Kacheln zählen.
-2. Hornisse, Summer und Zikade von dort anhören, dazu Sirene.
-3. Einen wählen, speichern, Wecker wieder öffnen: er muss gewählt bleiben.
-4. Auf Arabisch derselbe Bildschirm: gespiegelt, längere Namen, nichts darf abgeschnitten sein.
+WAS DU PRÜFEN SOLLTEST
+1. Lösche die App und installiere diesen Build. Zwei Bildschirme mit Weiter, dann der Bildschirm zur Berechtigung, der nur Weiter anbietet. Beantworte die Abfrage, wie du willst, und tippe dann auf „Ersten Alarm stellen“: Der Editor öffnet sich, und wenn du ihn schließt, gespeichert oder nicht, musst du bei der Alarmliste landen.
+2. Stell einen Alarm auf zwei Minuten später, sperr das Telefon und drück beim Klingeln die Taste mit dem Namen der Mission.
+3. Beim nächsten Mal drück stattdessen Stopp: Der Alarm muss eine Minute später zurückkommen.
+4. Wenn ein Alarm klingelt, fragt das X in der Ecke nach, bevor es dich gehen lässt; bei „Diese Mission ausprobieren“ schließt es sofort.
+5. Abgeschnittener, überlappender oder anderssprachiger Text: Ein Screenshot ist die beste Meldung.

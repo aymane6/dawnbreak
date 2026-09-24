@@ -1,19 +1,17 @@
-La version 10 corrige quelque chose que tu as trouvé et moi pas : tu as dit que l'app avait quatre sonneries. Elle en a quatorze, depuis le build 8. Quatre seulement étaient à l'écran.
+Le build 12 est celui qui repart en revue chez Apple : l’essentiel touche la première minute et les écrans de mission.
 
-POURQUOI TU EN VOYAIS QUATRE
-Les sonneries étaient une bande horizontale de petites tuiles dans la carte du son. Quatre tiennent sur un écran de 6,9 pouces, trois sur un 6,1, l'indicateur de défilement était masqué, et rien ne disait qu'il y en avait plus. Tu as lu l'écran correctement ; c'est l'écran qui mentait.
-
-CE QUE C'EST MAINTENANT
-La carte du son a une seule ligne : le nom de la sonnerie actuelle, son icône d'intensité, et le nombre 14. En la touchant, un écran s'ouvre avec les quatorze tuiles, trois par ligne, de la plus douce à la pire, toutes visibles d'un coup et sans défilement sur n'importe quel iPhone. Toucher une tuile la choisit et joue un extrait. L'icône et sa couleur disent la classe : une onde pour douce, deux pour standard, trois pour dure, un triangle rouge pour brutale.
-
-CE QUI EMPÊCHE QUE ÇA REVIENNE
-Un test ouvre cet écran et vérifie que les quatorze tuiles sont dans la fenêtre et touchables après zéro balayage, en anglais et en arabe. J'ai remis l'ancienne bande pour être sûr qu'il échoue : il échoue. Un second test vérifie qu'une sonnerie choisie survit à l'enregistrement et à la réouverture de l'alarme.
-
-SUR L'AJOUT DE SONS ENREGISTRÉS
-Tu as demandé des sources open source. J'ai vérifié les licences à la source, pas dans des résumés, et la conclusion est que les quatorze restent synthétisées. En bref : seul un son en CC0 peut entrer dans un binaire payant de l'App Store sans demander l'accord de chaque auteur, parce que la FAQ de Creative Commons dit elle-même que publier un fichier CC BY via une plateforme qui applique une protection anticopie exige la permission expresse du titulaire, et l'App Store en applique une. La liste complète de ce qui est utilisable et de ce qui a l'air libre sans l'être est dans le message qui accompagne ce build.
+CE QUI CHANGE
+- L’écran qui précède l’autorisation des alarmes n’a plus qu’un bouton, Continuer. Le choix se fait dans l’alerte d’iOS, et l’app fonctionne quelle que soit la réponse.
+- « Créer ma première alarme », le dernier bouton de la présentation, ouvre maintenant l’éditeur d’alarme.
+- Les réglages ne gardent que ce qui sert. L’app est toujours en mode sombre.
+- Frappe : plus de bouton Vérifier. La manche est validée à la frappe qui termine la phrase.
+- Dessin : après deux échecs, l’app dit ce qu’elle a vu à la place et propose autre chose à dessiner.
+- En arabe, les calculs ne s’affichent plus à l’envers.
+- Supprimer une alarme demande confirmation.
 
 À VÉRIFIER
-1. Éditeur, la ligne du son : elle doit afficher la sonnerie actuelle et 14. Touche-la et compte les tuiles.
-2. Écoute Frelon, Buzzer et Cigale depuis cet écran, et Sirène.
-3. Choisis-en une, enregistre, réouvre l'alarme : elle doit rester sélectionnée.
-4. En arabe, le même écran : tuiles en miroir et noms plus longs ; rien ne doit être coupé.
+1. Supprimez l’app et installez ce build. Deux écrans avec Suivant, puis un écran qui ne propose que Continuer. Répondez à l’alerte comme vous voulez, puis touchez « Créer ma première alarme » : l’éditeur s’ouvre, et en le fermant, avec ou sans enregistrer, vous devez arriver sur la liste des alarmes.
+2. Réglez une alarme deux minutes plus tard, verrouillez le téléphone et, quand elle sonne, touchez le bouton qui porte le nom de la mission.
+3. La fois suivante, touchez plutôt Arrêter : l’alarme doit revenir une minute plus tard.
+4. Quand une alarme sonne, la croix dans le coin demande confirmation avant de vous laisser partir ; depuis « Essayer cette mission », elle ferme tout de suite.
+5. Un texte coupé, superposé ou dans la mauvaise langue : une capture d’écran est le meilleur signalement.

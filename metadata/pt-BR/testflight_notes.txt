@@ -1,19 +1,17 @@
-A build 10 corrige algo que você achou e eu não: você disse que o app tinha quatro toques. Tem quatorze, desde a build 8. Só quatro apareciam.
+O build 12 é o que volta para a revisão da Apple, então quase tudo tem a ver com o primeiro minuto e com as telas de missão.
 
-POR QUE VOCÊ VIA QUATRO
-Os toques eram uma faixa horizontal de blocos pequenos dentro do cartão de som. Quatro cabem numa tela de 6,9 polegadas, três numa de 6,1, o indicador de rolagem estava escondido e nada dizia que havia mais. Você leu a tela certo; a tela mentia.
+O QUE MUDOU
+- A tela antes da permissão de alarmes tem um único botão, Continuar. A escolha é feita no alerta do iOS, e o app funciona com qualquer resposta.
+- “Criar meu primeiro alarme”, o último botão da apresentação, agora abre o editor de alarme.
+- Os ajustes guardam só o que faz alguma coisa. O app é sempre escuro.
+- Digitação: não há mais botão Verificar. A rodada termina na tecla que completa a frase.
+- Desenho: depois de dois erros, o app diz o que viu no lugar e oferece outra coisa para desenhar.
+- Em árabe, as contas não aparecem mais de trás para frente.
+- Apagar um alarme pede confirmação.
 
-COMO ESTÁ AGORA
-O cartão de som tem uma linha: o nome do toque atual, o ícone de intensidade e o número 14. Ao tocar, abre uma tela com os quatorze blocos, três por linha, do mais suave ao pior, todos visíveis de uma vez e sem rolagem em qualquer iPhone. Tocar um bloco seleciona e toca uma prévia.
-
-O QUE IMPEDE QUE VOLTE
-Um teste abre essa tela e verifica que os quatorze blocos estão dentro da janela e podem ser tocados após zero deslizes, em inglês e em árabe. Recoloquei a faixa antiga para garantir que falha: falha. Um segundo teste verifica que o toque escolhido sobrevive a salvar e reabrir.
-
-SOBRE ADICIONAR SONS GRAVADOS
-Você pediu fontes open source. Conferi as licenças na fonte, não em resumos, e a conclusão é que os quatorze seguem sintetizados. Em resumo: só áudio CC0 pode entrar num binário pago da App Store sem pedir permissão a cada autor, porque o próprio FAQ da Creative Commons diz que publicar um arquivo CC BY por uma plataforma que aplica proteção de cópia exige permissão expressa do licenciante, e a App Store aplica. A lista completa está na mensagem que acompanha esta build.
-
-VALE CONFERIR
-1. Editor, linha do som: deve dizer o toque atual e 14. Toque e conte os blocos.
-2. Ouça Vespão, Cigarra e Cigarra elétrica de lá, e Sirene.
-3. Escolha um, salve, reabra o alarme: precisa continuar selecionado.
-4. Em árabe, a mesma tela: blocos espelhados e nomes mais longos; nada pode ficar cortado.
+O QUE VERIFICAR
+1. Apague o app e instale este build. Duas telas com Avançar e depois uma que oferece só Continuar. Responda ao alerta como quiser e toque em “Criar meu primeiro alarme”: o editor abre e, ao fechá-lo, salvando ou não, você tem que chegar à lista de alarmes.
+2. Crie um alarme para daqui a dois minutos, bloqueie o telefone e, quando tocar, toque no botão com o nome da missão.
+3. Na próxima vez, toque em Parar: o alarme deve voltar um minuto depois.
+4. Quando um alarme toca, o X no canto pede confirmação antes de deixar você sair; em “Testar esta missão” ele fecha na hora.
+5. Texto cortado, sobreposto ou no idioma errado: uma captura de tela é o melhor relato.

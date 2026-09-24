@@ -17,8 +17,11 @@ struct DrawMissionView: View {
     @State private var current: Stroke?
     @State private var isChecking = false
     @State private var verdict: Verdict?
+    @State private var misses = 0
 
-    private enum Verdict: Equatable { case tooEmpty, notRecognised(String?) }
+    /// A miss names what the drawing looked like only when that is another prompt, because
+    /// those have a name in all twelve languages and the classifier's own labels are English.
+    private enum Verdict: Equatable { case tooEmpty, notRecognised(DrawingPrompt?) }
 
     struct Stroke: Equatable {
         var points: [CGPoint]
@@ -40,6 +43,9 @@ struct DrawMissionView: View {
                 canvas
                 if let verdict {
                     verdictLine(verdict)
+                }
+                if misses >= 2 {
+                    anotherPromptButton
                 }
             }
         } control: {
@@ -111,7 +117,7 @@ struct DrawMissionView: View {
                 Text("mission.draw.tooEmpty", bundle: .main)
             case .notRecognised(let guess):
                 if let guess {
-                    Text(localized("mission.draw.sawInstead", guess))
+                    Text(localized("mission.draw.sawInstead", localized(guess.nameKey).uppercased()))
                 } else {
                     Text("mission.draw.notRecognised", bundle: .main)
                 }
@@ -120,6 +126,30 @@ struct DrawMissionView: View {
         .font(Theme.captionFont)
         .foregroundStyle(Theme.warning)
         .multilineTextAlignment(.center)
+    }
+
+    /// After two misses, a way to a different subject. The classifier is slower to believe some
+    /// drawings than others, and a fourth bicycle at 06:00 tests patience, not wakefulness. A new
+    /// subject is still a drawing to finish, so nothing about the mission gets easier.
+    private var anotherPromptButton: some View {
+        Button(action: handleAnotherPrompt) {
+            Label {
+                Text("mission.draw.another", bundle: .main)
+            } icon: {
+                Image(systemName: "arrow.triangle.2.circlepath")
+            }
+            .font(Theme.captionFont.weight(.semibold))
+            .foregroundStyle(Theme.accent)
+            .frame(minHeight: Theme.Metric.minimumTarget)
+        }
+    }
+
+    private func handleAnotherPrompt() {
+        prompt = DrawingPrompt.all.filter { $0 != prompt }.randomElement() ?? prompt
+        strokes = []
+        current = nil
+        verdict = nil
+        misses = 0
     }
 
     private func check() async {
@@ -151,7 +181,10 @@ struct DrawMissionView: View {
         if prompt.matches(observations: ranked, threshold: config.recognitionThreshold) {
             callbacks.cleared()
         } else {
-            verdict = .notRecognised(ranked.first(where: { $0.confidence > 0.2 })?.label)
+            misses += 1
+            let guess = ranked.first(where: { $0.confidence > 0.2 }).flatMap { DrawingPrompt.prompt(forLabel: $0.label) }
+            // The right subject under the threshold is "not quite", not "it looked like a boat".
+            verdict = .notRecognised(guess == prompt ? nil : guess)
         }
     }
 

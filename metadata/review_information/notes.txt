@@ -3,24 +3,39 @@ Dawnbreak is an alarm clock that will not switch off until a task is completed.
 No account, no login, no server. Everything is stored on the device. There is nothing to give you
 credentials for.
 
+WHAT CHANGED SINCE BUILD 11 (GUIDELINE 5.1.1(iv))
+
+The screen shown before the alarm permission request no longer has an "Allow alarms" button or a
+way to skip it. It explains why the permission is needed and has a single button, "Continue",
+which opens the system alert. The choice is made in the system alert alone, and the app works
+with either answer: if alarms are declined, the alarm list says so and links to Settings. It is
+the third onboarding screen, after two screens with a Next button that explain what the app does.
+
 HOW TO SEE THE MAIN FEATURE IN UNDER A MINUTE
 
-1. Open the app and allow the alarm permission when asked (AlarmKit).
-2. Tap + and set the alarm one or two minutes ahead.
-3. Under Mission, pick "Math" and leave the difficulty at Easy. Save.
+1. Open the app, tap Next twice, tap Continue, and allow alarms in the system alert (AlarmKit).
+2. Tap "Set my first alarm". The alarm editor opens: set the time one or two minutes ahead.
+3. The mission is already Math at Medium difficulty. Keep it and tap Save.
 4. Lock the phone and wait. The alarm rings on the lock screen through AlarmKit.
-5. Press the second button on the alert (it is labelled with the mission, not "Open"). The app
-   opens on the mission and the alarm is only silenced once the sum is answered.
-6. To see the follow-up: press "Stop" instead. The mission opens anyway, and the alarm returns
-   sixty seconds later under the title "Mission not done". Stopping the alarm is a delay, not a
-   way out: only answering the mission ends it.
+5. Press the button labelled "Math" on the alert. The app opens on the mission, and the alarm
+   keeps sounding until the sum is answered.
+6. To see the follow-up, press Stop instead. The mission opens anyway, and the alarm returns a
+   minute later under the title "Mission not done". Stopping the alarm is a delay, not a way out.
+
+THE WAY OUT
+
+Every mission screen has the X in its top corner. It asks for confirmation, then stops the alarm
+for that morning: a repeating alarm stays set for its next day, a one-time alarm is switched off.
+No setting hides it, so no alarm can trap anyone.
 
 PERMISSIONS, AND WHY
 
 - Alarms (AlarmKit): the whole app. Without it there is no alarm.
 - Camera: only for the three missions that use it (photograph an object, scan a barcode, count
-  squats). The frames are analysed on the device and never stored or transmitted.
-- Motion and fitness: only for the step and shake missions. Read live, never written down.
+  squats), and only while that mission is on screen. Frames are analysed on the device and never
+  stored or transmitted.
+- Motion and fitness: only for the steps mission, to count steps while it is on screen. Nothing is
+  written down. The shake mission reads the accelerometer, which needs no permission.
 
 There is no location, contacts, microphone, health, or tracking access of any kind, and no
 analytics SDK.
@@ -30,5 +45,3 @@ NOTHING TO BUY
 There are no in-app purchases, no subscription, no advertising and no paywall of any kind. Every
 one of the twelve missions, all four difficulties, up to ten rounds, as many alarms as the user
 wants and ninety days of history are available on first launch. The app links no StoreKit.
-
-An emergency exit is available in Settings and is on by default, so no alarm can trap a user.

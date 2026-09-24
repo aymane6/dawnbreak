@@ -122,9 +122,9 @@ export class StaticSite extends Construct {
   /**
    * Makes `/privacy` serve `/privacy.html`.
    *
-   * Not cosmetic: the URLs compiled into the app and printed on the paywall have no extension, and
-   * S3 has no notion of one path standing for another. Without this the app's own legal links 404,
-   * which is the 3.1.2 rejection this whole stack exists to prevent.
+   * The app and the listing link the `.html` names, which S3 serves as they are. The stack's own
+   * outputs and anyone typing the address use the short form, and S3 has no notion of one path
+   * standing for another, so without this they 404.
    */
   protected createUriRewriter(): CloudFrontFunction {
     return new CloudFrontFunction(this, 'Rewrite', {

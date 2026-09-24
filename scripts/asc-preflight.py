@@ -54,10 +54,15 @@ ENTITLEMENTS = (
     CONFIGURATION / "Dawnbreak-Debug.entitlements",
 )
 XCODEPROJ = ROOT / "Dawnbreak.xcodeproj"
+# Homebrew's by path when it is there, as in release.sh: xcodegen looks for its build-setting
+# presets beside the path it was started from, and a link or a copy earlier on PATH (~/.local/bin
+# on the build Mac) has none there.
+XCODEGEN = shutil.which("/opt/homebrew/bin/xcodegen") or shutil.which("xcodegen")
 PRIVACY_MANIFEST = ROOT / "Resources" / "PrivacyInfo.xcprivacy"
 ICON_SET = ROOT / "Resources" / "Assets.xcassets" / "AppIcon.appiconset"
 FRAMED = ROOT / "build" / "shots" / "framed"
 PREFERENCES = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Store/Preferences.swift"
+MISSION_RUNNER = ROOT / "Sources/Missions/MissionRunnerView.swift"
 MISSION_KIND = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Models/MissionKind.swift"
 MISSION_CONFIG = ROOT / "DawnbreakKit/Sources/DawnbreakKit/Models/MissionConfig.swift"
 STATS = ROOT / "Sources/Stats/StatsView.swift"
@@ -185,7 +190,7 @@ def listing():
 
 @check("the pages match their generator", testflight=False)
 def site():
-    """docs/ is what GitHub Pages serves, and the privacy policy a reviewer opens is in there.
+    """docs/ is what dawnbreak.app serves, and the privacy policy a reviewer opens is in there.
 
     Stale HTML here is worse than stale copy in the app: the listing links to these three URLs, so a
     description promising that no data leaves the device, against a policy page that says something
@@ -229,18 +234,20 @@ def project_generated():
     if problems:
         return "not generated", problems
 
-    if not shutil.which("xcodegen"):
+    if not XCODEGEN:
         return "6 files, not verified (xcodegen is not installed)", problems
 
     # A farm of symlinks to every top-level entry, so the spec's source paths resolve, with a real
     # empty Configuration/ so the four generated files land somewhere they can be compared. The
     # hand-written files in that folder are linked back in: the spec does not mention them, but
-    # leaving them out would be a lie about what the folder holds.
+    # leaving them out would be a lie about what the folder holds. The project is not linked,
+    # because xcodegen writes through the link: on 2026-09-24 this check rewrote Dawnbreak.xcodeproj
+    # under release.sh, without presets, and the tests after it found no app to host them.
     generated_names = {path.name for path in (INFO_PLIST, WIDGET_INFO_PLIST, *ENTITLEMENTS)}
     farm = Path(tempfile.mkdtemp(prefix="dawnbreak-spec."))
     try:
         for entry in ROOT.iterdir():
-            if entry != CONFIGURATION:
+            if entry not in (CONFIGURATION, XCODEPROJ):
                 (farm / entry.name).symlink_to(entry)
         (farm / CONFIGURATION.name).mkdir()
         for entry in CONFIGURATION.iterdir():
@@ -248,7 +255,7 @@ def project_generated():
                 (farm / CONFIGURATION.name / entry.name).symlink_to(entry)
 
         result = subprocess.run(
-            ["xcodegen", "generate", "--spec", str(PROJECT),
+            [XCODEGEN, "generate", "--spec", str(PROJECT),
              "--project-root", str(farm), "--project", str(farm), "--quiet"],
             capture_output=True, text=True, check=False,
         )
@@ -577,21 +584,22 @@ def nothing_for_sale():
     return f"{len(swift)} Swift files, no store", problems
 
 
-@check("the emergency exit is on by default", testflight=False)
+@check("every mission screen has a way out", testflight=False)
 def emergency_exit():
-    """The review notes promise no alarm can trap a user, and that the switch is on by default.
+    """The review notes promise no alarm can trap a user, and point at the X on the mission screen.
 
-    It is the one sentence in those notes a reviewer can disprove without waiting for an alarm, and
-    the default it describes is a single `?? true` in the kit.
+    It is the one sentence in those notes a reviewer can disprove without waiting for an alarm. The
+    exit once hung off a Settings switch that could hide it. There is no switch now, so the check is
+    that the runner draws the exit, that no preference could gate it, and that the notes say where.
     """
-    on_by_default = re.search(
-        r"emergencyExitEnabled = defaults\.object\(forKey: Key\.emergencyExit\) as\? Bool \?\? true",
-        read(PREFERENCES),
-    )
-    problems = [] if on_by_default else ["Preferences no longer defaults emergencyExitEnabled to true"]
-    if "on by default" not in make_metadata.REVIEW_NOTES:
-        problems.append("the review notes no longer promise the default")
-    return "on", problems
+    problems = []
+    if "AccessibilityID.missionExit" not in read(MISSION_RUNNER):
+        problems.append("the mission screen no longer draws the exit")
+    if "emergencyExit" in read(PREFERENCES):
+        problems.append("Preferences has an exit switch again, and the review notes say there is none")
+    if "the X" not in make_metadata.REVIEW_NOTES:
+        problems.append("the review notes no longer say where the exit is")
+    return "always there", problems
 
 
 @check("the review contact reaches a person", testflight=False)

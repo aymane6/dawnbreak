@@ -42,12 +42,18 @@ struct RootView: View {
         // A full-screen cover, not a sheet: a sheet can be swiped away, and the whole promise
         // of the app is that the mission screen does not go away on a swipe.
         .fullScreenCover(item: takeoverBinding) { takeover in
-            switch takeover {
-            case .mission(let pending):
-                MissionRunnerView(pending: pending)
-            case .onboarding:
-                OnboardingView()
+            Group {
+                switch takeover {
+                case .mission(let pending):
+                    MissionRunnerView(pending: pending)
+                case .onboarding:
+                    OnboardingView()
+                }
             }
+            // A new identity for a new takeover. The cover stays up when one replaces another,
+            // so without this the next stage of a morning, rung while the last one's success
+            // page was still showing, inherited that page and its finished state.
+            .id(takeover.id)
         }
         .onChange(of: app.preferences.hapticsEnabled) { _, enabled in
             Haptics.isEnabled = enabled
@@ -67,18 +73,20 @@ struct RootView: View {
         case mission(PendingMission)
         case onboarding
 
-        /// Keyed by the alarm, so a *different* alarm ringing replaces the screen rather than
-        /// being silently ignored.
+        /// Keyed by the alarm and the stage, so a *different* alarm ringing, or the next mission
+        /// of the same morning, replaces the screen rather than being silently ignored.
         var id: String {
             switch self {
-            case .mission(let pending): pending.alarmID.uuidString
+            case .mission(let pending): "\(pending.alarmID.uuidString)-\(pending.stage)"
             case .onboarding: "onboarding"
             }
         }
     }
 
+    /// A mission just cleared keeps the screen for its success page. The morning is already
+    /// settled by then; see `AlarmBridge.celebration`.
     private var takeover: Takeover? {
-        if let pending = app.bridge.activeMission { return .mission(pending) }
+        if let pending = app.bridge.activeMission ?? app.bridge.celebration { return .mission(pending) }
         if !app.preferences.hasCompletedOnboarding { return .onboarding }
         return nil
     }

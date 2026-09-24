@@ -182,9 +182,8 @@ else
     fail "the signature is not for team $TEAM_ID"
   fi
 
-  # `get-task-allow` is what makes a build debuggable, and `Configuration/Dawnbreak-Debug.entitlements`
-  # puts it on the unit-test bundle so the tests can be attached to. A true one must never reach the
-  # store, which refuses a debuggable binary. A distribution profile does not authorise it either, so
+  # `get-task-allow` is what makes a build debuggable, and a development profile signs it in without
+  # being asked. A true one must never reach the store, which refuses a debuggable binary. A distribution profile does not authorise it either, so
   # the usual outcome is a signing failure long before here, and "the usual outcome" is not something
   # to upload on.
   #

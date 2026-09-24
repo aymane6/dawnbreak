@@ -12,12 +12,15 @@ struct AlarmEditorView: View {
     /// The mission being tried out, built from the draft at the moment the button is
     /// pressed. Nothing is armed: see `MissionRunnerView.Mode.rehearsal`.
     @State private var rehearsing: PendingMission?
+    @State private var confirmingDelete = false
     private let isNew: Bool
 
     init(alarm: AlarmDraft, isNew: Bool) {
         _draft = State(initialValue: alarm)
         self.isNew = isNew
     }
+
+    private var title: LocalizedStringKey { isNew ? "editor.title.new" : "editor.title.edit" }
 
     var body: some View {
         NavigationStack {
@@ -36,9 +39,7 @@ struct AlarmEditorView: View {
 
                     if !isNew {
                         Button(role: .destructive) {
-                            app.bridge.cancel(draft.id)
-                            app.alarms.remove(id: draft.id)
-                            dismiss()
+                            confirmingDelete = true
                         } label: {
                             Text("action.deleteAlarm", bundle: .main)
                                 .frame(maxWidth: .infinity, minHeight: Theme.Metric.minimumTarget)
@@ -53,9 +54,20 @@ struct AlarmEditorView: View {
             }
             .dawnCanvas()
             .scrollIndicators(.hidden)
-            .navigationTitle(Text(isNew ? "editor.title.new" : "editor.title.edit", bundle: .main))
+            .navigationTitle(Text(title, bundle: .main))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Drawn here rather than by the bar, which cuts a title short instead of shrinking
+                // it: between French or German Cancel and Save buttons, the title already fills the
+                // gap on a 6.9-inch phone, and a 6.1-inch one is about 50 points narrower.
+                ToolbarItem(placement: .principal) {
+                    Text(title, bundle: .main)
+                        .font(.headline)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .accessibilityAddTraits(.isHeader)
+                }
+                .sharedBackgroundVisibility(.hidden)
                 ToolbarItem(placement: .topBarLeading) {
                     Button { dismiss() } label: { Text("action.cancel", bundle: .main) }
                         .accessibilityIdentifier(AccessibilityID.editorCancel)
@@ -73,6 +85,20 @@ struct AlarmEditorView: View {
             }
             .fullScreenCover(item: $rehearsing) { pending in
                 MissionRunnerView(pending: pending, mode: .rehearsal)
+            }
+            // The same question the list's swipe asks: a mission set up with an enrolled
+            // object is a minute of work, and one stray tap should not throw it away.
+            .alert(Text("alarm.delete.title", bundle: .main), isPresented: $confirmingDelete) {
+                Button(role: .destructive) {
+                    app.bridge.cancel(draft.id)
+                    app.alarms.remove(id: draft.id)
+                    dismiss()
+                } label: {
+                    Text("action.delete", bundle: .main)
+                }
+                Button(role: .cancel) {} label: { Text("action.cancel", bundle: .main) }
+            } message: {
+                Text("alarm.delete.body", bundle: .main)
             }
         }
         .presentationDragIndicator(.visible)
@@ -104,6 +130,12 @@ struct AlarmEditorView: View {
                 SectionLabel(titleKey: "editor.mission")
 
                 MissionGrid(selected: draft.mission.kind) { kind in
+                    // The tile already selected changes nothing. Tapping it used to throw away
+                    // the object registered for it and start the enrollment again.
+                    guard kind != draft.mission.kind else {
+                        if draft.mission.isIncomplete { enrolling = true }
+                        return
+                    }
                     draft.mission.kind = kind
                     // The enrollment belongs to the mission that asked for it; carrying a
                     // barcode payload over to a photo mission would make the alarm
@@ -219,7 +251,7 @@ struct AlarmEditorView: View {
                     }
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.caption)
                     .foregroundStyle(Theme.textTertiary)
             }
@@ -234,11 +266,13 @@ struct AlarmEditorView: View {
                 SectionLabel(titleKey: "editor.sound")
                 SoundRow(selection: $draft.soundName)
 
+                // The lock-screen ring follows the iPhone's own volume; this is the level the
+                // tone keeps playing at once the mission is open, which is all the app controls.
                 LabeledSlider(
                     titleKey: "editor.volume",
                     value: $draft.volume,
                     range: 0.2...1,
-                    format: { "\(Int(($0 * 100).rounded()))%" }
+                    format: { $0.formatted(.percent.precision(.fractionLength(0))) }
                 )
 
                 Toggle(isOn: $draft.vibrate) {
@@ -246,19 +280,6 @@ struct AlarmEditorView: View {
                         .font(Theme.bodyFont)
                 }
                 .tint(Theme.accent)
-
-                // Gentle wake ramps the in-app mission audio up from silence. It is off by
-                // default because someone who chose this app wants to be woken, not eased.
-                LabeledSlider(
-                    titleKey: "editor.gentleWake",
-                    value: Binding(
-                        get: { Double(draft.gentleWakeSeconds) },
-                        set: { draft.gentleWakeSeconds = Int($0.rounded()) }
-                    ),
-                    range: 0...120,
-                    step: 15,
-                    format: { $0 < 1 ? localized("editor.gentleWake.off") : localized("duration.seconds", Int($0)) }
-                )
             }
         }
     }
@@ -351,7 +372,8 @@ struct TimeWheel: View {
         HStack(spacing: 0) {
             Picker(selection: displayHour) {
                 ForEach(hourRange, id: \.self) { value in
-                    Text(value.formatted(.number.grouping(.never)))
+                    // "07" on a 24-hour wheel, as the system clock writes it; "7" beside AM/PM.
+                    Text(uses24Hour ? String(format: "%02d", value).localizedDigits : value.formatted(.number.grouping(.never)))
                         .font(Theme.clock(26))
                         .tag(value)
                 }
@@ -441,14 +463,10 @@ struct WeekdayPicker: View {
                             Text(key: day.shortLocalizationKey)
                                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                                 .frame(maxWidth: .infinity, minHeight: Theme.Metric.minimumTarget)
-                                .foregroundStyle(isOn ? .white : Theme.textSecondary)
-                                .background {
-                                    if isOn {
-                                        Theme.dawnGradient
-                                    } else {
-                                        Theme.surfaceRaised
-                                    }
-                                }
+                                // Solid accent for a choice, as on every picker here; the
+                                // gradient is kept for the one button that acts.
+                                .foregroundStyle(isOn ? Theme.onAccent : Theme.textSecondary)
+                                .background(isOn ? Theme.accent : Theme.surfaceRaised)
                                 .clipShape(.rect(cornerRadius: 12))
                         }
                         .buttonStyle(.plain)
@@ -477,10 +495,12 @@ struct WeekdayPicker: View {
                 .font(.system(size: 12, weight: .medium, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-                .frame(maxWidth: .infinity, minHeight: 32)
+                .frame(maxWidth: .infinity, minHeight: Theme.Metric.minimumTarget)
                 .foregroundStyle(selection == days ? Theme.accent : Theme.textTertiary)
+                .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selection == days ? [.isSelected] : [])
     }
 }
 
@@ -506,14 +526,8 @@ private struct MissionGrid: View {
                             .minimumScaleFactor(0.75)
                     }
                     .frame(maxWidth: .infinity, minHeight: 68)
-                    .foregroundStyle(isSelected ? .white : Theme.textSecondary)
-                    .background {
-                        if isSelected {
-                            Theme.dawnGradient
-                        } else {
-                            Theme.surfaceRaised
-                        }
-                    }
+                    .foregroundStyle(isSelected ? Theme.onAccent : Theme.textSecondary)
+                    .background(isSelected ? Theme.accent : Theme.surfaceRaised)
                     .clipShape(.rect(cornerRadius: 14))
                 }
                 .buttonStyle(.plain)
@@ -542,10 +556,10 @@ private struct DifficultyPicker: View {
                         Text(key: level.titleKey)
                             .font(.system(size: 12, weight: .semibold, design: .rounded))
                             .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .frame(maxWidth: .infinity, minHeight: 36)
-                        .foregroundStyle(isOn ? .white : Theme.textSecondary)
-                        .background(isOn ? Theme.accent : Theme.surfaceRaised, in: .rect(cornerRadius: 10))
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity, minHeight: Theme.Metric.minimumTarget)
+                            .foregroundStyle(isOn ? Theme.onAccent : Theme.textSecondary)
+                            .background(isOn ? Theme.accent : Theme.surfaceRaised, in: .rect(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(isOn ? [.isSelected] : [])
@@ -618,7 +632,8 @@ private struct FollowOnRow: View {
                         .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text("action.deleteAlarm", bundle: .main))
+                // This removes one mission from the chain, not the alarm.
+                .accessibilityLabel(Text("action.delete", bundle: .main))
             }
 
             HStack {
@@ -702,7 +717,10 @@ private struct MissionPreviewRow: View {
         case .breathe: localized("preview.breathe", mission.breathe.cycles)
         }
         guard mission.rounds > 1 else { return detail }
-        return detail + localized("preview.roundsSuffix", mission.rounds)
+        let rounds = localized("preview.rounds", mission.rounds)
+        // A mid-dot rather than a translated suffix: glued on bare, the old suffix read
+        // "2-digit sums3 rounds", and the dot needs no translating in any of the twelve.
+        return "\(detail) · \(rounds)"
     }
 }
 
@@ -715,8 +733,7 @@ struct SectionLabel: View {
         Text(key: titleKey)
             .font(Theme.captionFont)
             .foregroundStyle(Theme.textTertiary)
-            .textCase(.uppercase)
-            .tracking(0.7)
+            .eyebrow(tracking: 0.7)
     }
 }
 
@@ -778,7 +795,7 @@ private struct SoundRow: View {
                 Text(verbatim: AlarmSound.allCases.count.formatted(.number.grouping(.never)))
                     .font(Theme.captionFont.monospacedDigit())
                     .foregroundStyle(Theme.textTertiary)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(Theme.textTertiary)
             }
@@ -831,7 +848,7 @@ private struct SoundPickerScreen: View {
             VStack(spacing: 6) {
                 Image(systemName: sound.loudness.systemImage)
                     .font(.system(size: 17))
-                    .foregroundStyle(isOn ? .white : sound.loudness.tint)
+                    .foregroundStyle(isOn ? Theme.onAccent : sound.loudness.tint)
                 Text(key: sound.titleKey)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     // Two lines, not one: "Sonnenaufgang" and "Canto de pássaros" do not fit a
@@ -843,7 +860,7 @@ private struct SoundPickerScreen: View {
             }
             .frame(maxWidth: .infinity, minHeight: 68)
             .padding(.horizontal, 4)
-            .foregroundStyle(isOn ? .white : Theme.textSecondary)
+            .foregroundStyle(isOn ? Theme.onAccent : Theme.textSecondary)
             .background(isOn ? Theme.accent : Theme.surfaceRaised, in: .rect(cornerRadius: 14))
         }
         .buttonStyle(.plain)
@@ -863,8 +880,8 @@ private extension AlarmSound.Loudness {
         }
     }
 
-    /// A colour on the icon rather than a label under it: the picker's tiles are 74 points wide and
-    /// a second line of text in twelve languages does not fit in any of them.
+    /// A colour on the icon rather than a label under it: each tile is a third of the screen wide and
+    /// already holds the tone's name, which in some of the twelve languages takes the whole width.
     var tint: Color {
         switch self {
         case .gentle, .standard: Theme.textSecondary

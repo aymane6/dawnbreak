@@ -121,6 +121,10 @@ final class AlarmAudio {
 /// The short preview played when the user taps a tone in the editor. Separate from
 /// `AlarmAudio` because it must not duck other audio, loop, or vibrate: it is a two-second
 /// sample, not an alarm.
+///
+/// `.playback`, not `.ambient`: the alarm rings through the silent switch, so the preview has
+/// to as well. Under `.ambient` a muted phone played nothing at all, and fourteen silent tiles
+/// read as fourteen broken tones.
 @MainActor
 @Observable
 final class SoundPreviewer {
@@ -131,7 +135,7 @@ final class SoundPreviewer {
         stop()
         guard let url = AlarmAudio.url(for: soundName) else { return }
         do {
-            try AVAudioSession.sharedInstance().setCategory(.ambient, options: [.mixWithOthers])
+            try AVAudioSession.sharedInstance().setCategory(.playback, options: [.mixWithOthers])
             try AVAudioSession.sharedInstance().setActive(true)
             let player = try AVAudioPlayer(contentsOf: url)
             player.volume = 0.7

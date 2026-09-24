@@ -1,46 +1,55 @@
 Non dormi troppo perché la sveglia suona piano. Dormi troppo perché spegnerla costa un pollice, mezzo secondo e nessun pensiero.
 
-Dawnbreak toglie il pollice dall’equazione. Per far tacere la sveglia devi fare qualcosa che una persona addormentata non può fare: andare in cucina e fotografare il bollitore, fare dieci squat davanti alla fotocamera, risolvere calcoli che a mezzogiorno ti sembrerebbero facili, scansionare il codice a barre di una scatola in un’altra stanza.
+Dawnbreak toglie il pollice dall’equazione. Per spegnere la sveglia completi una missione: andare in cucina e inquadrare il bollitore, fare otto squat davanti alla fotocamera, risolvere calcoli che a mezzogiorno ti sembrerebbero facili, scansionare il codice a barre di una scatola in un’altra stanza.
 
-Quando torna il silenzio, sei in piedi.
+Se la spegni senza la missione, un minuto dopo suona di nuovo.
 
 DODICI MISSIONI
 
-- Calcolo: operazioni a tempo, tarate sulla difficoltà scelta
-- Squat: li conta la fotocamera, non tu
-- Foto: vai a fotografare un oggetto preciso, in un posto preciso
-- Codice a barre: scansiona la scatola che hai lasciato in bagno ieri sera
-- Scuotere: continua a scuotere finché la barra non si riempie
-- Passi: cammina un numero di passi stabilito, contati dal telefono
-- Sequenza: ripeti una serie che si allunga a ogni turno
-- Digitazione: ricopia una frase, identica, punteggiatura compresa
-- Disegno: disegna quello che ti chiede, e viene verificato
-- Memoria: trova le coppie
-- Respiro: sessanta secondi di respirazione lenta prima di essere lasciato andare
-- Fermo: tieni il telefono dritto e immobile, più a lungo di quanto vorresti
+- Calcoli: calcolo mentale tarato sulla difficoltà. Solo Difficile e Brutale sono a tempo, e una risposta sbagliata porta un nuovo calcolo
+- Memoria: guarda quali caselle si accendono, poi tocca le stesse
+- Sequenza: ripeti una serie di tasti colorati che si allunga di uno ogni volta che la indovini
+- Digitazione: ricopia una frase parola per parola, da una riga breve in Facile a una frase lunga in Brutale. Maiuscole, accenti e punteggiatura non contano
+- Scuoti: da 15 a 100 scosse
+- Passi: da 20 a 200 passi, contati dal telefono
+- Squat: 3, 8, 15 o 25, contati dalla fotocamera anteriore, sul dispositivo
+- Foto: registra un oggetto una volta, per esempio il bollitore. Al mattino inquadra un oggetto dello stesso tipo. Il riconoscimento avviene sul dispositivo e verifica che cosa è l’oggetto, non dove si trova
+- Codice a barre: registra un codice a barre o un codice QR, per esempio su una scatola in un’altra stanza, poi scansionalo
+- Disegno: disegna quello che ti chiede, il riconoscimento sul dispositivo lo verifica
+- Volo: un gioco di volo con un pollice solo. Supera da 2 a 15 varchi
+- Respiro: respirazione guidata, da 3 a 10 cicli, da circa 30 secondi a oltre tre minuti
+
+DURA QUANTO SERVE
+
+- Quattro difficoltà: Facile, Medio, Difficile e Brutale
+- Fino a dieci turni della stessa missione
+- Fino a tre missioni in più nel corso della mattina: ognuna suona da 1 a 60 minuti dopo che hai superato la precedente
+- Posticipo da 1 a 30 minuti, quante volte lo concedi, oppure mai
+- Quattordici suonerie, dalle più dolci alle più feroci
+- Prova prima una missione dall’editor della sveglia, in silenzio e senza impostare nulla. Le due del pomeriggio sono il momento giusto per scoprire cosa vuol dire Brutale
 
 NON MOLLA
 
-Ferma la sveglia senza finire la missione e torna dopo un minuto, sulla schermata di blocco, con un titolo che dice perché. Imposta i turni che ti servono: uno per un giorno feriale, dieci per la mattina di un volo.
-
-Suona sulla schermata di blocco tramite il sistema di allarmi di Apple, quindi funziona con l’app chiusa, il telefono bloccato e Non disturbare attivo. C’è un’uscita di emergenza nelle impostazioni, attiva per impostazione predefinita, perché una sveglia che non si può fermare è un pericolo e non una funzione.
+- La modalità Implacabile è attiva su ogni nuova sveglia: spenta senza finire la missione, suona di nuovo un minuto dopo sulla schermata di blocco, con il titolo «Missione non completata»
+- Chiudere l’app non basta: finché la missione non è fatta, il prossimo squillo è già impostato
+- Suona come sveglia di sistema, tramite AlarmKit: con l’app chiusa, il telefono bloccato, in modalità silenziosa e con qualsiasi modalità Full Immersion, Non disturbare compreso. Richiede iOS 26
+- C’è sempre una via d’uscita. La X nell’angolo di ogni schermata di missione chiede conferma, poi ferma la sveglia e registra la mattina come resa, perché una sveglia che non si può fermare è un pericolo e non una funzione
 
 OGNI MATTINA, SCRITTA
 
-Novanta giorni di quello che è successo davvero: a che ora ti sei svegliato, quanto è durata la missione, la tua serie, e ogni mattina in cui hai fermato la sveglia senza fare la missione. I numeri non ti lusingano, di proposito. È questo che li rende utili.
+Fino a 90 giorni di orari di risveglio, durata delle missioni, serie, posticipi e le mattine in cui l’hai spenta senza missione. I numeri non ti lusingano, di proposito. È questo che li rende utili.
 
 FATTA COME SI DEVE
 
-- Dodici lingue, incluso l’arabo da destra a sinistra, tradotte e non passate a una macchina
-- Scura per impostazione predefinita, perché questa schermata la leggi alle sei del mattino
-- Un widget nella schermata di blocco con la prossima sveglia
-- Supporto completo per VoiceOver e testo dinamico
-- Nessun account. Nessun accesso. Nessuna pubblicità. Nessuna analisi
-- Niente lascia il telefono. Non c’è nemmeno un server dove andare
+- Dodici lingue, arabo compreso, da destra a sinistra
+- Scura dall’inizio alla fine, perché questa schermata la leggi alle 6
+- Un widget con la prossima sveglia, per la schermata di blocco e la schermata Home
+- Nessun account. Nessun login. Nessuna pubblicità. Nessuna analisi
+- Niente lascia il telefono. Non c’è nemmeno un server dove mandarlo
 
 GRATIS, TUTTO
 
-Tutte le missioni, tutte le difficoltà, fino a dieci turni, tutte le sveglie che la tua settimana richiede, novanta giorni di cronologia. Non c’è nulla da comprare: nessun abbonamento, nessuna pubblicità, nessun account.
+Tutte le missioni, tutte le difficoltà e tutte le suonerie, dal primo avvio. Non c’è nulla da comprare: nessun abbonamento, nessuna pubblicità, nessun account.
 
 Privacy: https://dawnbreak.app/privacy.html
 Termini d’uso: https://dawnbreak.app/terms.html

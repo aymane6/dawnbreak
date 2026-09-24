@@ -34,10 +34,15 @@ enum CaptureLaunch {
     /// The order is the screenshot order, so the numbering the App Store sorts by comes from
     /// `allCases` rather than being written twice. `editor` is the one the test still has to tap
     /// for, because opening that sheet is `AlarmListView`'s own state.
+    ///
+    /// The mission leads because a search result shows the first three and nothing else: the
+    /// screen no ordinary alarm has, then the list, then the promise that it rings through silent
+    /// mode and Focus. The list led until 2026-09-24, and a row of alarm cards is what every
+    /// alarm clock in the results looks like.
     enum Screen: String, CaseIterable {
-        case alarms, editor, mission, stats, settings, onboarding
+        case mission, alarms, onboarding, editor, stats, settings
 
-        /// `01-alarms`, `02-editor`, … The prefix is what makes the set sort correctly in Finder
+        /// `01-mission`, `02-alarms`, … The prefix is what makes the set sort correctly in Finder
         /// and in the App Store Connect upload, which orders by filename.
         var fileStem: String {
             let position = (Screen.allCases.firstIndex(of: self) ?? 0) + 1

@@ -15,19 +15,39 @@ public struct JSONFileStore<Value: Codable & Sendable>: Sendable {
         self.fallback = fallback
     }
 
-    /// Reads the file. A missing file is not an error — it is the first launch — and a
-    /// *corrupt* file is not an error either: the corrupt copy is moved aside so it can be
+    /// Reads the file, or returns nil and leaves it where it is when it exists but cannot
+    /// be read.
+    ///
+    /// A missing file is not an error: it is the first launch. An unreadable one is not
+    /// corrupt either. After a restart the data-protection class keeps the file closed
+    /// until the phone is first unlocked, and an alarm's lock-screen buttons can launch the
+    /// app before that. Reading that as corruption moved a healthy alarm list aside, and
+    /// the next write replaced it with an empty one.
+    ///
+    /// A file that reads but does not decode *is* corrupt: it is moved aside so it can be
     /// inspected, and the caller gets the fallback rather than a crash loop at 6am.
-    public func load() -> Value {
+    public func loadIfReadable() -> Value? {
         guard FileManager.default.fileExists(atPath: url.path) else { return fallback() }
+        let data: Data
         do {
-            let data = try Data(contentsOf: url)
+            data = try Data(contentsOf: url)
+        } catch {
+            NSLog("[Dawnbreak] store at %@ could not be read (%@); left in place",
+                  url.lastPathComponent, String(describing: error))
+            return nil
+        }
+        do {
             return try Self.decoder.decode(Value.self, from: data)
         } catch {
             quarantine(reason: error)
             return fallback()
         }
     }
+
+    /// `loadIfReadable`, with the fallback standing in for a file that cannot be read yet.
+    /// Only for readers that never write back: a store that saves what it loaded here
+    /// would put the fallback over the real file.
+    public func load() -> Value { loadIfReadable() ?? fallback() }
 
     /// Writes via a temporary file in the same directory and an atomic replace. Writing in
     /// place risks a half-written file if the app is killed mid-write, and a half-written
@@ -57,7 +77,7 @@ public struct JSONFileStore<Value: Codable & Sendable>: Sendable {
     private func quarantine(reason: any Error) {
         let broken = url.appendingPathExtension("corrupt-\(Int(Date().timeIntervalSince1970))")
         try? FileManager.default.moveItem(at: url, to: broken)
-        NSLog("[Dawnbreak] store at %@ was unreadable (%@); moved to %@",
+        NSLog("[Dawnbreak] store at %@ did not decode (%@); moved to %@",
               url.lastPathComponent, String(describing: reason), broken.lastPathComponent)
     }
 

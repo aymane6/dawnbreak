@@ -77,7 +77,7 @@ struct MemoryMissionView: View {
                     if isChosen {
                         Image(systemName: "checkmark")
                             .font(.system(size: 17, weight: .heavy))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Theme.onAccent)
                             .transition(.scale.combined(with: .opacity))
                     }
                 }

@@ -1,1 +1,1 @@
-wake,heavy,sleeper,oversleep,late,snooze,loud,ringtone,squat,barcode,photo,math,shake,habit
+loud,math,puzzle,task,challenge,game,barcode,qr,scan,squat,snooze,oversleep,deep,morning,photo,shake

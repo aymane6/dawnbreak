@@ -21,6 +21,20 @@ public struct MathChallenge: Hashable, Sendable {
         return "\(left.formatted(style)) \(op.rawValue) \(right.formatted(style))"
     }
 
+    /// `prompt`, as it has to be drawn: isolated left to right, with the operator held in place
+    /// by two left-to-right marks.
+    ///
+    /// Not cosmetic. To the bidi algorithm Arabic-Indic digits are Arabic numbers, and the
+    /// operator between two of them resolves right to left even inside a left-to-right paragraph,
+    /// so a plain "٩ − ٢" is drawn "٢ − ٩". Read left to right, like the keypad under it and like
+    /// every calculator on the platform, that is a problem whose answer is −7. The isolate keeps
+    /// the order whichever way the surrounding text runs. The marks are invisible and VoiceOver
+    /// skips them, but the accessibility label still reads `prompt`, which has none.
+    public func displayPrompt(in locale: Locale) -> String {
+        let style = IntegerFormatStyle<Int>(locale: locale).grouping(.never)
+        return "\u{2066}\(left.formatted(style)) \u{200E}\(op.rawValue)\u{200E} \(right.formatted(style))\u{2069}"
+    }
+
     /// Deterministic under an injected generator, which is what lets the tests assert that
     /// `.easy` never produces a negative answer instead of hoping across 100 random runs.
     public static func make(

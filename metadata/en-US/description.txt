@@ -1,46 +1,55 @@
-You do not oversleep because your alarm is too quiet. You oversleep because stopping it takes one thumb, half a second, and no thought at all.
+You do not oversleep because your alarm is too quiet. You oversleep because stopping it takes one thumb, half a second and no thought at all.
 
-Dawnbreak takes the thumb out of it. To silence the alarm you have to do something a sleeping person cannot: walk to the kitchen and photograph the kettle, do ten squats in front of the camera, solve arithmetic you would find easy at noon, scan the barcode on a box in another room.
+Dawnbreak takes the thumb out of it. To stop the alarm you complete a mission: walk to the kitchen and point the camera at the kettle, do eight squats in front of the camera, solve arithmetic you would find easy at noon, scan the barcode on a box in another room.
 
-By the time it goes quiet, you are up.
+Stop it without the mission and, one minute later, it rings again.
 
 TWELVE MISSIONS
 
-- Math: sums with a time limit, sized to the difficulty you chose
-- Squats: counted by the camera, not by you
-- Photo: go and photograph a specific object, in a specific place
-- Barcode: scan the box you left in the bathroom last night
-- Shake: keep shaking until the bar fills
-- Steps: walk a set number of steps, counted by the phone
-- Pattern: repeat a sequence that gets longer each round
-- Typing: type a sentence out, exactly, punctuation and all
-- Drawing: draw what it asks for, and it checks
-- Memory: find the pairs
-- Breathe: sixty seconds of paced breathing before you are let go
-- Hold: hold still, phone upright, for longer than you want to
+- Math: mental arithmetic sized to the difficulty. Only Hard and Brutal are timed, and a wrong answer brings a new problem
+- Memory: watch which tiles light up, then tap the same ones
+- Sequence: repeat a run of colored pads that grows by one each time you get it right
+- Typing: retype a sentence word for word, from a short line at Easy to a long one at Brutal. Capitals and punctuation do not count
+- Shake: 15 to 100 shakes
+- Steps: 20 to 200 steps, counted by the phone
+- Squats: 3, 8, 15 or 25, counted by the front camera, on the device
+- Photo: register an object once, the kettle for instance. In the morning, point the camera at one like it. Recognition runs on the device and checks what the object is, not where it is
+- Barcode: register a barcode or QR code, say on a box in another room, then scan it
+- Draw: draw what it asks for, and on-device recognition checks it
+- Flap: a one-thumb flying game. Get through 2 to 15 gaps
+- Breathe: guided breathing, 3 to 10 cycles, from about 30 seconds to over three minutes
+
+AS HARD AS YOU NEED IT
+
+- Four difficulties: Easy, Medium, Hard and Brutal
+- Up to ten rounds of the same mission
+- Up to three more missions later in the morning, each one ringing 1 to 60 minutes after you clear the one before
+- Snooze from 1 to 30 minutes, as often as you allow, or not at all
+- Fourteen alarm tones, from gentle to savage
+- Try a mission first from the alarm editor, silently and with nothing armed. Two in the afternoon is a good time to find out what Brutal means
 
 IT DOES NOT LET GO
 
-Stop the alarm without finishing the mission and it comes back a minute later, on the lock screen, under a title that says why. Set as many rounds as you need: one for a weekday, ten for the morning of a flight.
-
-It rings on the lock screen through Apple's own alarm system, so it works with the app closed, the phone locked, and Do Not Disturb on. There is an emergency exit, in Settings, on by default, because an alarm that cannot be stopped is a hazard and not a feature.
+- Relentless is on for every new alarm: stop the alarm without finishing the mission and it rings again a minute later on the lock screen, titled “Mission not done”
+- Closing the app is no way out: until the mission is done, the next ring is already set
+- It rings as a system alarm, through AlarmKit: with the app closed, the phone locked, silent mode on, and through every Focus, Do Not Disturb included. Requires iOS 26
+- There is always a way out. The X in the corner of every mission screen asks you to confirm, then stops the alarm and logs the morning as a give-up, because an alarm that cannot be stopped is a hazard and not a feature
 
 EVERY MORNING, WRITTEN DOWN
 
-Ninety days of what actually happened: when you woke, how long the mission took, your streak, and every morning you stopped the alarm without doing the mission. The numbers are unflattering on purpose. That is what makes them useful.
+Up to 90 days of wake times, how long the missions took, streaks, snoozes, and the mornings you stopped it without the mission. The numbers are unflattering on purpose. That is what makes them useful.
 
 BUILT PROPERLY
 
-- Twelve languages, including right-to-left Arabic, translated rather than machine-processed
-- Dark by default, because you read this screen at 6am
-- A lock screen widget with the next alarm
-- Full VoiceOver support and Dynamic Type
-- No account. No sign-in. No adverts. No analytics
+- Twelve languages, including Arabic, laid out right to left
+- Dark throughout, because you read this screen at 6am
+- A widget with the next alarm, for the lock screen and the home screen
+- No account. No sign-in. No ads. No analytics
 - Nothing leaves the phone. There is no server to leave it to
 
 FREE, ALL OF IT
 
-Every mission, every difficulty, up to ten rounds, as many alarms as your week needs, and ninety days of history. There is nothing to buy: no subscription, no adverts, no account.
+Every mission, every difficulty and every tone, from the first launch. There is nothing to buy: no subscription, no ads, no account.
 
 Privacy policy: https://dawnbreak.app/privacy.html
 Terms of use: https://dawnbreak.app/terms.html

@@ -11,7 +11,9 @@ struct DawnbreakApp: App {
         WindowGroup {
             RootView()
                 .environment(\.app, env)
-                .preferredColorScheme(colorScheme)
+                // Dark only. Every colour in `Theme` is drawn for a dark bedroom at 06:00, and a
+                // light scheme put the system's black text on those dark surfaces.
+                .preferredColorScheme(.dark)
                 .task {
                     #if DEBUG
                     // Before the restore: the seed clears the pending mission store, and the
@@ -35,21 +37,19 @@ struct DawnbreakApp: App {
                 }
         }
         .onChange(of: scenePhase) { _, phase in
+            // A success page is read once. Left up, it greeted the next unlock hours later.
+            if phase == .background { env.bridge.dismissCelebration() }
             // Coming back to the foreground is the moment a mission left pending by a
             // lock-screen intent becomes visible, and the moment to notice that an alarm
             // was silenced while the app was away.
             guard phase == .active else { return }
+            // A process launched by a lock-screen button before the first unlock after a
+            // restart could not read its files. The phone is unlocked by now.
+            env.alarms.reloadIfUnread()
+            env.log.reloadIfUnread()
             let resumed = env.bridge.restorePendingMission()
             guard resumed, !CaptureMode.isActive else { return }
             Task { await env.bridge.missionLeftUnfinished() }
-        }
-    }
-
-    private var colorScheme: ColorScheme? {
-        switch env.preferences.appearance {
-        case .dark: .dark
-        case .light: .light
-        case .system: nil
         }
     }
 }

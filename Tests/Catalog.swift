@@ -94,6 +94,20 @@ enum Catalog {
         url("Localizable", "strings", locale) != nil
     }
 
+    /// One language's compiled directory as a bundle of its own, which is how a test formats that
+    /// language's text without changing the language the host app runs in.
+    static func bundle(_ locale: String) -> Bundle? {
+        guard let url = url("Localizable", "strings", locale) else { return nil }
+        return Bundle(url: url.deletingLastPathComponent())
+    }
+
+    /// A key's text in one language, formatted the way the app formats it.
+    static func format(_ key: String, in locale: String, _ arguments: any CVarArg...) -> String? {
+        guard let bundle = bundle(locale) else { return nil }
+        let format = bundle.localizedString(forKey: key, value: nil, table: "Localizable")
+        return String(format: format, locale: Locale(identifier: locale), arguments: arguments)
+    }
+
     // MARK: - Format specifiers
 
     /// `%1$lld`, `%lld`, `%@`, `%.1f`. Not the `%%` that renders a literal percent sign, which is

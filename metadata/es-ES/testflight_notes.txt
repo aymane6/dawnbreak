@@ -1,19 +1,17 @@
-La versión 10 corrige algo que encontraste tú y yo no: dijiste que la app tenía cuatro tonos. Tiene catorce, desde la versión 8. Solo cuatro estaban en pantalla.
+La build 12 es la que vuelve a la revisión de Apple, así que casi todo tiene que ver con el primer minuto y con las pantallas de misión.
 
-POR QUÉ VEÍAS CUATRO
-Los tonos eran una tira horizontal de fichas pequeñas dentro de la tarjeta de sonido. Cuatro caben en una pantalla de 6,9 pulgadas, tres en una de 6,1, el indicador de scroll estaba oculto y nada decía que hubiera más. Leíste bien la pantalla; la pantalla mentía.
+QUÉ HA CAMBIADO
+- La pantalla previa al permiso de alarmas tiene un solo botón, Continuar. La decisión se toma en el aviso de iOS, y la app funciona con cualquiera de las dos respuestas.
+- «Crear mi primera alarma», el último botón de la presentación, ahora abre el editor de alarmas.
+- Ajustes solo conserva lo que hace algo. La app es siempre oscura.
+- Escritura: ya no hay botón Comprobar. La ronda se supera con la pulsación que completa la frase.
+- Dibujo: tras dos fallos dice qué ha visto en su lugar y propone otra cosa que dibujar.
+- En árabe, las operaciones ya no se muestran al revés.
+- Borrar una alarma pide confirmación.
 
-CÓMO ES AHORA
-La tarjeta de sonido tiene una fila: el nombre del tono actual, su icono de intensidad y el número 14. Al tocarla se abre una pantalla con las catorce fichas, tres por fila, de la más suave a la peor, todas visibles a la vez y sin scroll en cualquier iPhone. Tocar una la selecciona y suena una vista previa. El icono y su color dicen la clase.
-
-QUÉ IMPIDE QUE VUELVA
-Una prueba abre esa pantalla y comprueba que las catorce fichas están dentro de la ventana y se pueden tocar tras cero deslizamientos, en inglés y en árabe. Volví a poner la tira antigua para asegurarme de que falla: falla. Otra prueba comprueba que el tono elegido sobrevive al guardar y reabrir.
-
-SOBRE AÑADIR SONIDOS GRABADOS
-Pediste fuentes open source. Comprobé las licencias en su fuente, no en resúmenes, y la conclusión es que los catorce siguen sintetizados. En corto: solo el audio CC0 puede entrar en un binario de pago de la App Store sin pedir permiso a cada autor, porque las propias FAQ de Creative Commons dicen que publicar un archivo CC BY a través de una plataforma que aplica protección de copia requiere permiso expreso del licenciante, y la App Store la aplica. La lista completa va en el mensaje que acompaña a esta versión.
-
-VALE LA PENA COMPROBAR
-1. Editor, fila de sonido: debe decir el tono actual y 14. Tócala y cuenta las fichas.
-2. Escucha Avispón, Zumbador y Cigarra desde ahí, y Sirena.
-3. Elige uno, guarda, reabre la alarma: debe seguir seleccionado.
-4. En árabe, la misma pantalla: fichas espejadas y nombres más largos; nada debe cortarse.
+QUÉ COMPROBAR
+1. Borra la app e instala esta build. Dos pantallas con Siguiente y luego una que solo ofrece Continuar. Responde al aviso como quieras y pulsa «Crear mi primera alarma»: se abre el editor y, al cerrarlo, guardes o no, tienes que acabar en la lista de alarmas.
+2. Pon una alarma dos minutos más tarde, bloquea el teléfono y, cuando suene, pulsa el botón con el nombre de la misión.
+3. La siguiente vez pulsa Parar: la alarma debe volver un minuto después.
+4. Cuando suena una alarma, la X de la esquina pide confirmación antes de dejarte ir; desde «Probar esta misión» cierra al instante.
+5. Texto cortado, superpuesto o en otro idioma: una captura de pantalla es el mejor aviso.

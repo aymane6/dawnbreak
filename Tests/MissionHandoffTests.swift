@@ -31,11 +31,11 @@ struct MissionHandoffTests {
     /// clearing it.
     private static func bridge(
         with alarm: AlarmDraft?,
-        system: FakeAlarmSystem = FakeAlarmSystem()
+        system: FakeAlarmSystem = FakeAlarmSystem(),
+        in directory: URL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("handoff-\(UUID().uuidString)", isDirectory: true)
     ) -> (AlarmBridge, AlarmStore) {
         PendingMissionStore.clear()
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("handoff-\(UUID().uuidString)", isDirectory: true)
         let store = AlarmStore(directory: directory)
         if let alarm { store.upsert(alarm) }
         let bridge = AlarmBridge(system: system)
@@ -152,6 +152,7 @@ struct MissionHandoffTests {
     func snoozeClosesTheMissionUntilItRings() async {
         var alarm = Self.draft()
         alarm.snooze = AlarmDraft.SnoozePolicy(isAllowed: true, minutes: 9, maxCount: nil)
+        alarm.label = "Run"
         let system = FakeAlarmSystem()
         let (bridge, _) = Self.bridge(with: alarm, system: system)
         await bridge.handleStopPressed(alarmID: alarm.id)
@@ -168,6 +169,9 @@ struct MissionHandoffTests {
         #expect(PendingMissionStore.loadIfFresh() == nil, "it must not reopen during the snooze")
         #expect(PendingMissionStore.loadUpcoming()?.alarmID == alarm.id, "reconcile must not touch it")
         #expect(bridge.armedIDs == [alarm.id])
+        // A snooze was allowed and asked for, so the alarm comes back as itself, not as the
+        // "Mission not done" a dodge earns.
+        #expect(system.followUpTitleKeys.last == .some("Run"))
     }
 
     // MARK: - Walking away
@@ -470,6 +474,86 @@ struct MissionHandoffTests {
         #expect(bridge.armedIDs == [alarm.id])
     }
 
+    /// The phone restarted overnight, the alarm rang before anyone unlocked it, and its Stop
+    /// button launched the app with the alarm list still closed by data protection. An empty
+    /// list that only means "not read yet" made every armed alarm look like a stray.
+    @Test("Reconciliation does nothing while the alarm list cannot be read yet")
+    func reconcileWaitsForTheList() async throws {
+        let alarm = Self.draft(repeatDays: [.monday])
+        let system = FakeAlarmSystem()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("handoff-\(UUID().uuidString)", isDirectory: true)
+        let (bridge, _) = Self.bridge(with: alarm, system: system, in: directory)
+        await bridge.schedule(alarm)
+        let file = directory.appendingPathComponent("alarms.json")
+        try FileManager.default.setAttributes([.posixPermissions: 0], ofItemAtPath: file.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: file.path) }
+
+        // A new process, launched before the first unlock.
+        let early = AlarmStore(directory: directory)
+        #expect(early.isUnread)
+        let relaunched = AlarmBridge(system: system)
+        relaunched.attach(alarms: early, log: WakeLogStore(directory: directory))
+        let callsBefore = system.calls.count
+
+        await relaunched.reconcile()
+
+        #expect(system.calls.count == callsBefore, "reconcile cancelled an alarm it could not see")
+        #expect(system.snapshot()?.scheduled == [alarm.id])
+    }
+
+    // MARK: - A morning in progress
+
+    /// Between two stages the only thing standing between the user and a lie-in is the
+    /// one-off ring that continues the morning. An edit re-armed the alarm on its normal
+    /// schedule over it, and a delete or a switch-off cancelled it outright.
+    @Test("Editing, switching off or deleting an alarm mid-morning leaves the ring that continues it")
+    func aMorningInProgressSurvivesTheList() async {
+        let alarm = AlarmDraft(
+            hour: 6, minute: 30, repeatDays: [.monday],
+            mission: MissionConfig(kind: .math, difficulty: .easy, rounds: 1),
+            followOns: [FollowOnMission(mission: MissionConfig(kind: .shake, difficulty: .easy), minutesAfter: 10)]
+        )
+        let system = FakeAlarmSystem()
+        let (bridge, store) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let stage1 = bridge.activeMission else { Issue.record("no mission opened"); return }
+        await bridge.missionCompleted(stage1)
+        let callsBefore = system.calls.count
+
+        var edited = alarm
+        edited.minute = 45
+        store.upsert(edited)
+        await bridge.schedule(edited)
+        edited.isEnabled = false
+        store.upsert(edited)
+        await bridge.schedule(edited)
+        bridge.cancel(alarm.id)
+
+        #expect(system.calls.count == callsBefore, "the list touched the ring that continues the morning")
+        #expect(bridge.armedIDs == [alarm.id])
+        #expect(PendingMissionStore.loadUpcoming()?.stage == 1)
+    }
+
+    @Test("A change made mid-morning applies once the morning is settled")
+    func aChangeMadeMidMorningAppliesAfterwards() async {
+        let alarm = Self.draft(repeatDays: [.monday])
+        let system = FakeAlarmSystem()
+        let (bridge, store) = Self.bridge(with: alarm, system: system)
+        await bridge.handleStopPressed(alarmID: alarm.id)
+        guard let pending = bridge.activeMission else { Issue.record("no mission opened"); return }
+        var switchedOff = alarm
+        switchedOff.isEnabled = false
+        store.upsert(switchedOff)
+        await bridge.schedule(switchedOff)
+        #expect(system.calls.last == .followUp(alarm.id), "switching it off ended the morning")
+
+        await bridge.missionCompleted(pending)
+
+        #expect(bridge.armedIDs.isEmpty, "the alarm switched off mid-morning was put back on its schedule")
+        #expect(system.snapshot()?.scheduled.isEmpty == true)
+    }
+
     // MARK: - Chained missions
 
     @Test("Clearing a stage with a follow-on arms the next ring instead of ending the morning")
@@ -622,9 +706,8 @@ struct MissionHandoffTests {
     /// returns. The whole unit bundle then sits at zero output forever with no failure and no
     /// timeout, which reads as a hung machine rather than an unanswered prompt. There is no
     /// `simctl privacy` service for alarms, so the alert cannot be pre-granted; what answers it is
-    /// `AlarmRingTests.allowAlarmsIfAsked`, so run the UI bundle once on a fresh device before this
-    /// one. `build/ship-screenshots.sh` erases the device on every run, which is what makes a
-    /// device that used to be authorized stop being it.
+    /// `UITestCase.allowAlarmsIfAsked`, so run the UI bundle once on a fresh device before this
+    /// one. Erasing the simulator is what makes a device that used to be authorized stop being it.
     @Test("Building a throwaway environment does not steal the shared bridge's stores")
     func aThrowawayEnvironmentLeavesTheSharedBridgeAlone() async {
         // The worst bug this app has had, as a regression test. SwiftUI's environment default

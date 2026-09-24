@@ -10,25 +10,59 @@ import UIKit
 struct MissionRunnerView: View {
     @Environment(\.app) private var app
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let pending: PendingMission
     /// `.alarm` is the real thing. `.rehearsal` is the editor's "try this mission": same
     /// challenge, same rounds, but no audio, no alarm behind it, no record written, and a
-    /// door that is always open — nobody should have to do squats to leave a settings screen.
+    /// door that is always open: nobody should have to do squats to leave a settings screen.
     var mode: Mode = .alarm
 
     enum Mode { case alarm, rehearsal }
+
+    /// How often real progress inside a round may push the follow-up out. Each push is a cancel
+    /// and a re-arm, and a shake counted ten times a second would otherwise be ten of them; the
+    /// follow-up is three minutes out, so twenty seconds of slack costs nothing.
+    private static let progressInterval: TimeInterval = 20
 
     @State private var roundsCleared = 0
     @State private var audio = AlarmAudio()
     @State private var showingExitConfirmation = false
     @State private var phase: Phase = .running
     /// Bumped to force a fresh challenge. Every mission view is `.id`-keyed on it, so a new
-    /// round is a new view rather than a reset method each mission has to implement.
+    /// round is a new view rather than a reset method each mission has to implement. The round's
+    /// countdown is keyed on it too.
     @State private var roundToken = 0
     @State private var secondsLeft: Int?
     @State private var flashMistake = false
+    /// The last setback, said in words over the new round for a moment. A wrong answer and a
+    /// round that ran out of time used to be the same silent flash, and the puzzle simply
+    /// changed under the user with nothing to say why.
+    @State private var setback: Setback?
+    @State private var setbackCount = 0
+    /// When the last round was cleared. The success page times the morning from here rather
+    /// than from each redraw, so the figure it shows is the one the log keeps.
+    @State private var solvedAt: Date?
+    /// Whether the morning is on record. The streak on the success page waits for it.
+    @State private var isSettled = false
+    @State private var lastPush: Date?
+    /// The runner's calls into the bridge, one at a time. Each one ends in a cancel and a round
+    /// trip to the daemon for the same id, and two in flight at once race: AlarmKit refuses the
+    /// second as a duplicate, and whichever lands last is what rings. A push still in flight
+    /// when the last answer settles the morning would re-arm a morning that is over.
+    @State private var bridgeCalls: Task<Void, Never>?
 
     private enum Phase { case running, succeeded }
+
+    private enum Setback {
+        case wrong, timeUp
+
+        var messageKey: String {
+            switch self {
+            case .wrong: "mission.setback.wrong"
+            case .timeUp: "mission.setback.timeUp"
+            }
+        }
+    }
 
     private var isRehearsal: Bool { mode == .rehearsal }
 
@@ -40,8 +74,13 @@ struct MissionRunnerView: View {
             case .running:
                 running
             case .succeeded:
-                MissionSuccessView(pending: pending, roundsCleared: roundsCleared, isRehearsal: isRehearsal) {
-                    Task { await finish() }
+                MissionSuccessView(
+                    pending: pending,
+                    elapsed: (solvedAt ?? Date()).timeIntervalSince(pending.startedAt),
+                    isRehearsal: isRehearsal,
+                    isSettled: isSettled
+                ) {
+                    Task { await close() }
                 }
             }
         }
@@ -50,9 +89,6 @@ struct MissionRunnerView: View {
         // through counting squats.
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
-            // The round timer runs in both modes: the time limit is part of the difficulty,
-            // and showing someone an untimed rehearsal of a timed mission would be a lie.
-            startTimerIfNeeded()
             guard !isRehearsal else { return }
             audio.start(
                 soundName: pending.soundName,
@@ -63,24 +99,27 @@ struct MissionRunnerView: View {
             // The mission is being done, so the alarm waiting to come back is pushed out. It is
             // not cancelled: something has to be armed at every instant until the mission is
             // cleared, or killing the app here would be the way out.
-            Task { await app.bridge.missionInProgress() }
+            pushFollowUpOut()
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
             audio.stop()
             guard !isRehearsal else { return }
             // This screen going away without the mission being settled is not allowed to be a
-            // way out. `missionCompleted` and `missionAbandoned` both clear the pending mission
-            // before the cover dismisses, so a mission still owed here means the screen was
-            // taken away by something that did not settle it — and then the alarm comes straight
-            // back rather than never.
-            if app.bridge.activeMission?.alarmID == pending.alarmID {
+            // way out. Clearing the last round, giving up and snoozing all take the mission off
+            // `activeMission` before the cover dismisses, so a mission still owed here means the
+            // screen was taken away by something that did not settle it, and then the alarm
+            // comes straight back rather than never. Only this stage counts: the next mission
+            // of a chain replaces this screen when it rings, and that is not this one left
+            // unfinished.
+            if let active = app.bridge.activeMission,
+               active.alarmID == pending.alarmID, active.stage == pending.stage {
                 Task { await app.bridge.missionLeftUnfinished() }
             }
         }
         // No interactive dismissal, no swipe: this is the one screen in the app that is
-        // deliberately hard to leave. The escape hatch in the corner is the way out.
-        // A rehearsal keeps that off too — its exit is the always-present X, not a swipe
+        // deliberately hard to leave. The confirmed exit in the corner is the way out.
+        // A rehearsal keeps that off too: its exit is the always-present X, not a swipe
         // nobody discovers.
         .interactiveDismissDisabled()
     }
@@ -91,7 +130,7 @@ struct MissionRunnerView: View {
         VStack(spacing: 0) {
             header
 
-            ZStack {
+            ZStack(alignment: .top) {
                 missionBody
                     .id(roundToken)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -102,40 +141,54 @@ struct MissionRunnerView: View {
                         .allowsHitTesting(false)
                         .transition(.opacity)
                 }
+
+                if let setback {
+                    SetbackBanner(messageKey: setback.messageKey)
+                        .padding(.top, 10)
+                        .allowsHitTesting(false)
+                        .transition(.opacity)
+                }
             }
 
             footer
         }
         .animation(.easeOut(duration: 0.2), value: flashMistake)
+        .animation(.easeOut(duration: 0.2), value: setback)
+        // One countdown per round, owned by this view: SwiftUI cancels it when the round is
+        // replaced, when the mission is won and when the screen goes away. It used to be a
+        // loose task that only checked a token, and it went on ticking after the screen closed.
+        .task(id: roundToken) { await runRoundTimer() }
+        .task(id: setbackCount) { await clearSetbackSoon() }
     }
 
     private var header: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             HStack(spacing: 10) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(Theme.accent)
-                    .symbolEffect(.variableColor.iterative, options: .repeating)
+                    .symbolEffect(.variableColor.iterative, options: .repeating, isActive: !reduceMotion)
+                    .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     // The anchor for "the mission screen is up" sits on this leaf rather than on
                     // the header container, because an accessibility modifier on a container is
                     // applied to everything inside it: identifying the whole header stamped
                     // `ax.mission.header` over the exit button's own identifier, and the test that
                     // checks the escape hatch exists could no longer find it.
                     Text(pending.label.isEmpty ? localized("app.name") : pending.label)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .font(Theme.headlineFont)
                         .foregroundStyle(Theme.textPrimary)
                         .lineLimit(1)
                         .accessibilityIdentifier(AccessibilityID.missionHeader)
                     if isRehearsal {
                         Text("mission.rehearsal", bundle: .main)
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
+                            .font(Theme.captionFont)
                             .foregroundStyle(Theme.warning)
                     } else {
                         Text(ClockFormatter(uses24Hour: app.preferences.usesTwentyFourHourClock)
                             .full(hour: rangAtHour, minute: rangAtMinute))
-                            .font(.system(size: 12, weight: .medium, design: .rounded).monospacedDigit())
+                            .font(Theme.captionFont.monospacedDigit())
                             .foregroundStyle(Theme.textSecondary)
                     }
                 }
@@ -150,41 +203,7 @@ struct MissionRunnerView: View {
                     CountdownPill(seconds: secondsLeft)
                 }
 
-                if isRehearsal {
-                    // Always present, no confirmation: a rehearsal is a settings screen in
-                    // costume, and it must never hold anyone hostage.
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Theme.textSecondary)
-                            .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
-                    }
-                    .accessibilityLabel(Text("action.cancel", bundle: .main))
-                    .accessibilityIdentifier(AccessibilityID.missionExit)
-                } else if app.preferences.emergencyExitEnabled {
-                    Button { showingExitConfirmation = true } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Theme.textTertiary)
-                            .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
-                    }
-                    .accessibilityLabel(Text("mission.exit", bundle: .main))
-                    .accessibilityIdentifier(AccessibilityID.missionExit)
-                    .confirmationDialog(
-                        Text("mission.exit.title", bundle: .main),
-                        isPresented: $showingExitConfirmation,
-                        titleVisibility: .visible
-                    ) {
-                        Button(role: .destructive) {
-                            Task { await abandon() }
-                        } label: {
-                            Text("mission.exit.confirm", bundle: .main)
-                        }
-                        Button(role: .cancel) {} label: { Text("mission.exit.keepGoing", bundle: .main) }
-                    } message: {
-                        Text("mission.exit.body", bundle: .main)
-                    }
-                }
+                exitButton
             }
 
             RoundProgress(cleared: roundsCleared, total: pending.mission.rounds)
@@ -192,15 +211,54 @@ struct MissionRunnerView: View {
         .padding(.horizontal, Theme.Metric.gutter)
         .padding(.top, 8)
         .padding(.bottom, 14)
-        .background(Theme.surface.opacity(0.6))
+    }
+
+    /// Always there. A rehearsal leaves at once, because it is a settings screen in costume and
+    /// must never hold anyone hostage. A real alarm asks first, and there is no setting that
+    /// removes it: with insistence on, a Photo or Draw mission the recogniser keeps rejecting
+    /// would otherwise have no way out but killing the app, which brings the alarm back.
+    @ViewBuilder private var exitButton: some View {
+        if isRehearsal {
+            Button { dismiss() } label: { exitGlyph }
+                .accessibilityLabel(Text("action.cancel", bundle: .main))
+                .accessibilityIdentifier(AccessibilityID.missionExit)
+        } else {
+            Button { showingExitConfirmation = true } label: { exitGlyph }
+                .accessibilityLabel(Text("mission.exit", bundle: .main))
+                .accessibilityIdentifier(AccessibilityID.missionExit)
+                .confirmationDialog(
+                    Text("mission.exit.title", bundle: .main),
+                    isPresented: $showingExitConfirmation,
+                    titleVisibility: .visible
+                ) {
+                    Button(role: .destructive) {
+                        callBridge { await abandon() }
+                    } label: {
+                        Text("mission.exit.confirm", bundle: .main)
+                    }
+                    Button(role: .cancel) {} label: { Text("mission.exit.keepGoing", bundle: .main) }
+                } message: {
+                    Text("mission.exit.body", bundle: .main)
+                }
+        }
+    }
+
+    private var exitGlyph: some View {
+        Image(systemName: "xmark")
+            .font(.system(size: 14, weight: .bold))
+            .foregroundStyle(Theme.textSecondary)
+            .frame(width: 32, height: 32)
+            .background(Theme.surfaceRaised, in: .circle)
+            .frame(width: Theme.Metric.minimumTarget, height: Theme.Metric.minimumTarget)
+            .contentShape(.rect)
     }
 
     @ViewBuilder private var missionBody: some View {
         let callbacks = MissionCallbacks(
             cleared: { clearRound() },
-            mistake: { registerMistake() },
+            mistake: { registerSetback(.wrong) },
             progressed: { reportProgress() },
-            unavailable: { Task { await standDown() } }
+            unavailable: { callBridge { await standDown() } }
         )
 
         switch pending.mission.kind {
@@ -221,9 +279,9 @@ struct MissionRunnerView: View {
 
     @ViewBuilder private var footer: some View {
         if pending.canSnooze && !isRehearsal {
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Button {
-                    Task { await snooze() }
+                    callBridge { await snooze() }
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "zzz")
@@ -234,8 +292,8 @@ struct MissionRunnerView: View {
 
                 if let left = pending.snoozesLeft {
                     Text(localized("mission.snoozesLeft", left))
-                        .font(.caption2)
-                        .foregroundStyle(Theme.textTertiary)
+                        .font(Theme.captionFont)
+                        .foregroundStyle(Theme.textSecondary)
                 }
             }
             .padding(.horizontal, Theme.Metric.gutter)
@@ -246,65 +304,118 @@ struct MissionRunnerView: View {
     // MARK: - Round flow
 
     private func clearRound() {
+        guard phase == .running else { return }
         audio.acknowledge()
         Haptics.success()
         roundsCleared += 1
-        if roundsCleared >= pending.mission.rounds {
-            audio.stop()
-            withAnimation(.spring(duration: 0.4)) { phase = .succeeded }
-        } else {
-            roundToken += 1
-            startTimerIfNeeded()
-            // Progress buys time. A three-round mission is not a dodge, and the alarm coming
-            // back between rounds would be the app fighting the person doing what it asked.
-            if !isRehearsal {
-                Task { await app.bridge.missionInProgress() }
-            }
+        guard roundsCleared < pending.mission.rounds else { return succeed() }
+        roundToken += 1
+        AccessibilityNotification.Announcement(
+            localized("mission.round.cleared.a11y", roundsCleared, pending.mission.rounds)
+        ).post()
+        // Progress buys time. A three-round mission is not a dodge, and the alarm coming
+        // back between rounds would be the app fighting the person doing what it asked.
+        pushFollowUpOut()
+    }
+
+    /// The last round is cleared, and that is the moment the morning is won.
+    ///
+    /// It used to be won by the success page's button: someone who solved the mission and put
+    /// the phone down was rung again three minutes later with "Mission not done", and the log
+    /// timed the morning from a tap. The page that follows is now only a page.
+    private func succeed() {
+        audio.stop()
+        solvedAt = Date()
+        // Nothing is owed any more, so the phone may sleep again.
+        UIApplication.shared.isIdleTimerDisabled = false
+        withAnimation(reduceMotion ? nil : .spring(duration: 0.4)) { phase = .succeeded }
+        AccessibilityNotification.ScreenChanged().post()
+        guard !isRehearsal else { return }
+        callBridge {
+            await app.bridge.missionCompleted(pending)
+            isSettled = true
         }
     }
 
-    /// A wrong answer flashes the screen and restarts the round. It does not end the mission:
-    /// punishing a sleepy mistake by making the alarm unclearable would be cruel and would
-    /// also be the kind of thing that gets an app one-starred.
-    private func registerMistake() {
+    /// A wrong answer, or a round that ran out of time. Either way the round starts again with
+    /// a new challenge, and neither ends the mission: punishing a sleepy mistake by making the
+    /// alarm unclearable would be cruel, and would also be the kind of thing that gets an app
+    /// one-starred.
+    private func registerSetback(_ kind: Setback) {
+        guard phase == .running else { return }
         Haptics.error()
         flashMistake = true
-        Task {
-            try? await Task.sleep(for: .milliseconds(320))
-            flashMistake = false
-        }
+        setback = kind
+        setbackCount += 1
         roundToken += 1
-        startTimerIfNeeded()
+        AccessibilityNotification.Announcement(localized(kind.messageKey)).post()
+        // A wrong answer is someone awake and trying, which is all the follow-up waits for. A
+        // round running out is not: a phone left on this screen runs out of time on its own.
+        if kind == .wrong { reportProgress() }
     }
 
-    private func startTimerIfNeeded() {
+    private func runRoundTimer() async {
         guard let limit = pending.mission.timeLimit else {
             secondsLeft = nil
             return
         }
-        secondsLeft = Int(limit)
-        let token = roundToken
-        Task {
-            while let current = secondsLeft, current > 0, token == roundToken, phase == .running {
-                try? await Task.sleep(for: .seconds(1))
-                guard token == roundToken else { return }
-                secondsLeft = current - 1
-            }
-            // Running out restarts the round rather than failing the mission.
-            if token == roundToken, phase == .running, secondsLeft == 0 {
-                registerMistake()
-            }
+        var left = Int(limit)
+        secondsLeft = left
+        while left > 0 {
+            do { try await Task.sleep(for: .seconds(1)) } catch { return }
+            left -= 1
+            secondsLeft = left
+        }
+        // Running out restarts the round rather than failing the mission.
+        registerSetback(.timeUp)
+    }
+
+    private func clearSetbackSoon() async {
+        guard setback != nil else { return }
+        do {
+            try await Task.sleep(for: .milliseconds(320))
+            flashMistake = false
+            try await Task.sleep(for: .milliseconds(1_300))
+            setback = nil
+        } catch {
+            // A newer setback replaced this one, and its own task clears it.
         }
     }
 
     // MARK: - Outcomes
 
-    private func finish() async {
+    /// Queues `work` behind every earlier call this screen made into the bridge.
+    private func callBridge(_ work: @escaping @MainActor () async -> Void) {
+        let previous = bridgeCalls
+        bridgeCalls = Task { @MainActor in
+            await previous?.value
+            await work()
+        }
+    }
+
+    /// Real progress inside a round: a rep counted, a pipe cleared, an answer given. Buys the
+    /// same time a cleared round buys, at most once every `progressInterval`.
+    private func reportProgress() {
+        guard !isRehearsal, phase == .running else { return }
+        if let lastPush, Date().timeIntervalSince(lastPush) < Self.progressInterval { return }
+        pushFollowUpOut()
+    }
+
+    private func pushFollowUpOut() {
+        guard !isRehearsal else { return }
+        lastPush = Date()
+        callBridge { await app.bridge.missionInProgress() }
+    }
+
+    /// The success page's button. The morning was settled by the last answer; this only takes
+    /// the page down, and not before that settling has landed.
+    private func close() async {
         guard !isRehearsal else {
             dismiss()
             return
         }
-        await app.bridge.missionCompleted(pending)
+        await bridgeCalls?.value
+        app.bridge.dismissCelebration()
     }
 
     private func abandon() async {
@@ -312,19 +423,12 @@ struct MissionRunnerView: View {
         await app.bridge.missionAbandoned(pending)
     }
 
-    /// A mission reported progress inside a round. Buys the same time a cleared round buys.
-    private func reportProgress() {
-        guard !isRehearsal else { return }
-        Task { await app.bridge.missionInProgress() }
-    }
-
     /// The mission cannot be done on this phone, and the wall it shows said so.
     ///
     /// Recorded as a bail-out, not as a completion. It used to clear the round instead, which
     /// wrote "mission completed" into the streak for someone who had merely refused Motion
-    /// access, and did it one tap per round. It is deliberately not the confirmed corner exit
-    /// either: that one can be switched off in Settings, and a phone with no pedometer would
-    /// then hold its owner in front of a ring that can never fill.
+    /// access, and did it one tap per round. It skips the corner exit's confirmation because
+    /// the wall has already explained, and asking twice at 06:00 is one question too many.
     private func standDown() async {
         guard !isRehearsal else {
             dismiss()
@@ -341,11 +445,11 @@ struct MissionRunnerView: View {
     /// When the alarm went off, which is what the header under the label is answering.
     ///
     /// `pending.startedAt` rather than `Date()`. The two are the same instant in the moment that
-    /// matters — the alert has just appeared — and SwiftUI redraws this header whenever the round
-    /// changes, so reading the wall clock made the line drift away from the ring time while the
-    /// mission was being done. It also made it unphotographable: the store screenshots override the
-    /// status bar to 9:41, and a header reading the real clock put "Course du matin 14:19" under an
-    /// 09:41 status bar in all twelve languages of the 19 August set.
+    /// matters, the alert having just appeared, and SwiftUI redraws this header whenever the
+    /// round changes, so reading the wall clock made the line drift away from the ring time
+    /// while the mission was being done. It also made it unphotographable: the store screenshots
+    /// override the status bar to 9:41, and a header reading the real clock put "Course du matin
+    /// 14:19" under an 09:41 status bar in all twelve languages of the 19 August set.
     /// `CaptureMode.headerTime` is nil in every run that is not an App Store capture, so this is
     /// `pending.startedAt` on a real device. See that property for why the pin cannot live in the
     /// mission: the store measures a mission's age from `startedAt` and discards one dated 9:41.
@@ -363,11 +467,12 @@ struct MissionRunnerView: View {
 struct MissionCallbacks {
     var cleared: () -> Void
     var mistake: () -> Void
-    /// Progress inside a round that has no rounds to speak of. A mission whose single round
-    /// outlasts `missionEngagedDelay` would otherwise be rung over while it is being done
-    /// correctly: brutal breathing is ten cycles of twenty seconds, and the follow-up is three
-    /// minutes out. Only real progress may call this; a blind heartbeat would let someone leave
-    /// the screen open and go back to sleep, which is the one thing this app must not allow.
+    /// Progress inside a round. A mission whose single round outlasts `missionEngagedDelay`
+    /// would otherwise be rung over while it is being done correctly: 200 steps, 25 squats or
+    /// ten cycles of brutal breathing all run past the three minutes the follow-up waits. Only
+    /// real progress may call this, and not on the rep that clears the round, which `cleared`
+    /// already covers; a blind heartbeat would let someone leave the screen open and go back
+    /// to sleep, which is the one thing this app must not allow. The runner throttles it.
     var progressed: () -> Void = {}
     /// The mission cannot be done on this phone: no pedometer, or the permission it needs was
     /// refused. Stands the alarm down honestly rather than pretending the user did it.
@@ -397,6 +502,7 @@ private struct RoundProgress: View {
             }
             .frame(height: 5)
         }
+        .animation(.easeOut(duration: 0.3), value: cleared)
         .accessibilityElement()
         .accessibilityLabel(Text("mission.progress", bundle: .main))
         .accessibilityValue(localized("mission.progress.value", cleared, total))
@@ -439,13 +545,36 @@ private struct CountdownPill: View {
     }
 }
 
+/// "Not quite. New round." over the top of the new round, for a moment.
+private struct SetbackBanner: View {
+    let messageKey: String
+
+    var body: some View {
+        Text(key: messageKey)
+            .font(Theme.captionFont.weight(.semibold))
+            .foregroundStyle(Theme.textPrimary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(Theme.danger.opacity(0.22), in: .capsule)
+            .overlay(Capsule().stroke(Theme.danger.opacity(0.5), lineWidth: 1))
+            // Announced when it appears; reading it again from the hierarchy would be twice.
+            .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Success
 
 private struct MissionSuccessView: View {
     @Environment(\.app) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let pending: PendingMission
-    let roundsCleared: Int
+    /// From the ring to the last answer, fixed at the answer: the figure the log keeps.
+    let elapsed: TimeInterval
     var isRehearsal = false
+    /// Whether the morning is on record. The streak is read from the log, so it is shown once
+    /// the log has this morning in it rather than guessed at with a +1 that counted today twice
+    /// on a second alarm.
+    var isSettled = false
     let onDone: () -> Void
 
     @State private var appeared = false
@@ -457,30 +586,24 @@ private struct MissionSuccessView: View {
             Image(systemName: systemImage)
                 .font(.system(size: 74))
                 .foregroundStyle(Theme.dawnGradient)
-                .scaleEffect(appeared ? 1 : 0.6)
+                .scaleEffect(appeared || reduceMotion ? 1 : 0.6)
                 .opacity(appeared ? 1 : 0)
+                .accessibilityHidden(true)
 
             VStack(spacing: 8) {
-                Text("mission.done.title", bundle: .main)
+                Text(key: titleKey)
                     .font(Theme.titleFont)
                     .foregroundStyle(Theme.textPrimary)
-                if let next = pending.upNext, !isRehearsal {
-                    // The morning is not over: say so before the screen goes away, or the
-                    // next ring reads as a malfunction rather than as the deal that was made.
-                    Text(localized("mission.done.nextStage", next.minutesAfter))
-                        .font(Theme.bodyFont)
-                        .foregroundStyle(Theme.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text(localized("mission.done.body", DurationCopy.spent(elapsed)))
-                        .font(Theme.bodyFont)
-                        .foregroundStyle(Theme.textSecondary)
-                        .multilineTextAlignment(.center)
-                }
+                    .multilineTextAlignment(.center)
+                Text(bodyText)
+                    .font(Theme.bodyFont)
+                    .foregroundStyle(Theme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.horizontal, Theme.Metric.gutter)
 
-            if streak > 1 && !isRehearsal && pending.upNext == nil {
+            if showsStreak {
                 HStack(spacing: 6) {
                     Image(systemName: "flame.fill")
                     Text(localized("mission.done.streak", streak))
@@ -490,36 +613,51 @@ private struct MissionSuccessView: View {
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(Theme.accent.opacity(0.14), in: .capsule)
+                .accessibilityElement(children: .combine)
+                .transition(.opacity)
             }
 
             Spacer()
 
             Button(action: onDone) {
-                if pending.upNext != nil && !isRehearsal {
-                    Text("action.ok", bundle: .main)
-                } else {
-                    Text("mission.done.action", bundle: .main)
-                }
+                Text(key: actionKey)
             }
             .buttonStyle(DawnButtonStyle())
             .padding(.horizontal, Theme.Metric.gutter)
             .padding(.bottom, 28)
         }
+        .animation(.easeOut(duration: 0.3), value: isSettled)
         .task {
-            withAnimation(.spring(duration: 0.5)) { appeared = true }
+            withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.5)) { appeared = true }
         }
     }
 
-    private var elapsed: TimeInterval { Date().timeIntervalSince(pending.startedAt) }
+    private var titleKey: String {
+        isRehearsal ? "mission.rehearsal.done.title" : "mission.done.title"
+    }
+
+    /// The morning is not over while a stage remains: say so before the screen goes away, or
+    /// the next ring reads as a malfunction rather than as the deal that was made.
+    private var bodyText: String {
+        if isRehearsal { return localized("mission.rehearsal.done.body") }
+        if let next = pending.upNext { return localized("mission.done.nextStage", next.minutesAfter) }
+        return localized("mission.done.body", DurationCopy.spent(elapsed))
+    }
+
+    private var actionKey: String {
+        if isRehearsal { return "mission.rehearsal.done.action" }
+        return pending.upNext == nil ? "mission.done.action" : "action.ok"
+    }
+
+    private var showsStreak: Bool {
+        isSettled && !isRehearsal && pending.upNext == nil && streak > 1
+    }
+
+    private var streak: Int { app.log.stats().currentStreak }
 
     /// A sunrise while stages remain, full sun when the morning is truly over. Named so
     /// `make_strings` skips it: SF Symbol names, not localization keys.
     private var systemImage: String {
-        pending.upNext == nil ? "sun.max.fill" : "sunrise.fill"
+        pending.upNext == nil || isRehearsal ? "sun.max.fill" : "sunrise.fill"
     }
-
-    /// Includes this morning, which is not yet in the log: the record is written when the
-    /// runner finishes, and showing "streak 0" on the screen that celebrates the streak
-    /// would be absurd.
-    private var streak: Int { app.log.stats().currentStreak + 1 }
 }

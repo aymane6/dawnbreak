@@ -72,8 +72,7 @@ struct CountReadout: View {
             Text(key: unitKey)
                 .font(Theme.captionFont)
                 .foregroundStyle(Theme.textTertiary)
-                .textCase(.uppercase)
-                .tracking(1)
+                .eyebrow(tracking: 1)
         }
         .animation(.spring(duration: 0.3), value: count)
         .accessibilityElement()
@@ -103,13 +102,13 @@ struct ProgressRing: View {
 
 /// The permission wall a camera or motion mission shows instead of a dead viewfinder.
 ///
-/// It has its own escape route on purpose: a user who denied camera access and set a squat
-/// alarm has to be able to get out, and the runner's corner button may be off if they turned
-/// the escape hatch off in settings.
+/// It has its own way out on purpose: a user who denied camera access and set a squat alarm
+/// has to be able to stop it from the screen that says why, not only from the corner cross.
+/// Enrollment passes no `onOverride`, because nothing is ringing there.
 struct MissionUnavailableView: View {
     let titleKey: String
     let bodyKey: String
-    let onOverride: () -> Void
+    var onOverride: (() -> Void)?
 
     var body: some View {
         VStack(spacing: 16) {
@@ -135,10 +134,12 @@ struct MissionUnavailableView: View {
             }
             .buttonStyle(DawnButtonStyle())
 
-            Button(action: onOverride) {
-                Text("mission.unavailable.dismiss", bundle: .main)
+            if let onOverride {
+                Button(action: onOverride) {
+                    Text("mission.unavailable.dismiss", bundle: .main)
+                }
+                .buttonStyle(QuietButtonStyle())
             }
-            .buttonStyle(QuietButtonStyle())
         }
         .padding(28)
     }

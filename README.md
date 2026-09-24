@@ -40,8 +40,8 @@ Twelve, all of them available on first launch.
 | Draw | Draw a named object, recognised on device | |
 | Flap | Clear a lap of the side-scroller | |
 
-Four difficulties, up to ten rounds per alarm, and an emergency exit in Settings that is on by
-default: no alarm can trap anybody.
+Four difficulties, up to ten rounds per alarm, and a way out on every mission screen, the × in its
+corner, that no setting can hide: no alarm can trap anybody.
 
 ## Free
 
@@ -135,8 +135,8 @@ There used to be a thirteenth image here, and a `--review` flag to take it: Appl
 in-app purchase with a picture of the screen that sells it, and rendering that screen with real
 prices on a simulator took a unit test, a `SKTestSession`, a `.storekit` file and a Debug-only
 `get-task-allow` entitlement. All of it went with the products. What is left is
-`Configuration/Dawnbreak-Debug.entitlements`, which the unit-test bundle still signs with so the
-tests can be attached to, and which `verify-archive.sh` refuses to see in a shipped bundle.
+`Configuration/Dawnbreak-Debug.entitlements`, which XcodeGen writes from `project.yml` to give the
+unit-test bundle the app group, and nothing more.
 
 The path the review notes send a reviewer down is checked by `SmokeTests`, which runs in every test
 run rather than only before a submission.
@@ -144,14 +144,14 @@ run rather than only before a submission.
 ## Tests
 
 ```sh
-swift test --package-path DawnbreakKit        # the logic: 80 tests, no simulator needed
+swift test --package-path DawnbreakKit        # the logic, no simulator needed
 xcodebuild test -scheme Dawnbreak -destination 'platform=iOS Simulator,name=iPhone 17 Pro Max'
 ```
 
 The kit's tests are property-based where it matters: "easy maths never asks for a negative answer"
 is proved over 200 seeded draws, not hoped about one. The app's tests check what only the bundle can
 answer: that every key the app builds at runtime resolves in all twelve languages, that the twelve
-compiled `.lproj` folders are really there, and that the eight sounds are in the bundle.
+compiled `.lproj` folders are really there, and that the fourteen sounds are in the bundle.
 
 ## Release: TestFlight
 

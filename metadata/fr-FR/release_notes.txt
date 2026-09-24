@@ -1,5 +1,5 @@
 Première version.
 
-Douze missions, autant d’alarmes que votre semaine en demande, quatre difficultés, et une alarme sur l’écran verrouillé qui revient si vous l’arrêtez sans faire la mission. Douze langues. Sans compte, sans publicité, rien ne quitte votre téléphone.
+Dawnbreak est un réveil que vous arrêtez en accomplissant une mission : douze au choix, quatre difficultés, jusqu’à dix manches. Arrêtée sans la mission, l’alarme sonne de nouveau une minute plus tard. Douze langues. Gratuit : rien à acheter, pas de compte, pas de publicité, et rien ne quitte votre téléphone.
 
-Si quelque chose ne va pas, la page d’assistance est à un geste dans les réglages. Elle est lue.
+Si quelque chose ne va pas, dans les Réglages, le lien « Contacter le support » ouvre un e-mail, et un lien vers la page d’assistance figure sur cette page. Les messages sont lus.

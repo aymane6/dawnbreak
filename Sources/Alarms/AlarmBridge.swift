@@ -4,6 +4,7 @@ import DawnbreakKit
 import Foundation
 import Observation
 import SwiftUI
+import WidgetKit
 import os
 
 /// The only place that talks to AlarmKit.
@@ -28,6 +29,19 @@ final class AlarmBridge {
     /// Set when an alarm is ringing and the mission screen should be on screen. The root
     /// view watches this.
     private(set) var activeMission: PendingMission?
+    /// The mission just cleared, kept on screen for its success page after the morning has
+    /// already been settled.
+    ///
+    /// Settling and closing used to be one moment, the page's button: someone who solved the
+    /// mission and walked off was rung again three minutes later with "Mission not done", and
+    /// the log timed the morning from a tap. The last answer settles it now, and this is only
+    /// what keeps the page up until it is read. It is never a way into a mission: anything that
+    /// opens one clears it.
+    private(set) var celebration: PendingMission?
+
+    /// Whether the mission cover holds the screen, success page included. Anything else that
+    /// wants to present waits for this: UIKit gives a window one presentation at a time.
+    var isMissionOnScreen: Bool { activeMission != nil || celebration != nil }
     /// Surfaced rather than logged: an alarm that failed to schedule is an alarm that will
     /// not ring, and the user has to find that out now rather than tomorrow morning.
     private(set) var lastFailure: Failure?
@@ -66,10 +80,16 @@ final class AlarmBridge {
     private var authorizationTask: Task<Void, Never>?
     private var armedTask: Task<Void, Never>?
 
+    /// `detail` is the framework's own words, for the failures only the framework can explain.
+    /// Left empty when the message already says everything: a French user was shown "denied"
+    /// under a sentence that had just said so, and "photo" under one about setting a mission up.
     struct Failure: Identifiable, Hashable {
         let id = UUID()
         var messageKey: String
         var detail: String
+
+        /// The one failure the user can fix, and only in iOS Settings.
+        var opensSettings: Bool { messageKey == "error.alarmPermissionDenied" }
     }
 
     /// How long after a dodged mission the alarm comes back. Short enough that going back
@@ -168,18 +188,22 @@ final class AlarmBridge {
     /// a time nothing is going to ring at. So every arm is a cancel and a schedule, in that
     /// order, whether or not the system is thought to know the id.
     func schedule(_ alarm: AlarmDraft) async {
+        guard !isOwed(alarm.id) else {
+            Self.journal.notice("not re-arming \(alarm.id.uuidString, privacy: .public): its morning is still owed, the edit applies once it is settled")
+            return
+        }
         guard alarm.isEnabled else {
             cancel(alarm.id)
             return
         }
         guard !alarm.mission.isIncomplete else {
-            lastFailure = Failure(messageKey: "error.missionNeedsSetup", detail: alarm.mission.kind.rawValue)
+            lastFailure = Failure(messageKey: "error.missionNeedsSetup", detail: "")
             return
         }
         if authorization != .authorized {
             let state = await requestAuthorization()
             guard state == .authorized else {
-                lastFailure = Failure(messageKey: "error.alarmPermissionDenied", detail: "\(state)")
+                lastFailure = Failure(messageKey: "error.alarmPermissionDenied", detail: "")
                 return
             }
         }
@@ -195,6 +219,7 @@ final class AlarmBridge {
             // anything that trusts such a read un-arms alarms it should be protecting.
             armedIDs.insert(alarm.id)
             Self.journal.info("armed \(alarm.id.uuidString, privacy: .public)")
+            refreshWidgets()
         } catch AlarmManager.AlarmError.maximumLimitReached {
             armedIDs.remove(alarm.id)
             lastFailure = Failure(messageKey: "error.tooManyAlarms", detail: "")
@@ -206,11 +231,34 @@ final class AlarmBridge {
     }
 
     func cancel(_ id: UUID) {
+        guard !isOwed(id) else {
+            Self.journal.notice("not cancelling \(id.uuidString, privacy: .public): its morning is still owed")
+            return
+        }
         // A cancel for an alarm the system does not know about throws, and that is fine:
         // the desired end state is "not scheduled", which is already true.
         Self.journal.info("cancel \(id.uuidString, privacy: .public)")
         system.cancel(id: id)
         armedIDs.remove(id)
+        refreshWidgets()
+    }
+
+    /// The alarm has a morning in progress: a mission on screen, a snooze counting down, or
+    /// a chained stage waiting its turn. What the system holds under its id is that
+    /// morning's follow-up, so an edit or a toggle that re-armed it on its normal schedule,
+    /// or a delete that cancelled it, ended the morning without the mission. The store
+    /// keeps the change, and settling the mission re-arms from the store.
+    ///
+    /// The bridge's own settling paths clear the record before they cancel or re-arm, so
+    /// this only ever stops a caller from outside the morning.
+    private func isOwed(_ id: UUID) -> Bool {
+        activeMission?.alarmID == id || PendingMissionStore.loadUpcoming()?.alarmID == id
+    }
+
+    /// The widget reads the store on its own clock, at most hourly, so without a nudge an alarm
+    /// switched off at night went on showing on the lock screen as the one that would ring.
+    private func refreshWidgets() {
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     /// Re-arms every enabled alarm. Run at launch, because an app update or a restore from
@@ -224,6 +272,14 @@ final class AlarmBridge {
         // optimisation; running it on a guess is how it becomes the thing it guards against.
         guard let snapshot = system.snapshot() else {
             Self.journal.warning("reconcile skipped: the daemon could not be asked")
+            return
+        }
+        // The same rule for the other side. A list that could not be read yet (a launch
+        // before the first unlock after a restart) is empty because it is unknown, and the
+        // loop below would read every armed alarm as a stray and cancel it.
+        alarms.reloadIfUnread()
+        guard !alarms.isUnread else {
+            Self.journal.warning("reconcile skipped: the alarm list could not be read yet")
             return
         }
         // A mission still owed is not reconciled away — nor one *scheduled*: between two
@@ -310,11 +366,6 @@ final class AlarmBridge {
         await handleMissionRequested(alarmID: id)
     }
 
-    func handleSnoozePressed(hint: String) async {
-        guard let id = resolveRingingAlarm(hint: hint) else { return }
-        await handleSnoozePressed(alarmID: id)
-    }
-
     /// The alert's stop affordance was pressed.
     ///
     /// The alarm is now silent: the system did that before this ran, and no API can prevent it.
@@ -362,7 +413,12 @@ final class AlarmBridge {
         PendingMissionStore.save(pending)
         activeMission = nil
         log.amendLatest(alarmID: alarmID) { $0.snoozeCount = pending.snoozeCount }
-        await armFollowUp(pending, after: delay)
+        // Under the alarm's own title: the snooze was allowed and asked for, and the comeback is
+        // not the reproach a dodge earns.
+        let title = pending.label.isEmpty
+            ? LocalizedStringResource("alarm.defaultTitle", defaultValue: "Dawnbreak")
+            : LocalizedStringResource(stringLiteral: pending.label)
+        await armFollowUp(pending, after: delay, titled: title)
     }
 
     /// The mission screen was left with the mission still owed, or the app was killed while it
@@ -438,6 +494,7 @@ final class AlarmBridge {
         }
 
         PendingMissionStore.save(pending)
+        celebration = nil
         activeMission = pending
         return pending
     }
@@ -532,6 +589,7 @@ final class AlarmBridge {
             // say which mission the morning is on. `notBefore` keeps it from opening the
             // mission screen during the wait.
             PendingMissionStore.save(next)
+            celebration = pending
             activeMission = nil
             Self.journal.info("stage \(pending.stage + 1, privacy: .public) cleared, arming stage \(next.stage + 1, privacy: .public) in \(followOn.minutesAfter, privacy: .public)m")
             await armFollowUp(
@@ -552,8 +610,11 @@ final class AlarmBridge {
 
         // Cleared before the alarm is stood down, and in this order on purpose: the mission
         // screen watches `activeMission`, and its disappearance is what would otherwise be read
-        // as "left unfinished" and arm another follow-up five seconds later.
+        // as "left unfinished" and arm another follow-up five seconds later. The success page
+        // stays up on `celebration`, which is set in the same main-actor turn so the cover
+        // never sees a moment with neither.
         PendingMissionStore.clear()
+        celebration = pending
         activeMission = nil
 
         // Cancel first, then re-arm. A repeating alarm needs its recurrence put back,
@@ -605,9 +666,14 @@ final class AlarmBridge {
         // mid-mission has not escaped anything. Only a launch that finds a mission already owed
         // means the screen went away without the mission being settled.
         let isNew = restored != nil && activeMission == nil
+        if restored != nil { celebration = nil }
         activeMission = restored
         return isNew
     }
+
+    /// The success page was read. The morning was settled when the mission was cleared, so
+    /// this only takes the page down.
+    func dismissCelebration() { celebration = nil }
 
     func clearFailure() { lastFailure = nil }
 }

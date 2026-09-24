@@ -21,7 +21,6 @@ struct LocalizationTests {
         keys += Difficulty.allCases.map(\.titleKey)
         keys += AlarmSound.allCases.map(\.titleKey)
         keys += Weekday.allCases.flatMap { [$0.localizationKey, $0.shortLocalizationKey] }
-        keys += Preferences.Appearance.allCases.map(\.titleKey)
         keys += WakeRecord.Outcome.allCases.map(\.titleKey)
         keys += DrawingPrompt.all.map(\.nameKey)
         keys += TypingChallenge.LengthBand.allCases.flatMap { band in
@@ -79,7 +78,8 @@ struct LocalizationTests {
     func englishIsPopulated() {
         // A sanity floor on the reader itself. Every assertion below is "the other eleven match
         // English", which passes trivially if English came back empty because the table moved.
-        #expect(Catalog.keys(Catalog.developmentLanguage).count > 400)
+        // A floor, not a count: build 12 took out the settings that did nothing and landed at 393.
+        #expect(Catalog.keys(Catalog.developmentLanguage).count > 350)
     }
 
     @Test("No language is missing a key", arguments: Catalog.locales)
@@ -139,6 +139,40 @@ struct LocalizationTests {
         }
     }
 
+    /// Declaring the right categories is not the same as resolving: a substitution whose name
+    /// drifted from its format key compiles fine and puts `%#@rounds@` on the screen.
+    @Test("Every plural entry formats to plain words", arguments: Catalog.locales)
+    func pluralsResolve(locale: String) throws {
+        let pluralKeys = Catalog.plurals(locale).keys.sorted()
+        #expect(!pluralKeys.isEmpty, "\(locale): no plural entries compiled at all")
+
+        for key in pluralKeys {
+            for count in [0, 1, 2, 3, 5, 11, 21, 100] {
+                let text = try #require(Catalog.format(key, in: locale, count))
+                #expect(!text.isEmpty && !text.contains("%") && !text.contains("@"), "\(locale): \(key) for \(count) reads \(text)")
+            }
+        }
+    }
+
+    /// The count picks the form. English and Russian because between them they have every shape
+    /// that goes wrong: a singular, and a language whose 21 is singular while its 5 is not.
+    @Test("A count picks its own plural form")
+    func pluralFormsFollowTheCount() {
+        #expect(Catalog.format("preview.rounds", in: "en", 1) == "1 round")
+        #expect(Catalog.format("preview.rounds", in: "en", 3) == "3 rounds")
+        #expect(Catalog.format("mission.done.streak", in: "ru", 2) == "2 дня подряд")
+        #expect(Catalog.format("mission.done.streak", in: "ru", 5) == "5 дней подряд")
+        #expect(Catalog.format("mission.done.streak", in: "ru", 21) == "21 день подряд")
+    }
+
+    /// The same through the app's own helper, whose `String(localized:)` is the step that would
+    /// hand the formatter a bare `%#@rounds@` if it ever dropped the plural rules on the way.
+    @Test("The app's formatting helper keeps the plural rules")
+    func helperKeepsPluralRules() {
+        let text = localized("preview.rounds", 3)
+        #expect(text.contains("3") && !text.contains("%") && !text.contains("@"), "reads \(text)")
+    }
+
     @Test("Every key derived from an enum resolves", arguments: Catalog.locales)
     func derivedKeysResolve(locale: String) {
         let available = Catalog.keys(locale)
@@ -174,6 +208,6 @@ struct LocalizationTests {
         // layout and the screenshot compositor's RTL path. Losing it would not fail anything
         // else here, only the eleven remaining languages would keep passing.
         #expect(Catalog.isBuilt("ar"))
-        #expect(Catalog.strings("ar").count > 400)
+        #expect(Catalog.strings("ar").count > 350)
     }
 }

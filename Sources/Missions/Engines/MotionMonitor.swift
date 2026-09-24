@@ -167,7 +167,7 @@ final class StepMonitor {
     /// Asking `CMPedometer.authorizationStatus()` instead is not enough on its own: a refusal
     /// answered mid-mission arrives here as an error while the cached status can still read
     /// `notDetermined`, and the mission would then sit at zero steps with no way out but the
-    /// emergency exit — which the user may have switched off. Motion & Fitness turned off
+    /// emergency exit, which gives up the whole morning. Motion & Fitness turned off
     /// device-wide answers `CMErrorNotAvailable` and is just as final.
     nonisolated static func isRefusal(_ error: any Error) -> Bool {
         let code = (error as NSError).code

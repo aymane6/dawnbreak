@@ -40,6 +40,9 @@ final class FakeAlarmSystem: AlarmScheduler {
         /// When each follow-up was asked to fire, in order. How long after a dodge the alarm
         /// comes back is a product decision, so it is asserted rather than assumed.
         var followUpDates: [Date] = []
+        /// The key of each follow-up's title, nil for the default "Mission not done". Which title
+        /// a comeback rings under is what tells the user why it came back.
+        var followUpTitleKeys: [String?] = []
     }
 
     let authorizationState: AlarmManager.AuthorizationState
@@ -75,6 +78,7 @@ final class FakeAlarmSystem: AlarmScheduler {
 
     var calls: [Call] { log.withLock { $0.calls } }
     var followUpDates: [Date] { log.withLock { $0.followUpDates } }
+    var followUpTitleKeys: [String?] { log.withLock { $0.followUpTitleKeys } }
 
     /// How far out the last follow-up was armed, rounded to the second. The bridge builds its
     /// fire date from `Date()`, so the test compares an interval rather than an instant.
@@ -112,7 +116,10 @@ final class FakeAlarmSystem: AlarmScheduler {
     }
 
     func scheduleFollowUp(_ alarm: AlarmDraft, at fireDate: Date, titled: LocalizedStringResource?) async throws {
-        log.withLock { $0.followUpDates.append(fireDate) }
+        log.withLock {
+            $0.followUpDates.append(fireDate)
+            $0.followUpTitleKeys.append(titled?.key)
+        }
         // The suspension the real call has, made usable. `armFollowUp` is not atomic: the cancel
         // is synchronous, the schedule is a round trip to the daemon, and whatever the app does
         // in between lands in the middle of an arm. That is where the stale-follow-up race lives,

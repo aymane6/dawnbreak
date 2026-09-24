@@ -143,7 +143,7 @@ final class SmokeTests: UITestCase {
     func testARingingMissionDoesNotGoAwayOnASwipe() {
         let app = launch(.mission)
         waitFor(AccessibilityID.missionHeader, in: app)
-        // The deliberate escape hatch, which is on by default. Its absence would mean a user who
+        // The deliberate escape hatch, which no setting can hide. Its absence would mean a user who
         // genuinely cannot finish the mission has no way out, which is a support nightmare.
         XCTAssertTrue(element(AccessibilityID.missionExit, in: app).exists)
 
@@ -152,34 +152,73 @@ final class SmokeTests: UITestCase {
         XCTAssertTrue(element(AccessibilityID.missionHeader, in: app).exists, "the mission was swiped away")
     }
 
-    /// Onboarding walks to the end and hands over to the app.
+    /// Onboarding walks to the end and hands over to the app, through the alarm it promises.
     ///
-    /// Four taps on the primary button: three page turns and then "start". The permission request
-    /// is a separate button on the third page and is deliberately not tapped, because granting it
-    /// means a system alert, and a test that depends on the wording of an Apple alert breaks on an
-    /// OS update.
+    /// Four taps on the one button: two page turns, Continue on the permission page, then "Set
+    /// my first alarm", which opens the editor. Continue always leads to AlarmKit's alert when iOS
+    /// has not had an answer yet, which is what App Review asked for under 5.1.1(iv), so the test
+    /// answers it rather than avoiding it. On a simulator that answered it before, there is no
+    /// alert and nothing to answer.
+    ///
+    /// Saved rather than cancelled, and counted: five rows is the four seeded alarms and the one
+    /// just set, so the editor's alarm reached the list that onboarding hands over to.
     func testOnboardingWalksThroughToTheAlarmList() {
         let app = launch(.onboarding)
-        for _ in 0..<4 {
+        for tap in 0..<4 {
             waitFor(AccessibilityID.onboardingNext, in: app).tap()
+            if tap == 2 { allowAlarmsIfAsked(timeout: 5) }
         }
+        waitFor(AccessibilityID.editorSave, in: app).tap()
         XCTAssertTrue(
             element(AccessibilityID.addAlarm, in: app).waitForExistence(timeout: anchorTimeout),
             "onboarding finished without showing the app"
         )
+        XCTAssertEqual(matches(AccessibilityID.alarmRow, in: app).count, 5, "the first alarm did not reach the list")
+    }
+
+    /// The permission page offers no way past it except the system's question: one button, no
+    /// Skip, and a swipe does not turn the page. Build 11 was rejected for the opposite.
+    func testThePermissionPageCannotBeSkipped() {
+        let app = launch(.onboarding)
+        for _ in 0..<2 {
+            waitFor(AccessibilityID.onboardingNext, in: app).tap()
+        }
+        waitFor(AccessibilityID.onboardingPermission, in: app)
+        // Hittable rather than present: the list and the tab bar behind the cover are in the
+        // tree too, and none of them can be touched while it is up.
+        let reachable = app.buttons.allElementsBoundByIndex.filter { $0.isHittable }.map { $0.identifier }
+        XCTAssertEqual(reachable, [AccessibilityID.onboardingNext], "the permission page has more than one way forward")
+
+        // The footer's label is the page: Continue here, and something else on any other page.
+        let next = element(AccessibilityID.onboardingNext, in: app)
+        let label = next.label
+        app.swipeLeft()
+        settle()
+        XCTAssertEqual(next.label, label, "a swipe turned the page without the permission question")
+        XCTAssertTrue(element(AccessibilityID.onboardingPermission, in: app).exists)
     }
 
     func testTheStatsScreenComesUp() {
         let app = launch(.stats)
-        waitFor(AccessibilityID.statsWindow, in: app)
-        assertNothingIsCoveringTheScreen(app)
+        let picker = waitFor(AccessibilityID.statsWindow, in: app)
+
+        // Every period, not only the default one: the picker scopes the whole screen, and a
+        // segment that could not be tapped would leave the week and the quarter out of reach.
+        // Counted first, so a query that found no segments cannot pass by looping over nothing.
+        let segments = picker.buttons.allElementsBoundByIndex
+        XCTAssertEqual(segments.count, 3, "the period picker should offer a week, a month and a quarter")
+        for segment in segments {
+            segment.tap()
+            XCTAssertTrue(segment.isSelected, "\(segment.label) did not take the tap")
+            assertNothingIsCoveringTheScreen(app)
+        }
     }
 
     func testTheSettingsScreenComesUp() {
         let app = launch(.settings)
-        // Below the fold on the smaller phones: the appearance picker proves both that the
-        // screen came up and that its list scrolls.
-        scrollTo(AccessibilityID.settingsAppearance, in: app)
+        // The foot of the list: reaching the version row proves the screen came up and, on the
+        // smaller phones, that its list scrolls.
+        scrollTo(AccessibilityID.settingsVersion, in: app)
         assertNothingIsCoveringTheScreen(app)
     }
 
